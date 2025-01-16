@@ -17,7 +17,7 @@ TABLE_NAME_OLD = 'profiles_raw'
 # New Airtable Configuration
 BASE_ID_NEW = 'app5s8zl7DsUaDmtx'
 TABLE_NAME_NEW = 'profiles_cleaned'
-TABLE_NAME_NEW1 = 'profiles_outreach_demo'
+TABLE_NAME_NEW1 = 'profiles_outreach'
 TABLE_NAME_NEW2 = 'client_details'
 TABLE_NAME_NEW3 = 'contacts_taippa_marketing'
 TABLE_NAME_EMAIL_OPENED = 'email_opened'

@@ -13,8 +13,8 @@ import requests
 import ast
 import openai
 import json
-from lead_magnet.industry_insights import get_cold_email_kpis
-from lead_magnet.client_info_parser import collect_information
+from industry_insights import get_cold_email_kpis
+from client_info_parser import collect_information
 # from error_logger import execute_error_block
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -373,7 +373,7 @@ def generate_lead_magnet_pdf(user_id):
 if __name__=="__main__":
     output_pdf = "lead_magnet_personalized.pdf"
     # user_id for testing
-    user_id = "nadia@cgnet.ae"
+    user_id = "sravan.workemail@gmail.com"
     generate_lead_magnet_pdf(user_id)
     # print(f"PDF generated and saved at {output_pdf}")
     # print("Raw metrics:", metrics)
