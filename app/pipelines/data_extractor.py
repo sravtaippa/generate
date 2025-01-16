@@ -26,7 +26,7 @@ def people_search(custom_search_url,query_params,client_id,qualify_leads):
     url = f"{base_url}?{'&'.join(query_params)}"
     if custom_search_url != "":
         url = custom_search_url
-        # url = "https://api.apollo.io/api/v1/mixed_people/search?person_titles[]=Facilities%20director&person_titles[]=COO&person_titles[]=CEO&person_titles[]=operations%20director&person_titles[]=director%20of%20operations&person_locations[]=&organization_locations[]=United%20Arab%20Emirates&contact_email_status[]=verified&organization_num_employees_ranges[]=500%2C10000&page=5&per_page=34"
+        # url = "https://api.apollo.io/api/v1/mixed_people/search?person_titles[]=Facilities%20director&person_titles[]=COO&person_titles[]=CEO&person_titles[]=operations%20director&person_titles[]=director%20of%20operations&person_locations[]=&organization_locations[]=United%20Arab%20Emirates&contact_email_status[]=verified&organization_num_employees_ranges[]=500%2C10000&page=5&per_page=4"
     print(url)  
     response = requests.post(url, headers=APOLLO_HEADERS)
     print(f"Execution status code: {response.status_code}")
@@ -41,9 +41,10 @@ def people_search(custom_search_url,query_params,client_id,qualify_leads):
         iteration=1
         if qualify_leads=='yes':
             solution_benefits,unique_features,solution_impact_examples,domain,buyer_criteria,buyer_examples = fetch_client_details(client_id)
-        print(f"\n------------Initiating Persona Data Fetch Iteration------------")
+        print(f"\n------------Initiating People Search------------")
         for contact in data['people']:
             print(f"\n------------------------Iteration {iteration}------------------------------\n")
+            print('Collecting the info')
             iteration += 1
             apollo_id = contact['id']
             unique_value = apollo_id

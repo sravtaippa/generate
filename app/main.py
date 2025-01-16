@@ -14,6 +14,7 @@ from pipelines.data_sanitization import fetch_and_update_data, update_email_open
 from pipelines.data_extractor import people_enrichment,people_search
 from db.db_utils import fetch_client_details,export_to_airtable,unique_key_check_airtable,parse_people_info
 from error_logger import execute_error_block
+from lead_magnet.lead_magnet_pdf_generation import generate_lead_magnet_pdf
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
 
 print(f"\n=============== Generate : Data Ingestion  ===============")
@@ -47,6 +48,16 @@ def initialize_data_sanitization():
         return response
     except Exception as e:
         execute_error_block(f"Error occured while initializing data sanitization module {e}")
+
+@app.route("/generate_lead_magnet", methods=["GET"])
+def initialize_data_sanitization():
+    try:
+        user_id = request.args.get('user_id', default='sravan.workemail@gmail.com', type=str)
+        response = generate_lead_magnet_pdf(user_id)
+        return response
+    except Exception as e:
+        execute_error_block(f"Error occured while generating lead magnet {e}")
+
 
 @app.route("/update-email-opens", methods=["GET"])
 def update_email_opens_clicked():
@@ -136,6 +147,7 @@ def execute_collection():
         # job seniorities : owner,founder,director,vp,c level,president,vice president
         # keywords : invest
         custom_search_url = request.args.get('custom_search_url', default='', type=str)
+        print(f"Custom Search Url added: {custom_search_url}")
         qualify_leads = request.args.get('qualify_leads', default='yes', type=str)
         job_titles = request.args.get('job_titles', default='', type=str)
         person_seniorities = request.args.get('person_seniorities', default='', type=str)
