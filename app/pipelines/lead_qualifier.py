@@ -46,7 +46,8 @@ def qualify_lead(persona_details,solution_benefits,unique_features,solution_impa
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": lead_prompt}
-            ]
+            ],
+            max_tokens=300
         )
         # Print the response
         qualification_response = response['choices'][0]['message']['content']
