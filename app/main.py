@@ -50,14 +50,13 @@ def initialize_data_sanitization():
         execute_error_block(f"Error occured while initializing data sanitization module {e}")
 
 @app.route("/generate_lead_magnet", methods=["GET"])
-def initialize_data_sanitization():
+def generate_lead_magnet():
     try:
         user_id = request.args.get('user_id', default='sravan.workemail@gmail.com', type=str)
         response = generate_lead_magnet_pdf(user_id)
         return response
     except Exception as e:
         execute_error_block(f"Error occured while generating lead magnet {e}")
-
 
 @app.route("/update-email-opens", methods=["GET"])
 def update_email_opens_clicked():
