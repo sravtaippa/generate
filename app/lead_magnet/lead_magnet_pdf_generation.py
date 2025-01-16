@@ -13,8 +13,8 @@ import requests
 import ast
 import openai
 import json
-from industry_insights import get_cold_email_kpis
-from client_info_parser import collect_information
+from lead_magnet.industry_insights import get_cold_email_kpis
+from lead_magnet.client_info_parser import collect_information
 # from error_logger import execute_error_block
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

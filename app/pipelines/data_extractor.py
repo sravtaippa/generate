@@ -5,8 +5,7 @@ from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_
 from pipelines.lead_qualifier import qualify_lead
 from error_logger import execute_error_block
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
-from lead_magnet.industry_insights import get_cold_email_kpis
-
+# from lead_magnet.industry_insights import get_cold_email_kpis
 
 def people_enrichment(apollo_id):
     try:
