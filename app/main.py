@@ -135,6 +135,7 @@ def execute_collection():
         # job roles : ceo,coo,cmo,marketing manager,marketing director,investor,partner
         # job seniorities : owner,founder,director,vp,c level,president,vice president
         # keywords : invest
+        custom_search_url = request.args.get('custom_search_url', default='', type=str)
         qualify_leads = request.args.get('qualify_leads', default='yes', type=str)
         job_titles = request.args.get('job_titles', default='', type=str)
         person_seniorities = request.args.get('person_seniorities', default='', type=str)
@@ -176,7 +177,7 @@ def execute_collection():
         ]
         query_params.append(f"page={page_number}")
         query_params.append(f"per_page={results_per_page}")
-        success_status = people_search(query_params,client_id,qualify_leads)
+        success_status = people_search(custom_search_url,query_params,client_id,qualify_leads)
         response=fetch_and_update_data()
         print(response)
         print('\n------------ Data Cleaning Completed: Data Ready for Outreach ------------\n')

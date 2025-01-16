@@ -95,14 +95,14 @@ def validate_fields(job_titles,person_seniorities,person_locations,organization_
         execute_error_block(f"Error occured while validating the fields. {e}")
 
 # Title and Description
-st.markdown('<div class="main-title">Generate - Persona Miner </div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">Generate - Smart Data Miner </div>', unsafe_allow_html=True)
 
 # st.write("Use the filters below to customize the extraction of leads.")
 from streamlit_tags import st_tags
 
 # Input for job titles
 job_titles = st_tags(
-    label="Job Titles",
+    label="Job titles",
     text="Press Enter to add more",
     suggestions=["ceo","cmo","cfo","coo","marketing manager", "marketing director", "sales executive", "data scientist"],
     key="job_titles"
@@ -110,7 +110,7 @@ job_titles = st_tags(
 job_titles=",".join(job_titles)
 
 person_seniorities = st_tags(
-    label="Person Seniorities",
+    label="Person seniorities",
     text="Press Enter to add more",
     suggestions=["owner", "founder", "director"],
     key="person_seniorities"
@@ -118,7 +118,7 @@ person_seniorities = st_tags(
 person_seniorities=",".join(person_seniorities)
 
 person_locations = st_tags(
-    label="Person Locations",
+    label="Person locations",
     text="Press Enter to add",
     suggestions=["Dubai, United Arab Emirates","India","United Kingdom","Russia","Saudi Arabia","United States","Quatar"],
     key="person_locations"
@@ -126,7 +126,7 @@ person_locations = st_tags(
 
 
 organization_locations = st_tags(
-    label="Organization Locations",
+    label="Organization locations",
     text="Press Enter to add",
     suggestions=["Dubai, United Arab Emirates","India","United Kingdom","Russia","Saudi Arabia","United States","Quatar"],
     key="organization_locations"
@@ -135,7 +135,7 @@ organization_locations = st_tags(
 email_status = 'verified,likely to engage'
 
 organization_num_employees_ranges = st_tags(
-    label="Organization Employees Range",
+    label="Organization employees range",
     text="Press Enter to add",
     suggestions=["1,10","20,50","100,200","1,100000"],
     key="organization_num_employees_ranges"
@@ -161,7 +161,7 @@ q_keywords = st_tags(
 # )
 
 page_number = str(st.number_input(
-    label="Page Number",
+    label="Page number",
     min_value=1, 
     value=1, 
     step=1,   
@@ -169,7 +169,7 @@ page_number = str(st.number_input(
 ))
 
 results_per_page = str(st.number_input(
-    label="Results per Page",
+    label="Results per page",
     min_value=1, 
     value=10,  
     step=1,    
@@ -177,17 +177,26 @@ results_per_page = str(st.number_input(
 ))
 
 client_id = str(st.selectbox(
-    label="Client Id", 
+    label="Client id", 
     options=["berkleys_homes", "berkleys_homes_test", "taippa_marketing"],
     index=0  
 ))
 
 server_test = st.radio("Test in server:", options=["yes", "no"], index=1)
 test_run = st.radio("Test run:", options=["yes", "no"], index=1)
-qualify_leads = st.radio("Qualify Leads:", options=["yes", "no"], index=0)
+search_via_url = st.radio("Custom search via url:", options=["yes", "no"], index=1)
+qualify_leads = st.radio("Qualify leads:", options=["yes", "no"], index=0)
 test_run_id=''
 if test_run=="yes":
     test_run_id = st.text_input("Test run id:", "63568114be7c760001dc78c6")
+
+custom_search_url=""
+if search_via_url =="yes":
+    custom_search_url = st.text_input(
+    label="Custom Seach Url",
+    value="",  # Default value
+    max_chars=3000  # Optional: Limit the number of characters
+    )
 st.markdown('</div>', unsafe_allow_html=True)
 
 if st.button("Fetch Data"):
@@ -204,11 +213,11 @@ if st.button("Fetch Data"):
 
         if server_test == "yes":
             response = requests.get(
-                    f"https://magmostafa.pythonanywhere.com/data_ingestion?page={page_number}&per_page={results_per_page}&job_titles={job_titles}&person_seniorities={person_seniorities}&person_locations={person_locations}&organization_locations={organization_locations}&email_status={email_status}&organization_num_employees_ranges={organization_num_employees_ranges}&client_id={client_id}&test_run_id={test_run_id}&qualify_leads={qualify_leads}&q_keywords={q_keywords}"
+                    f"https://magmostafa.pythonanywhere.com/data_ingestion?page={page_number}&per_page={results_per_page}&job_titles={job_titles}&person_seniorities={person_seniorities}&person_locations={person_locations}&organization_locations={organization_locations}&email_status={email_status}&organization_num_employees_ranges={organization_num_employees_ranges}&client_id={client_id}&test_run_id={test_run_id}&qualify_leads={qualify_leads}&q_keywords={q_keywords}&custom_search_url={custom_search_url}"
                 )
         else:
             response = requests.get(
-                    f"http://127.0.0.1:5000/data_ingestion?page={page_number}&per_page={results_per_page}&job_titles={job_titles}&person_seniorities={person_seniorities}&person_locations={person_locations}&organization_locations={organization_locations}&email_status={email_status}&organization_num_employees_ranges={organization_num_employees_ranges}&client_id={client_id}&test_run_id={test_run_id}&qualify_leads={qualify_leads}&q_keywords={q_keywords}"
+                    f"http://127.0.0.1:5000/data_ingestion?page={page_number}&per_page={results_per_page}&job_titles={job_titles}&person_seniorities={person_seniorities}&person_locations={person_locations}&organization_locations={organization_locations}&email_status={email_status}&organization_num_employees_ranges={organization_num_employees_ranges}&client_id={client_id}&test_run_id={test_run_id}&qualify_leads={qualify_leads}&q_keywords={q_keywords}&custom_search_url={custom_search_url}"
                 )
         print(response)
         print('-------COMPLETED-----------')
@@ -219,12 +228,12 @@ if st.button("Fetch Data"):
             st.write(response)
             st.error("Failed to fetch data.")
 
-# Adding an image to the sidebar
-st.sidebar.image(
-    "logo.JPG",  
-    caption="",  
-    use_column_width=True
-)
+# # Adding an image to the sidebar
+# st.sidebar.image(
+#     "logo.JPG",  
+#     caption="",  
+#     use_column_width=True
+# )
 
 st.sidebar.markdown("<br>", unsafe_allow_html=True) 
 
