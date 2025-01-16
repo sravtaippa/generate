@@ -23,9 +23,14 @@ AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
 AIRTABLE_CLIENT_TABLE_NAME = os.getenv("AIRTABLE_CLIENT_TABLE_NAME")
 CLIENT_NAME = 'taippa_marketing'
 
-pdfmetrics.registerFont(TTFont('Anton', 'fonts/Anton-Regular.ttf'))
-pdfmetrics.registerFont(TTFont('Poppins', 'fonts/Poppins-Regular.ttf'))
-pdfmetrics.registerFont(TTFont('PoppinsBold', 'fonts/Poppins-Bold.ttf'))
+# Get the directory where the script is located
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Path to fonts directory
+FONTS_DIR = os.path.join(SCRIPT_DIR, 'fonts')
+
+pdfmetrics.registerFont(TTFont('Anton', os.path.join(FONTS_DIR, 'Anton-Regular.ttf')))
+pdfmetrics.registerFont(TTFont('Poppins', os.path.join(FONTS_DIR, 'Poppins-Regular.ttf')))
+pdfmetrics.registerFont(TTFont('PoppinsBold', os.path.join(FONTS_DIR, 'Poppins-Bold.ttf')))
 
 # Getting dynamic images from client_details table specific to each client
 def get_dynamic_images(table,record_id,attachment_column):
@@ -149,9 +154,11 @@ def content_formatting_list(content, is_metrics=False):
                 print(f"Error parsing response: {result}")
                 raise e
 
-def create_personalized_pdf(user_details,output_path, image_path):
+
+def create_personalized_pdf(user_details, output_path, image_path):
     styles = getSampleStyleSheet()
 
+    # Keep existing style definitions
     main_title = ParagraphStyle(
         "TitleStyle",
         parent=styles["Heading1"],
@@ -166,64 +173,53 @@ def create_personalized_pdf(user_details,output_path, image_path):
         borderRadius=8
     )
 
-    sub_heading = ParagraphStyle(
-        "SubHeadingStyle",
+    greeting_style = ParagraphStyle(
+        "GreetingStyle",
+        parent=styles["Normal"],
+        fontName="PoppinsBold",
+        fontSize=16,
+        textColor=colors.HexColor("#f6f2f7"),
+        spaceBefore=20,
+        spaceAfter=10,
+        leading=20
+    )
+
+    section_title = ParagraphStyle(
+        "SectionTitle",
         parent=styles["Heading2"],
         fontName="Anton",
         fontSize=18,
         textColor=colors.HexColor("#6292cc"),
-        alignment=1,
-        spaceAfter=15,
-        spaceBefore=10
-    )
-
-    header_style = ParagraphStyle(
-        "HeaderStyle",
-        parent=styles["Heading2"],
-        fontName="Anton",
-        fontSize=14,
-        textColor=colors.HexColor("#6292cc"),
-        spaceBefore=10,
-        spaceAfter=6,
-        leftIndent=10,
-        bulletIndent=5,
-        leading=18
-    )
-
-    metrics_header_style = ParagraphStyle(
-        "MetricsHeaderStyle",
-        parent=styles["Heading2"],
-        fontName="Anton",
-        fontSize=16,
-        textColor=colors.HexColor("#6292cc"),
-        spaceBefore=15,
-        spaceAfter=4
+        spaceBefore=20,
+        spaceAfter=10,
+        leading=24
     )
 
     body_style = ParagraphStyle(
         "BodyStyle",
         parent=styles["BodyText"],
         fontName="Poppins",
-        fontSize=10,
-        textColor=colors.HexColor("#f6f2f7"),
-        leading=14,
-        spaceAfter=8,
-        leftIndent=20,
-        firstLineIndent=-10,
-        alignment=0
-    )
-
-    metrics_style = ParagraphStyle(
-        "MetricsStyle",
-        parent=styles["BodyText"],
-        fontName="Poppins",
         fontSize=12,
         textColor=colors.HexColor("#f6f2f7"),
         leading=16,
-        spaceAfter=4,
-        leftIndent=20
+        spaceAfter=8,
+        leftIndent=20,
+        firstLineIndent=-10
     )
 
+    highlight_style = ParagraphStyle(
+        "HighlightStyle",
+        parent=styles["BodyText"],
+        fontName="PoppinsBold",
+        fontSize=14,
+        textColor=colors.HexColor("#c969f5"),
+        leading=18,
+        spaceBefore=15,
+        spaceAfter=15,
+        alignment=1
+    )
+
+    # Keep the existing background and divider functions
     def draw_fancy_background(canvas, doc):
         canvas.setFillColor(colors.black)
         canvas.rect(0, 0, A4[0], A4[1], fill=1)
@@ -245,73 +241,48 @@ def create_personalized_pdf(user_details,output_path, image_path):
         return drawing
 
     content = []
-    api = Api(AIRTABLE_API_KEY)
-    airtable = api.table(AIRTABLE_BASE_ID, AIRTABLE_CLIENT_TABLE_NAME)
-    records = airtable.all(formula=f"{{client_id}} = '{CLIENT_NAME}'")
-    company_lead_magnet = str(records[0]['fields']['company_lead_magnet_text'])
 
-    try:
-        result_new = content_formatting_list(company_lead_magnet, is_metrics=False)
-        result_new = json.loads(result_new)
-    except Exception as e:
-        print(f"Error parsing content: {result_new}")
-        raise e
-
-    
-    # if image_path and os.path.exists(image_path):
-    #     img = Img(image_path)
-    #     img.drawWidth = A4[0] - 2 * 0.6 * inch  # Full width minus margins
-    #     img_ratio = 0.3  # This controls the height of the banner (0.3 = 30% of width)
-    #     img.drawHeight = img.drawWidth * img_ratio
-    #     content.append(img)
+    # Add banner image if available
+    if image_path and len(image_path) >= 1:
+        img = Img(image_path[0])
+        img.drawWidth = A4[0] - 2 * 0.6 * inch
+        img_ratio = 0.3
+        img.drawHeight = img.drawWidth * img_ratio
+        content.append(img)
 
     content.append(Spacer(1, 0.3 * inch))
-    content.append(Paragraph("How AI-Driven Lead Generation Can Revolutionize Your Business Growth?", main_title))
+    content.append(Paragraph("Personalized Industry Insights Report", main_title))
     content.append(create_divider())
     content.append(Spacer(1, 0.2 * inch))
 
-    content.append(Paragraph("Emerging Trends in Email Marketing", sub_heading))
-    content.append(Spacer(1, 0.2 * inch))
+    # Greeting section with placeholder
+    content.append(Paragraph("Hi {Name},", greeting_style))
 
-    all_points = []
-    for point in result_new:
-        if point['header'] != "Emerging Trends in Email Marketing":
-            cell_content = [
-                Paragraph(f"{point['header']}", header_style),
-                Paragraph(point["body"], body_style)
-            ]
-            all_points.append(cell_content)
+    # Introduction text
+    intro_text = ("To help you stay ahead in your industry as an {job_title}, "
+                  "we've prepared a tailored insights report highlighting key competitors "
+                  "and market trends relevant to your business")
+    content.append(Paragraph(intro_text, body_style))
+    content.append(Spacer(1, 0.3 * inch))
 
-    if all_points:
-        table_data = [
-            [all_points[0], all_points[1]],
-            [all_points[2], all_points[3]]
-        ]
-        col_widths = [(A4[0] - 1.4 * inch) / 2] * 2
-        pdf_table = Table(table_data, colWidths=col_widths)
-        pdf_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#1a1a1a")),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-            ('PADDING', (0, 0), (-1, -1), 8),
-            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor("#2a2a2a")),
-        ]))
-        content.append(pdf_table)
+    # Market Competitors section
+    content.append(Paragraph("Your Market Competitors", section_title))
+    content.append(Paragraph("Stay informed about the top players in your market:", body_style))
+    content.append(Paragraph("{List of Competitors}", body_style))
+    content.append(Spacer(1, 0.3 * inch))
 
-    content.append(PageBreak())
-    content.append(Paragraph("Standard industry benchmarks of your sector", main_title))
+    # Industry Insights section
+    content.append(Paragraph("Industry Insights for Email campaigns for {Industry Name}", section_title))
 
+    # Add existing metrics content here
     try:
-        industry = user_details.get('organization_industry','Real Estate')
-        if industry in ['Unknown','']:
+        industry = user_details.get('organization_industry', 'Real Estate')
+        if industry in ['Unknown', '']:
             industry = 'Real Estate'
-        print('Getting the industry metrics')
         metrics = get_cold_email_kpis(industry)
-        print(metrics)
         metrics_result = content_formatting_list(metrics, is_metrics=True)
         metrics_formatted = json.loads(metrics_result)
-        print('Formatted the metrics')
+
         for point in metrics_formatted:
             content.append(Paragraph(f"<b>{point['header']}</b>", metrics_header_style))
             content.append(Paragraph(point['description'], metrics_style))
@@ -320,24 +291,28 @@ def create_personalized_pdf(user_details,output_path, image_path):
             content.append(Spacer(1, 0.2 * inch))
     except Exception as e:
         print(f"Error processing metrics: {e}")
-        raise
-    
-    content.append(Spacer(1, 0.2 * inch))
-    content.append(Spacer(1, 0.2 * inch))
-    content.append(Spacer(1, 0.2 * inch))
-    content.append(Spacer(1, 0.2 * inch))
-    content.append(Spacer(1, 0.2 * inch))
-    content.append(Spacer(1, 0.2 * inch))
-    content.append(Spacer(1, 0.2 * inch))
-    try:
-        if len(image_path) >= 2:
-            img = Img(image_path[2])
-            content.append(img)
-        else:
-            content.append(Paragraph("<b>Image not found!</b>", body_style))
-    except FileNotFoundError:
-        content.append(Paragraph("<b>Image not found!</b>", body_style))
+        content.append(Paragraph("Error loading metrics data", body_style))
 
+    content.append(PageBreak())
+
+    # Growth section
+    content.append(Paragraph("Accelerate Your Growth with Taippa", section_title))
+    growth_text = ("Take your business to the next level with our exclusive strategies "
+                   "and tools designed for high-impact growth. Join us for a "
+                   "<b>free demo</b> and explore how Taippa can empower your client "
+                   "acquisition and revenue acceleration.")
+    content.append(Paragraph(growth_text, body_style))
+    content.append(Spacer(1, 0.4 * inch))
+
+    # Call to action
+    content.append(Paragraph("📩 Book Your Free Demo Today!", highlight_style))
+
+    # Add footer image if available
+    if image_path and len(image_path) >= 2:
+        img = Img(image_path[2])
+        content.append(img)
+
+    # Create the PDF
     doc = SimpleDocTemplate(
         output_path,
         pagesize=A4,
