@@ -23,6 +23,7 @@ def people_search(query_params,client_id,qualify_leads):
     print(f"\n------------Started Persona Data Mining------------")
     base_url = "https://api.apollo.io/api/v1/mixed_people/search"
     url = f"{base_url}?{'&'.join(query_params)}"
+    url = "https://api.apollo.io/api/v1/mixed_people/search?person_titles[]=Facilities%20director&person_titles[]=COO&person_titles[]=CEO&person_titles[]=operations%20director&person_titles[]=director%20of%20operations&person_locations[]=&organization_locations[]=United%20Arab%20Emirates&contact_email_status[]=verified&organization_num_employees_ranges[]=500%2C10000&page=5&per_page=34"
     print(url)  
     response = requests.post(url, headers=APOLLO_HEADERS)
     print(f"Execution status code: {response.status_code}")
@@ -89,40 +90,40 @@ def people_search(query_params,client_id,qualify_leads):
                 )
                 employment_summary = response['choices'][0]['message']['content']
                 data_dict = {
-                    'id': data['id'],
-                    'first_name': data['first_name'],
-                    'last_name': data['last_name'],
-                    'name': data['name'],
-                    'email': data['email'],
-                    'linkedin_url': data['linkedin_url'],
+                    'id': data.get('id'),
+                    'first_name': data.get('first_name'),
+                    'last_name': data.get('last_name'),
+                    'name': data.get('name'),
+                    'email': data.get('email'),
+                    'linkedin_url': data.get('linkedin_url'),
                     'associated_client_id': client_id,
-                    'title': data['title'],
-                    'seniority': data['seniority'],
-                    'headline': data['headline'],
+                    'title': data.get('title'),
+                    'seniority': data.get('seniority'),
+                    'headline': data.get('headline'),
                     # 'is_likely_to_engage': str(data['is_likely_to_engage']),
                     'is_likely_to_engage': 'True',
-                    'photo_url': data['photo_url'],
-                    'email_status': contact['email_status'],
-                    'twitter_url': data['twitter_url'],
-                    'github_url': data['github_url'],
-                    'facebook_url': data['facebook_url'],
-                    'employment_history': str(data['employment_history']),
+                    'photo_url': data.get('photo_url'),
+                    'email_status': data.get('email_status'),
+                    'twitter_url': data.get('twitter_url'),
+                    'github_url': data.get('github_url'),
+                    'facebook_url': data.get('facebook_url'),
+                    'employment_history': str(data.get('employment_history')),
                     'employment_summary':str(employment_summary),
-                    'organization_name': data['organization']['name'],
-                    'organization_website': data['organization']['website_url'],
-                    'organization_linkedin': data['organization']['linkedin_url'],
-                    'organization_facebook': data['organization']['facebook_url'],
-                    'organization_primary_phone': str(data['organization']['primary_phone']),
-                    'organization_logo': data['organization']['logo_url'],
-                    'organization_primary_domain': data['organization']['primary_domain'],
-                    'organization_industry': data['organization']['industry'],
-                    'organization_estimated_num_employees': str(data['organization']['estimated_num_employees']),
-                    'organization_phone': data['organization']['phone'],
-                    'organization_city': data['organization']['city'],
-                    'organization_state': data['organization']['state'],
-                    'organization_country': data['organization']['country'],
-                    'organization_short_description': data['organization']['short_description'],
-                    'organization_technology_names': str(data['organization']['technology_names'])
+                    'organization_name': data.get('organization').get('name'),
+                    'organization_website': data.get('organization').get('website_url') if data.get('organization') else '',
+                    'organization_linkedin': data.get('organization').get('linkedin_url') if data.get('organization') else '',
+                    'organization_facebook': data.get('organization').get('facebook_url') if data.get('organization') else '',
+                    'organization_primary_phone': str(data.get('organization').get('primary_phone')) if data.get('organization') else '',
+                    'organization_logo': data.get('organization').get('logo_url') if data.get('organization') else '',
+                    'organization_primary_domain': data.get('organization').get('primary_domain') if data.get('organization') else '',
+                    'organization_industry': data.get('organization').get('industry') if data.get('organization') else '',
+                    'organization_estimated_num_employees': str(data.get('organization').get('estimated_num_employees')) if data.get('organization') else '',
+                    'organization_phone': data.get('organization').get('phone') if data.get('organization') else '',
+                    'organization_city': data.get('organization').get('city') if data.get('organization') else '',
+                    'organization_state': data.get('organization').get('state') if data.get('organization') else '',
+                    'organization_country': data.get('organization').get('country') if data.get('organization') else '',
+                    'organization_short_description': data.get('organization').get('short_description') if data.get('organization') else '',
+                    'organization_technology_names': str(data.get('organization').get('technology_names')) if data.get('organization') else ''
                 }
                 export_to_airtable(data_dict)
                 selected_profiles+=1
