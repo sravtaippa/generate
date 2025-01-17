@@ -22,7 +22,7 @@ class AirtableEmailSender:
         # Load environment variables
         self.airtable_api_key = os.getenv("AIRTABLE_API_KEY")
         self.airtable_base_id = os.getenv("AIRTABLE_BASE_ID")
-        self.airtable_table_name = os.getenv("AIRTABLE_CLIENT_TABLE_NAME", "lead_magnet_details_copy")
+        self.airtable_table_name = "lead_magnet_details_copy"
 
         # Email configuration
         self.sender_email = os.getenv("SENDER_EMAIL", "mohammed@taippa.com")
