@@ -15,6 +15,8 @@ import openai
 import json
 from industry_insights import get_cold_email_kpis
 from client_info_parser import collect_information
+from competitor_insights import get_competitors_list
+
 # from error_logger import execute_error_block
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -207,6 +209,19 @@ def create_personalized_pdf(user_details, output_path, image_path):
         firstLineIndent=-10
     )
 
+    competitor_style = ParagraphStyle(
+        "CompetitorStyle",
+        parent=styles["BodyText"],
+        fontName="Poppins",
+        fontSize=11,
+        textColor=colors.HexColor("#f6f2f7"),
+        leading=14,
+        spaceAfter=6,
+        leftIndent=30,
+        firstLineIndent=0,
+        bulletIndent=15
+    )
+
     highlight_style = ParagraphStyle(
         "HighlightStyle",
         parent=styles["BodyText"],
@@ -242,6 +257,14 @@ def create_personalized_pdf(user_details, output_path, image_path):
 
     content = []
 
+    # Get user details
+    name = user_details.get('name', 'there')
+    job_title = user_details.get('job_title', 'professional')
+    industry = user_details.get('organization_industry', 'Real Estate')
+    country = user_details.get('country', 'United Arab Emirates')
+    if industry in ['Unknown', '']:
+        industry = 'Real Estate'
+
     # Add banner image if available
     if image_path and len(image_path) >= 1:
         img = Img(image_path[0])
@@ -255,11 +278,11 @@ def create_personalized_pdf(user_details, output_path, image_path):
     content.append(create_divider())
     content.append(Spacer(1, 0.2 * inch))
 
-    # Greeting section with placeholder
-    content.append(Paragraph("Hi {Name},", greeting_style))
+    # Greeting section
+    content.append(Paragraph(f"Hi {name},", greeting_style))
 
     # Introduction text
-    intro_text = ("To help you stay ahead in your industry as an {job_title}, "
+    intro_text = (f"To help you stay ahead in your industry as a {job_title}, "
                   "we've prepared a tailored insights report highlighting key competitors "
                   "and market trends relevant to your business")
     content.append(Paragraph(intro_text, body_style))
@@ -268,17 +291,29 @@ def create_personalized_pdf(user_details, output_path, image_path):
     # Market Competitors section
     content.append(Paragraph("Your Market Competitors", section_title))
     content.append(Paragraph("Stay informed about the top players in your market:", body_style))
-    content.append(Paragraph("{List of Competitors}", body_style))
+
+    # Fetch and format competitors list
+    try:
+        competitors = get_competitors_list(industry, country)
+        if isinstance(competitors, str) and not competitors.startswith("Error"):
+            # Split the competitors list into individual items and format them
+            competitor_lines = competitors.strip().split('\n')
+            for line in competitor_lines:
+                if line.strip():  # Skip empty lines
+                    content.append(Paragraph(line.strip(), competitor_style))
+        else:
+            content.append(Paragraph("Competitor data currently unavailable.", body_style))
+    except Exception as e:
+        print(f"Error fetching competitors: {e}")
+        content.append(Paragraph("Competitor data currently unavailable.", body_style))
+
     content.append(Spacer(1, 0.3 * inch))
 
     # Industry Insights section
-    content.append(Paragraph("Industry Insights for Email campaigns for {Industry Name}", section_title))
+    content.append(Paragraph(f"Industry Insights for Email campaigns for {industry}", section_title))
 
     # Add existing metrics content here
     try:
-        industry = user_details.get('organization_industry', 'Real Estate')
-        if industry in ['Unknown', '']:
-            industry = 'Real Estate'
         metrics = get_cold_email_kpis(industry)
         metrics_result = content_formatting_list(metrics, is_metrics=True)
         metrics_formatted = json.loads(metrics_result)
