@@ -160,7 +160,7 @@ def content_formatting_list(content, is_metrics=False):
 def create_personalized_pdf(user_details, output_path, image_path):
     styles = getSampleStyleSheet()
 
-    # Keep existing style definitions
+    # Style definitions with reduced spacing
     main_title = ParagraphStyle(
         "TitleStyle",
         parent=styles["Heading1"],
@@ -168,8 +168,8 @@ def create_personalized_pdf(user_details, output_path, image_path):
         fontSize=24,
         textColor=colors.HexColor("#c969f5"),
         alignment=1,
-        spaceAfter=30,
-        borderPadding=20,
+        spaceAfter=20,  # Reduced from 30
+        borderPadding=15,  # Reduced from 20
         borderWidth=2,
         borderColor=colors.HexColor("#8A2BE2"),
         borderRadius=8
@@ -181,9 +181,9 @@ def create_personalized_pdf(user_details, output_path, image_path):
         fontName="PoppinsBold",
         fontSize=16,
         textColor=colors.HexColor("#f6f2f7"),
-        spaceBefore=20,
-        spaceAfter=10,
-        leading=20
+        spaceBefore=15,  # Reduced from 20
+        spaceAfter=8,  # Reduced from 10
+        leading=18  # Reduced from 20
     )
 
     section_title = ParagraphStyle(
@@ -192,19 +192,19 @@ def create_personalized_pdf(user_details, output_path, image_path):
         fontName="Anton",
         fontSize=18,
         textColor=colors.HexColor("#6292cc"),
-        spaceBefore=20,
-        spaceAfter=10,
-        leading=24
+        spaceBefore=15,  # Reduced from 20
+        spaceAfter=8,  # Reduced from 10
+        leading=22  # Reduced from 24
     )
 
     body_style = ParagraphStyle(
         "BodyStyle",
         parent=styles["BodyText"],
         fontName="Poppins",
-        fontSize=12,
+        fontSize=11,  # Reduced from 12
         textColor=colors.HexColor("#f6f2f7"),
-        leading=16,
-        spaceAfter=8,
+        leading=14,  # Reduced from 16
+        spaceAfter=6,  # Reduced from 8
         leftIndent=20,
         firstLineIndent=-10
     )
@@ -213,13 +213,33 @@ def create_personalized_pdf(user_details, output_path, image_path):
         "CompetitorStyle",
         parent=styles["BodyText"],
         fontName="Poppins",
-        fontSize=11,
+        fontSize=10,  # Reduced from 11
         textColor=colors.HexColor("#f6f2f7"),
-        leading=14,
-        spaceAfter=6,
-        leftIndent=30,
-        firstLineIndent=0,
-        bulletIndent=15
+        leading=12,  # Reduced from 14
+        spaceAfter=4,  # Reduced from 6
+        leftIndent=25,
+        firstLineIndent=0
+    )
+
+    metrics_header_style = ParagraphStyle(
+        "MetricsHeaderStyle",
+        parent=styles["Heading2"],
+        fontName="Anton",
+        fontSize=14,  # Reduced from 16
+        textColor=colors.HexColor("#6292cc"),
+        spaceBefore=12,  # Reduced from 15
+        spaceAfter=3  # Reduced from 4
+    )
+
+    metrics_style = ParagraphStyle(
+        "MetricsStyle",
+        parent=styles["BodyText"],
+        fontName="Poppins",
+        fontSize=10,  # Reduced from 12
+        textColor=colors.HexColor("#f6f2f7"),
+        leading=14,  # Reduced from 16
+        spaceAfter=3,  # Reduced from 4
+        leftIndent=20
     )
 
     highlight_style = ParagraphStyle(
@@ -228,13 +248,13 @@ def create_personalized_pdf(user_details, output_path, image_path):
         fontName="PoppinsBold",
         fontSize=14,
         textColor=colors.HexColor("#c969f5"),
-        leading=18,
-        spaceBefore=15,
-        spaceAfter=15,
+        leading=16,
+        spaceBefore=12,
+        spaceAfter=12,
         alignment=1
     )
 
-    # Keep the existing background and divider functions
+    # Background and divider functions remain the same
     def draw_fancy_background(canvas, doc):
         canvas.setFillColor(colors.black)
         canvas.rect(0, 0, A4[0], A4[1], fill=1)
@@ -248,8 +268,8 @@ def create_personalized_pdf(user_details, output_path, image_path):
             canvas.line(A4[0] - 82, 25, A4[0] - 40, 25)
 
     def create_divider():
-        drawing = Drawing(A4[0] - 100, 20)
-        line = Line(0, 10, A4[0] - 100, 10)
+        drawing = Drawing(A4[0] - 100, 15)  # Reduced height
+        line = Line(0, 7, A4[0] - 100, 7)
         line.strokeColor = colors.HexColor("#6292cc")
         line.strokeWidth = 1
         drawing.add(line)
@@ -265,28 +285,15 @@ def create_personalized_pdf(user_details, output_path, image_path):
     if industry in ['Unknown', '']:
         industry = 'Real Estate'
 
-    # Add banner image if available
-    if image_path and len(image_path) >= 1:
-        img = Img(image_path[0])
-        img.drawWidth = A4[0] - 2 * 0.6 * inch
-        img_ratio = 0.3
-        img.drawHeight = img.drawWidth * img_ratio
-        content.append(img)
-
-    content.append(Spacer(1, 0.3 * inch))
+    # Add title and introduction
     content.append(Paragraph("Personalized Industry Insights Report", main_title))
     content.append(create_divider())
-    content.append(Spacer(1, 0.2 * inch))
-
-    # Greeting section
+    content.append(Spacer(1, 0.1 * inch))  # Reduced spacing
     content.append(Paragraph(f"Hi {name},", greeting_style))
-
-    # Introduction text
-    intro_text = (f"To help you stay ahead in your industry as a {job_title}, "
-                  "we've prepared a tailored insights report highlighting key competitors "
-                  "and market trends relevant to your business")
-    content.append(Paragraph(intro_text, body_style))
-    content.append(Spacer(1, 0.3 * inch))
+    content.append(Paragraph(f"To help you stay ahead in your industry as a {job_title}, "
+                             "we've prepared a tailored insights report highlighting key competitors "
+                             "and market trends relevant to your business", body_style))
+    content.append(Spacer(1, 0.2 * inch))  # Reduced spacing
 
     # Market Competitors section
     content.append(Paragraph("Your Market Competitors", section_title))
@@ -296,10 +303,9 @@ def create_personalized_pdf(user_details, output_path, image_path):
     try:
         competitors = get_competitors_list(industry, country)
         if isinstance(competitors, str) and not competitors.startswith("Error"):
-            # Split the competitors list into individual items and format them
             competitor_lines = competitors.strip().split('\n')
             for line in competitor_lines:
-                if line.strip():  # Skip empty lines
+                if line.strip():
                     content.append(Paragraph(line.strip(), competitor_style))
         else:
             content.append(Paragraph("Competitor data currently unavailable.", body_style))
@@ -307,28 +313,55 @@ def create_personalized_pdf(user_details, output_path, image_path):
         print(f"Error fetching competitors: {e}")
         content.append(Paragraph("Competitor data currently unavailable.", body_style))
 
-    content.append(Spacer(1, 0.3 * inch))
+    content.append(Spacer(1, 0.2 * inch))
 
-    # Industry Insights section
+    # Industry Insights section with metrics
     content.append(Paragraph(f"Industry Insights for Email campaigns for {industry}", section_title))
 
-    # Add existing metrics content here
     try:
         metrics = get_cold_email_kpis(industry)
-        metrics_result = content_formatting_list(metrics, is_metrics=True)
-        metrics_formatted = json.loads(metrics_result)
+        if isinstance(metrics, str) and not metrics.startswith("Error"):
+            metric_lines = metrics.strip().split('\n')
+            for line in metric_lines:
+                if not line.strip():
+                    continue
 
-        for point in metrics_formatted:
-            content.append(Paragraph(f"<b>{point['header']}</b>", metrics_header_style))
-            content.append(Paragraph(point['description'], metrics_style))
-            content.append(Paragraph(f"Industry Average: {point['industry_average']}", metrics_style))
-            content.append(Paragraph(f"Taippa Target: {point['taippa_target']}", metrics_style))
-            content.append(Spacer(1, 0.2 * inch))
+                parts = line.split(':**')
+                if len(parts) == 2:
+                    metric_name = parts[0].replace('1.', '').replace('2.', '').replace('3.', '').replace('**',
+                                                                                                         '').strip()
+                    value = parts[1].strip()
+
+                    content.append(Paragraph(f"<b>{metric_name}</b>", metrics_header_style))
+                    if metric_name == "Open Rate":
+                        content.append(Paragraph("The percentage of recipients who open your email", metrics_style))
+                    elif metric_name == "Click-Through Rate (CTR)":
+                        content.append(
+                            Paragraph("The percentage of recipients who click on links in your email", metrics_style))
+                    elif metric_name == "Reply Rate":
+                        content.append(Paragraph("The percentage of recipients who reply to your email", metrics_style))
+
+                    content.append(Paragraph(f"Industry Average: {value}", metrics_style))
+
+                    try:
+                        if "to" in value or "-" in value:
+                            content.append(Paragraph("Contact us for a personalized target", metrics_style))
+                        else:
+                            raw_value = float(value.replace('%', ''))
+                            if metric_name == "Open Rate":
+                                taippa_target = f"{raw_value * 1.1:.1f}%"
+                            elif metric_name == "Click-Through Rate (CTR)":
+                                taippa_target = f"{raw_value * 1.3:.1f}%"
+                            else:
+                                taippa_target = f"{raw_value * 1.5:.1f}%"
+                            content.append(Paragraph(f"Taippa Target: {taippa_target}", metrics_style))
+                    except ValueError:
+                        content.append(Paragraph("Contact us for a personalized target", metrics_style))
+
+                    content.append(Spacer(1, 0.1 * inch))  # Reduced spacing
     except Exception as e:
         print(f"Error processing metrics: {e}")
-        content.append(Paragraph("Error loading metrics data", body_style))
-
-    content.append(PageBreak())
+        content.append(Paragraph("Industry metrics currently unavailable.", body_style))
 
     # Growth section
     content.append(Paragraph("Accelerate Your Growth with Taippa", section_title))
@@ -337,24 +370,17 @@ def create_personalized_pdf(user_details, output_path, image_path):
                    "<b>free demo</b> and explore how Taippa can empower your client "
                    "acquisition and revenue acceleration.")
     content.append(Paragraph(growth_text, body_style))
-    content.append(Spacer(1, 0.4 * inch))
-
-    # Call to action
+    content.append(Spacer(1, 0.2 * inch))
     content.append(Paragraph("📩 Book Your Free Demo Today!", highlight_style))
 
-    # Add footer image if available
-    if image_path and len(image_path) >= 2:
-        img = Img(image_path[2])
-        content.append(img)
-
-    # Create the PDF
+    # Create the PDF with reduced margins
     doc = SimpleDocTemplate(
         output_path,
         pagesize=A4,
-        leftMargin=0.6 * inch,
-        rightMargin=0.6 * inch,
-        topMargin=0.8 * inch,
-        bottomMargin=0.6 * inch
+        leftMargin=0.5 * inch,  # Reduced from 0.6
+        rightMargin=0.5 * inch,  # Reduced from 0.6
+        topMargin=0.6 * inch,  # Reduced from 0.8
+        bottomMargin=0.5 * inch  # Reduced from 0.6
     )
     doc.build(content, onFirstPage=draw_fancy_background, onLaterPages=draw_fancy_background)
     print(f"PDF generated and saved at {output_path}")
