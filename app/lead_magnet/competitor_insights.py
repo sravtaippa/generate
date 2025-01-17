@@ -16,18 +16,22 @@ def get_competitors_list(industry,country):
     prompt = f"""
     Find the top 5 competitors for the {industry} industry in {country} using credible sources specific to the country. Ensure the metrics provided are accurate and reasonable for the industry.
 
-    Include website links if available for each competitor.
+    Include website links if available for each competitor as plain text. Do not provide hyperlinks or references. If a website link is unavailable, specify 'N/A'.
+
+    Do not bold the headings, and ensure everything is presented as plain text.
 
     Provide the data in this exact concise format:
-    1. **Competitor Name 1:** Short description. **Website:** [Link]
-    2. **Competitor Name 2:** Short description. **Website:** [Link]
-    3. **Competitor Name 3:** Short description. **Website:** [Link]
-    4. **Competitor Name 4:** Short description. **Website:** [Link]
-    5. **Competitor Name 5:** Short description. **Website:** [Link]
+    1. Competitor Name 1: Short description. Website: [Link or N/A]
+    2. Competitor Name 2: Short description. Website: [Link or N/A]
+    3. Competitor Name 3: Short description. Website: [Link or N/A]
+    4. Competitor Name 4: Short description. Website: [Link or N/A]
+    5. Competitor Name 5: Short description. Website: [Link or N/A]
 
     - If specific data for the {industry} industry is unavailable, use data from a closely related industry.
     - Do not include sources, references, or explanations.
     - Avoid vague terms like 'not specified.' Provide reasonable and accurate estimates based on the industry.
+
+    Output should be strictly text.
     """
 
     # Payload for the API request
@@ -74,5 +78,5 @@ def get_competitors_list(industry,country):
 if __name__ == "__main__":
     industry = "information technology & services"  # Replace with the desired industry
     country= "Dubai, United Arab Emirates"
-    metrics = get_competitors_list(industry,country)
-    print(metrics)
+    competitors_list = get_competitors_list(industry,country)
+    print(competitors_list)
