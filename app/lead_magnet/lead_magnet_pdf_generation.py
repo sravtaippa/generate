@@ -13,9 +13,12 @@ import requests
 import ast
 import openai
 import json
-from industry_insights import get_cold_email_kpis
-from client_info_parser import collect_information
-from competitor_insights import get_competitors_list
+
+from lead_magnet.industry_insights import get_cold_email_kpis
+from lead_magnet.client_info_parser import collect_information
+from lead_magnet.competitor_insights import get_competitors_list
+from error_logger import execute_error_block
+from lead_magnet.email_module import send_lead_magnet_email
 
 # from error_logger import execute_error_block
 
@@ -42,7 +45,7 @@ def get_dynamic_images(table,record_id,attachment_column):
     if attachments:
         for attachment in attachments:
             image_url = attachment['url']
-            file_name = "images/"+attachment['filename']
+            file_name = os.path.join(SCRIPT_DIR,"images/"+attachment['filename'])
             print("\n================")
             print(f"File name: {file_name}")
             response = requests.get(image_url)
@@ -301,7 +304,9 @@ def create_personalized_pdf(user_details, output_path, image_path):
 
     # Fetch and format competitors list
     try:
+        print(f"industry : {industry}")
         competitors = get_competitors_list(industry, country)
+        print(f"competitors : {competitors}")
         if isinstance(competitors, str) and not competitors.startswith("Error"):
             competitor_lines = competitors.strip().split('\n')
             for line in competitor_lines:
@@ -398,10 +403,16 @@ def generate_lead_magnet_pdf(user_id):
         user_details = collect_information(user_id)
         if user_details is None:
             return "No user details found"
-        output_path = "pdf/lead_magnet_personalized.pdf"
+
+        print(f" Directory path for pdf: {os.path.dirname(os.path.abspath(__file__))}")
+        output_path = os.path.join(SCRIPT_DIR,"pdf/lead_magnet_personalized.pdf")
         image_path = get_image_path()
         print(f"Image path: {image_path}")
         create_personalized_pdf(user_details,output_path, image_path)
+        print("Successfully created lead magnet pdf")
+        print("Sending lead magnet email..")
+        send_lead_magnet_email()
+        print("Successfully sent lead magnet email")
         return {"Status":"Successfull"}
     except Exception as e:
         print(f"Exception occured at {__name__} while generating the lead magnet pdf : {e}")

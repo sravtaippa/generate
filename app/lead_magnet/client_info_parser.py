@@ -27,7 +27,7 @@ def fetch_user_details(user_table,user_id):
                 "name": str(records[0]['fields']['name']),
                 "email": str(records[0]['fields']['email']),
                 "organization_phone": str(records[0]['fields']['organization_phone']),
-                "title": str(records[0]['fields']['title']),
+                "job_title": str(records[0]['fields']['title']),
                 "organization_name": str(records[0]['fields']['organization_name']),
                 "linkedin_url": str(records[0]['fields']['linkedin_url']),
                 "associated_client_id": str(records[0]['fields']['associated_client_id']),

@@ -2,8 +2,8 @@ import os
 import requests
 
 # from error_logger import execute_error_block
-
 def get_cold_email_kpis(industry):
+
     """
     Fetches cold email outreach KPIs (Open Rate, CTR, Reply Rate) for the specified industry.
     Returns the data in this concise format without sources:
@@ -11,6 +11,7 @@ def get_cold_email_kpis(industry):
     2. **Click-Through Rate (CTR):** XX%
     3. **Reply Rate:** XX%
     """
+    
     # API endpoint and key
     url = "https://api.perplexity.ai/chat/completions"
     api_key = os.getenv("PERPLEXITY_API_KEY")  # Retrieve the API key from an environment variable
