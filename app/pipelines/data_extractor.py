@@ -1,7 +1,7 @@
 import requests
 import openai
 
-from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable
+from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable,retrieve_client_tables
 from pipelines.lead_qualifier import qualify_lead
 from error_logger import execute_error_block
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
@@ -73,10 +73,12 @@ def people_search(custom_search_url,query_params,client_id,qualify_leads):
                     print('Skipping the entry...')
                     continue
                 print(f"\n------------Lead Qualified------------")
+
             else:
                 print(f"Skipping lead qualification...")
             print(f"\n------------Data ingestion started for record id :{apollo_id}------------")
-            record_exists = unique_key_check_airtable('id',apollo_id)   
+            raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
+            record_exists = unique_key_check_airtable('id',apollo_id,raw_table)   
             if record_exists:
                 print(f'Record with the following id: {apollo_id} already exists. Skipping the entry...')
                 continue   
@@ -131,7 +133,7 @@ def people_search(custom_search_url,query_params,client_id,qualify_leads):
                     'organization_short_description': data.get('organization').get('short_description') if data.get('organization') else '',
                     'organization_technology_names': str(data.get('organization').get('technology_names')) if data.get('organization') else ''
                 }
-                export_to_airtable(data_dict)
+                export_to_airtable(data_dict,raw_table)
                 selected_profiles+=1
                 print(f"\n------------Data ingestion successful for record id :{apollo_id}------------")
             else:

@@ -3,6 +3,22 @@ import openai
 from error_logger import execute_error_block
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
 
+def retrieve_client_tables(client_id):
+    try:
+        print('Retreiving tables')
+        api = Api(AIRTABLE_API_KEY)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, "client_details")
+        records = airtable_obj.all()
+        print(f"\nRan the client details fetch command")
+        record_details = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")[0]
+        # print(record_details) 
+        raw_table = record_details.get('fields').get('raw_table')
+        cleaned_table = record_details.get('fields').get('cleaned_table')
+        outreach_table = record_details.get('fields').get('outreach_table')
+        return raw_table,cleaned_table,outreach_table
+    except Exception as e:
+        print(f"Error occured in {__name__} while retrieving tables from airtable. {e}")
+
 def fetch_client_details(client_id):
     try:
         print(f"\nFetching Client Details")
@@ -21,11 +37,11 @@ def fetch_client_details(client_id):
         execute_error_block(f"Error occured in {__name__} while fetching client details. {e}")
 
 # function to export data to Airtable
-def export_to_airtable(data):
+def export_to_airtable(data,raw_table):
     try:
         print(f"\nExporting results to Airtable")
         api = Api(AIRTABLE_API_KEY)
-        airtable_obj = api.table(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, raw_table)
         response = airtable_obj.create(data)
         # Check if the insertion was successful
         if 'id' in response:
@@ -35,11 +51,11 @@ def export_to_airtable(data):
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while exporting the data to Airtable. {e}")
 
-def unique_key_check_airtable(column_name,unique_value):
+def unique_key_check_airtable(column_name,unique_value,raw_table):
     try:
         print('Running unique key check')
         api = Api(AIRTABLE_API_KEY)
-        airtable_obj = api.table(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, raw_table)
         records = airtable_obj.all()
         print(f"\nCompleted unique key check")
         return any(record['fields'].get(column_name) == unique_value for record in records) 

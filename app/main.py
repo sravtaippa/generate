@@ -193,7 +193,7 @@ def execute_collection():
         query_params.append(f"page={page_number}")
         query_params.append(f"per_page={results_per_page}")
         success_status = people_search(custom_search_url,query_params,client_id,qualify_leads)
-        response=fetch_and_update_data()
+        response=fetch_and_update_data(client_id)
         print(response)
         print('\n------------ Data Cleaning Completed: Data Ready for Outreach ------------\n')
     else:
