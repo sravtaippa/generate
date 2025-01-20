@@ -1,7 +1,6 @@
 ############################################# Code to Perform Smart Data Mining ############################################# 
 
 # Package imports
- 
 import os
 from flask import Flask, render_template, request, jsonify
 import json
