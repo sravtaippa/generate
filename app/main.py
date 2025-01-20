@@ -18,6 +18,7 @@ from lead_magnet.lead_magnet_pdf_generation import generate_lead_magnet_pdf
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
 
 print(f"\n=============== Generate : Data Ingestion  ===============")
+print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
 app = Flask(__name__)
 
@@ -53,6 +54,7 @@ def initialize_data_sanitization():
 def generate_lead_magnet():
     try:
         user_id = request.args.get('user_id', default='sravan.workemail@gmail.com', type=str)
+        print(f"User id: {user_id}")
         response = generate_lead_magnet_pdf(user_id)
         return response
     except Exception as e:
