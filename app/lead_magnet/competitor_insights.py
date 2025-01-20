@@ -16,16 +16,14 @@ def get_competitors_list(industry,country):
     prompt = f"""
     Find the top 5 competitors for the {industry} industry in {country} using credible sources specific to the country. Ensure the metrics provided are accurate and reasonable for the industry.
 
-    Include website links if available for each competitor as plain text. Do not provide hyperlinks or references. If a website link is unavailable, specify 'N/A'.
-
     Do not bold the headings, and ensure everything is presented as plain text.
 
     Provide the data in this exact concise format:
-    1. Competitor Name 1: Short description. Website: [Link or N/A]
-    2. Competitor Name 2: Short description. Website: [Link or N/A]
-    3. Competitor Name 3: Short description. Website: [Link or N/A]
-    4. Competitor Name 4: Short description. Website: [Link or N/A]
-    5. Competitor Name 5: Short description. Website: [Link or N/A]
+    1. Competitor Name 1: Short description. 
+    2. Competitor Name 2: Short description.
+    3. Competitor Name 3: Short description. 
+    4. Competitor Name 4: Short description. 
+    5. Competitor Name 5: Short description.
 
     - If specific data for the {industry} industry is unavailable, use data from a closely related industry.
     - Do not include sources, references, or explanations.

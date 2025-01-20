@@ -30,7 +30,6 @@ class AirtableEmailSender:
 
         # Validate required environment variables
         self._validate_env_vars()
-
         # Initialize Airtable API
         self.api = Api(self.airtable_api_key)
         self.table = self.api.table(self.airtable_base_id, self.airtable_table_name)
@@ -157,6 +156,10 @@ class AirtableEmailSender:
             pdf_path: Path to the PDF file to attach
             cleanup: Whether to delete the PDF file after sending
         """
+
+        
+        print(f"pdf_path : {pdf_path}") 
+
         if not pdf_path.exists():
             raise FileNotFoundError(f"PDF file not found at {pdf_path}")
 
@@ -187,10 +190,10 @@ class AirtableEmailSender:
 
             logger.info(f"Email sent successfully to {receiver_email}")
 
-            # Cleanup
-            if cleanup:
-                pdf_path.unlink()
-                logger.info(f"Temporary PDF file removed: {pdf_path}")
+            # # Cleanup
+            # if cleanup:
+            #     pdf_path.unlink()
+            #     logger.info(f"Temporary PDF file removed: {pdf_path}")
 
         except smtplib.SMTPException as e:
             logger.error(f"SMTP error sending email: {e}")
@@ -199,29 +202,31 @@ class AirtableEmailSender:
             logger.error(f"Unexpected error sending email: {e}")
             raise
 
-
 def main():
     try:
         sender = AirtableEmailSender()
 
         # Configuration
         id_to_search = "66a0bdc2aa61c20001776e82"  # The ID value to search for
-        receiver_email = "mo@taippa.info"
+        receiver_email = "sravan@taippa.com"
         subject = "Your Requested PDF"
         body = "Please find attached the PDF you requested."
-        pdf_path = Path("downloads/lead_magnet.pdf")
+        pdf_path = Path("pdf/lead_magnet_personalized.pdf")
 
         # Process
-        pdf_url = sender.fetch_pdf_from_airtable(id_to_search)
-        sender.download_pdf(pdf_url, pdf_path)
+        # pdf_url = sender.fetch_pdf_from_airtable(id_to_search)
+        # sender.download_pdf(pdf_url, pdf_path)
+        pdf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),"pdf/lead_magnet_personalized.pdf")
+        pdf_path = Path(pdf_path)
         sender.send_email(receiver_email, subject, body, pdf_path)
-
         logger.info("Process completed successfully")
 
     except Exception as e:
         logger.error(f"Process failed: {e}")
         raise
 
+def send_lead_magnet_email():
+    main()
 
 if __name__ == "__main__":
-    main()
+    send_lead_magnet_email()
