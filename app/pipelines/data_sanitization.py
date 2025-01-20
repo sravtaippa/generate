@@ -1,6 +1,5 @@
 from flask import Flask, jsonify, request 
 from airtable import Airtable
-from pyairtable import Api
 import pandas as pd
 import numpy as np
 import os
@@ -198,11 +197,16 @@ def fetch_client_details(df, airtable_instance, icp_field="associated_client_id"
 def fetch_and_update_data(client_id):
     try:
         print(client_id)
-        raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
-        print(f"raw_table : {raw_table}")
-        print(f"cleaned_table : {cleaned_table}")
-        print(f"outreach_table : {outreach_table}")
-        all_records = airtable_old.get_all()
+        raw_table_name,cleaned_table_name,outreach_table_name = retrieve_client_tables(client_id)
+        print(f"raw_table_name : {raw_table_name}")
+        print(f"cleaned_table_name : {cleaned_table_name}")
+        print(f"outreach_table_name : {outreach_table_name}")
+        
+        raw_table = Airtable(BASE_ID_NEW, raw_table_name, API_KEY_NEW)
+        cleaned_table = Airtable(BASE_ID_NEW, cleaned_table_name, API_KEY_NEW)
+        outreach_table = Airtable(BASE_ID_NEW, outreach_table_name, API_KEY_NEW)
+
+        all_records = raw_table.get_all()
         data = [record.get('fields', {}) for record in all_records]
 
         if not data:
@@ -233,7 +237,7 @@ def fetch_and_update_data(client_id):
             )
 
         if 'created_time' in df.columns:
-            max_created_time = fetch_max_created_time(airtable_new)
+            max_created_time = fetch_max_created_time(cleaned_table)
             df = filter_new_records(df, max_created_time)
 
         df['unique_id'] = df['id'].fillna("Unknown") + "_" + df['email'].fillna("Unknown")
@@ -302,7 +306,6 @@ def fetch_and_update_data(client_id):
             default_values=default_values_campaign,
             icp_df=icp_df,
         )
-
         return jsonify({"message": "Data cleaned, updated, and old records processed successfully."})
 
     except Exception as e:
@@ -472,29 +475,6 @@ def send_to_airtable(airtable_instance, records):
         # Update the corresponding record with the new data
         update_data = {key: value for key, value in record.items() if key != 'email'}
         airtable_instance.update(record_id, update_data)
-
-@app.route('/collect_lead_magnet', methods=['POST'])
-def collect_lead_magnet():
-    """
-    Endpoint to process data from both Airtable tables, match emails, and return a JSON response.
-    """
-    try:
-        # Fetch data from Airtable
-        lead_magnet_df = fetch_airtable_data(airtable_lead_magnet)
-        new3_df = fetch_airtable_data(airtable_new3)
-
-        # Match records
-        matched_records = match_and_return_records(lead_magnet_df, new3_df)
-
-        # Send matched records back to Airtable
-        send_to_airtable(airtable_lead_magnet, matched_records)
-
-        # Return matched records as a JSON response
-        return jsonify(matched_records), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
 
 
 
