@@ -27,12 +27,15 @@ def fetch_user_details(user_table,user_id):
                 "name": str(records[0]['fields']['name']),
                 "email": str(records[0]['fields']['email']),
                 "organization_phone": str(records[0]['fields']['organization_phone']),
-                "job_title": str(records[0]['fields']['title']),
+                "title": str(records[0]['fields']['title']),
                 "organization_name": str(records[0]['fields']['organization_name']),
                 "linkedin_url": str(records[0]['fields']['linkedin_url']),
                 "associated_client_id": str(records[0]['fields']['associated_client_id']),
                 "employment_summary": str(records[0]['fields']['employment_summary']),
-                "organization_industry": str(records[0]['fields']['organization_industry'])
+                "organization_industry": str(records[0]['fields']['organization_industry']),
+                "organization_size": str(records[0]['fields']['organization_estimated_num_employees']),
+                "organization_technology_names": str(records[0]['fields']['organization_technology_names']),
+                "organization_description": str(records[0]['fields']['organization_short_description']),
             }
         else:
             print("User id doesn't exist")
