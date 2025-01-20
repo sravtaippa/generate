@@ -8,6 +8,7 @@ from pyairtable import Table,Api
 import requests
 import ast
 import openai
+from urllib.parse import unquote
 
 from pipelines.data_sanitization import fetch_and_update_data, update_email_opens
 from pipelines.data_extractor import people_enrichment,people_search
@@ -140,14 +141,16 @@ def execute_collection():
     print(f"\n------------ Started Data Collection ------------")  
 
     # Construct the query string dynamically
-    client_id = request.args.get('client_id', default='taippa_marketing', type=str)
+    client_id = request.args.get('client_id', type=str)
     test_run_id = request.args.get('test_run_id', default='', type=str)
     if not test_run_id:
         # job roles : ceo,coo,cmo,marketing manager,marketing director,investor,partner
         # job seniorities : owner,founder,director,vp,c level,president,vice president
         # keywords : invest
         custom_search_url = request.args.get('custom_search_url', default='', type=str)
-        print(f"Custom Search Url added: {custom_search_url}")
+        custom_search_url = unquote(custom_search_url)
+        print(f"Decoded Custom Search Url added: {custom_search_url}")
+        # return {"Status" : custom_search_url}
         qualify_leads = request.args.get('qualify_leads', default='yes', type=str)
         job_titles = request.args.get('job_titles', default='', type=str)
         person_seniorities = request.args.get('person_seniorities', default='', type=str)

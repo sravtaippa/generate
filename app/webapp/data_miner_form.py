@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import re
 import sys
+from urllib.parse import quote
 
 # Custom CSS for styling
 st.markdown(
@@ -178,7 +179,7 @@ results_per_page = str(st.number_input(
 
 client_id = str(st.selectbox(
     label="Client id", 
-    options=["berkleys_homes", "berkleys_homes_test", "taippa_marketing"],
+    options=["berkleys_homes", "berkleys_homes_test", "taippa_marketing","plot_taippa"],
     index=0  
 ))
 
@@ -194,28 +195,30 @@ custom_search_url=""
 if search_via_url =="yes":
     custom_search_url = st.text_input(
     label="Custom Seach Url",
-    value="",  # Default value
+    value="https://api.apollo.io/api/v1/mixed_people/search?person_titles[]=Facilities%20director&person_titles[]=COO&person_titles[]=CEO&person_titles[]=operations%20director&person_titles[]=director%20of%20operations&person_locations[]=&organization_locations[]=United%20Arab%20Emirates&contact_email_status[]=verified&organization_num_employees_ranges[]=500%2C10000&page=11&per_page=40",  # Default value
     max_chars=3000  # Optional: Limit the number of characters
     )
 st.markdown('</div>', unsafe_allow_html=True)
 
 if st.button("Fetch Data"):
     print('----------------Fields Validation--------------------')
-    if validate_fields(
+    validation_status = validate_fields(
         job_titles=job_titles,
         person_seniorities=person_seniorities,
         person_locations=person_locations,
         organization_locations=organization_locations,
         organization_num_employees_ranges=organization_num_employees_ranges
-        ):
-        print('Success')
+        )
+    print(f"Fields validation status : {validation_status}")
+    if custom_search_url!="" or validation_status:
         st.write("Valid Input")
-
+        custom_search_url = quote(custom_search_url, safe='')
         if server_test == "yes":
             response = requests.get(
                     f"https://magmostafa.pythonanywhere.com/data_ingestion?page={page_number}&per_page={results_per_page}&job_titles={job_titles}&person_seniorities={person_seniorities}&person_locations={person_locations}&organization_locations={organization_locations}&email_status={email_status}&organization_num_employees_ranges={organization_num_employees_ranges}&client_id={client_id}&test_run_id={test_run_id}&qualify_leads={qualify_leads}&q_keywords={q_keywords}&custom_search_url={custom_search_url}"
                 )
         else:
+            print(f"Encoded custom search url: {custom_search_url}")
             response = requests.get(
                     f"http://127.0.0.1:5000/data_ingestion?page={page_number}&per_page={results_per_page}&job_titles={job_titles}&person_seniorities={person_seniorities}&person_locations={person_locations}&organization_locations={organization_locations}&email_status={email_status}&organization_num_employees_ranges={organization_num_employees_ranges}&client_id={client_id}&test_run_id={test_run_id}&qualify_leads={qualify_leads}&q_keywords={q_keywords}&custom_search_url={custom_search_url}"
                 )
