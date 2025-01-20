@@ -592,6 +592,10 @@ def post_data():
     return {"message": "Data received successfully"}, 200
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # testing
+    client_id = "plot_taippa"
+    status = fetch_and_update_data(client_id)
+    print(status)
+    # app.run(debug=True)
 
 
