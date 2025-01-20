@@ -25,7 +25,7 @@ def people_search(custom_search_url,query_params,client_id,qualify_leads):
     url = f"{base_url}?{'&'.join(query_params)}"
     if custom_search_url != "":
         url = custom_search_url
-        url = "https://api.apollo.io/api/v1/mixed_people/search?person_titles[]=Facilities%20director&person_titles[]=COO&person_titles[]=CEO&person_titles[]=operations%20director&person_titles[]=director%20of%20operations&person_locations[]=&organization_locations[]=United%20Arab%20Emirates&contact_email_status[]=verified&organization_num_employees_ranges[]=500%2C10000&page=11&per_page=40"
+        # url = "https://api.apollo.io/api/v1/mixed_people/search?person_titles[]=Facilities%20director&person_titles[]=COO&person_titles[]=CEO&person_titles[]=operations%20director&person_titles[]=director%20of%20operations&person_locations[]=&organization_locations[]=United%20Arab%20Emirates&contact_email_status[]=verified&organization_num_employees_ranges[]=500%2C10000&page=11&per_page=40"
     print(url)  
     response = requests.post(url, headers=APOLLO_HEADERS)
     print(f"Execution status code: {response.status_code}")
