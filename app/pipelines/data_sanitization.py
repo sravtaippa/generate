@@ -1,11 +1,12 @@
 from flask import Flask, jsonify, request 
 from airtable import Airtable
+from pyairtable import Api
 import pandas as pd
 import numpy as np
 import os
 import re
 import json
-
+from db.db_utils import retrieve_client_tables
 
 app = Flask(__name__)
 
@@ -192,9 +193,15 @@ def fetch_client_details(df, airtable_instance, icp_field="associated_client_id"
     
     return client_details_df
 
+
 @app.route("/", methods=["GET"])
-def fetch_and_update_data():
+def fetch_and_update_data(client_id):
     try:
+        print(client_id)
+        raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
+        print(f"raw_table : {raw_table}")
+        print(f"cleaned_table : {cleaned_table}")
+        print(f"outreach_table : {outreach_table}")
         all_records = airtable_old.get_all()
         data = [record.get('fields', {}) for record in all_records]
 
@@ -233,6 +240,7 @@ def fetch_and_update_data():
         df = df.drop_duplicates(subset=['id', 'email'])
         filtered_df = df[df['email'] != "Unknown"]
 
+
         campaign_field_mapping = {
             "first_name": "recipient_first_name",
             "last_name": "recipient_last_name",
@@ -265,10 +273,15 @@ def fetch_and_update_data():
             "outreach_table": "outreach_table"
         }
 
-        send_to_airtable_if_new(df, airtable_new, unique_field='unique_id')
+        # Cleaned Records
+        print('Cleaning started')
+        send_to_airtable_if_new(df, cleaned_table, unique_field='unique_id')
+
+        # Outreach Records
+        print('Outreach started')
         send_to_airtable_if_new(
             filtered_df,
-            airtable_new1,
+            outreach_table,
             unique_field="unique_id",
             desired_fields=[
                 "linkedin_url",
@@ -293,6 +306,7 @@ def fetch_and_update_data():
         return jsonify({"message": "Data cleaned, updated, and old records processed successfully."})
 
     except Exception as e:
+        print({"error": f"Error fetching, processing, or deleting data: {e}"})
         return jsonify({"error": f"Error fetching, processing, or deleting data: {e}"}), 500
 
 
@@ -571,7 +585,6 @@ def collect_lead_magnet():
 
 #     except Exception as e:
 #         return jsonify({"error": f"Error updating lead magnet data: {str(e)}"}), 500
-
 
 
 @app.route('/post-data', methods=['GET'])
