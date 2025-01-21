@@ -135,6 +135,15 @@ def test_run_pipeline(test_run_id,client_id):
     except Exception as e:
         execute_error_block(f"Error occured during test run. {e}")
 
+@app.route("/test_sanitization", methods=["GET"])
+def test_sanitization():
+    try:
+        client_id="plot_taippa"
+        response=fetch_and_update_data(client_id)
+        return {"Status":"Testing sanitization successful"}
+    except Exception as e:
+        print(f"Exception occured while testing sanitization module : {e}")
+
 @app.route("/data_ingestion", methods=["GET"])
 def execute_collection():
   try:
