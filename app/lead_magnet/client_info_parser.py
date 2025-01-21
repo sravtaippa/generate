@@ -7,11 +7,11 @@ from pyairtable import Table,Api
 
 # New Airtable Configuration
 AIRTABLE_BASE_ID = 'app5s8zl7DsUaDmtx'
-SOURCE_TABLE = 'profiles_cleaned'
+CUR_TABLE = 'profiles_cleaned'
 LEAD_MAGNET_TABLE = 'lead_magnet_details'
 AIRTABLE_API_KEY = os.getenv('AIRTABLE_API_KEY', 'patELEdV0LAx6Aba3.393bf0e41eb59b4b80de15b94a3d122eab50035c7c34189b53ec561de590dff3')
 
-AIRTABLE_RAW = Table(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, SOURCE_TABLE)
+AIRTABLE_CLEANED = Table(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, CUR_TABLE)
 # AIRTABLE_LEAD_MAGNET = Table(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, LEAD_MAGNET_TABLE)
 
 def fetch_user_details(user_table,user_id):
@@ -36,6 +36,8 @@ def fetch_user_details(user_table,user_id):
                 "organization_size": str(records[0]['fields']['organization_estimated_num_employees']),
                 "organization_technology_names": str(records[0]['fields']['organization_technology_names']),
                 "organization_description": str(records[0]['fields']['organization_short_description']),
+                "organization_state": str(records[0]['fields']['organization_state']),
+                "organization_country": str(records[0]['fields']['organization_country']),
             }
         else:
             print("User id doesn't exist")
@@ -61,7 +63,7 @@ def export_to_airtable(data):
 def collect_information(user_id):
     try:
         # Fetch data from Airtable
-        user_details = fetch_user_details(AIRTABLE_RAW,user_id)
+        user_details = fetch_user_details(AIRTABLE_CLEANED,user_id)
         if user_details:
             print(user_details)
             organization_industry = user_details.get('organization_industry','real_estate')
