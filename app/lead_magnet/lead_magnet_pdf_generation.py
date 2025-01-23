@@ -1,6 +1,6 @@
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, PageBreak, Image as Img, Table, TableStyle
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, PageBreak, Image as Img, Table, TableStyle,Flowable,KeepTogether
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib import colors
@@ -14,13 +14,15 @@ import ast
 import openai
 import json
 
-from lead_magnet.industry_insights import get_cold_email_kpis
+
+from PyPDF2 import PdfReader, PdfWriter
+
+# from lead_magnet.industry_insights import get_cold_email_kpis
 from lead_magnet.client_info_parser import collect_information
 from lead_magnet.competitor_insights import get_competitors_list
-from error_logger import execute_error_block
-from lead_magnet.email_module import send_lead_magnet_email
-
+from lead_magnet.personalized_planner import generate_personalized_planner
 # from error_logger import execute_error_block
+from lead_magnet.email_module import send_lead_magnet_email
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY")
@@ -37,11 +39,142 @@ pdfmetrics.registerFont(TTFont('Anton', os.path.join(FONTS_DIR, 'Anton-Regular.t
 pdfmetrics.registerFont(TTFont('Poppins', os.path.join(FONTS_DIR, 'Poppins-Regular.ttf')))
 pdfmetrics.registerFont(TTFont('PoppinsBold', os.path.join(FONTS_DIR, 'Poppins-Bold.ttf')))
 
+
+# class CheckboxItem(Flowable):
+#     """
+#     Custom Flowable to create a checkbox with text.
+#     """
+#     def __init__(self, text, checkbox_size=10, space_between=5):
+#         super().__init__()
+#         self.text = text
+#         self.checkbox_size = checkbox_size
+#         self.space_between = space_between
+
+#     def draw(self):
+
+#         self.canv.setStrokeColor(colors.white) 
+
+#         self.canv.setFillColor(colors.white)
+    
+#         # Draw the checkbox with white fill and white stroke
+#         self.canv.rect(0, -self.checkbox_size, self.checkbox_size, self.checkbox_size, stroke=1, fill=1)
+#         # Draw the checkbox
+#         # self.canv.rect(0, -self.checkbox_size, self.checkbox_size, self.checkbox_size, stroke=1, fill=0)
+#         # Draw the text next to the checkbox
+#         self.canv.setFillColor(colors.white)
+#         # style = ParagraphStyle(name='CustomStyle', fontName='PlusJakartaSans', fontSize=12)
+#         self.canv.setFont("Poppins", 10)
+
+#         self.canv.drawString(self.checkbox_size + self.space_between, -self.checkbox_size + 2, self.text)
+
+#     def wrap(self, availWidth, availHeight):
+#         # Width is the available width, height is based on the checkbox and spacing
+#         return availWidth, self.checkbox_size + self.space_between
+
+from reportlab.platypus import Flowable
+from reportlab.lib import colors
+from reportlab.lib.utils import simpleSplit
+
+
+class CheckboxItem(Flowable):
+    """
+    Custom Flowable to create a checkbox with text and appropriate spacing.
+    """
+    def __init__(self, text, checkbox_size=10, space_between=5, line_spacing=16, margin_left=50, margin_right=50):
+        super().__init__()
+        self.text = text
+        self.checkbox_size = checkbox_size
+        self.space_between = space_between
+        self.line_spacing = line_spacing  # Space between lines, including for individual checkboxes
+        self.margin_left = margin_left  # Margin on the left side of the page
+        self.margin_right = margin_right  # Margin on the right side of the page
+
+    def draw(self):
+        # Set the stroke and fill colors for the checkbox
+        self.canv.setStrokeColor(colors.black)
+        self.canv.setFillColor(colors.white)
+
+        # Draw the checkbox
+        self.canv.rect(0, -self.checkbox_size, self.checkbox_size, self.checkbox_size, stroke=1, fill=1)
+
+        # Set the font for the text
+        self.canv.setFont("Poppins", 10)
+
+        # Calculate the available width for the text, considering margins
+        page_width = self.canv._pagesize[0]
+        max_width = page_width - self.margin_left - self.margin_right - (self.checkbox_size + self.space_between)
+
+        # Wrap the text if it exceeds the maximum width
+        wrapped_lines = simpleSplit(self.text, self.canv._fontname, self.canv._fontsize, max_width)
+
+        # Draw the wrapped lines of text
+        for i, line in enumerate(wrapped_lines):
+            y_offset = -self.checkbox_size + 2 - (i * self.line_spacing)
+            self.canv.drawString(self.checkbox_size + self.space_between, y_offset, line)
+
+    def wrap(self, availWidth, availHeight):
+        """
+        Calculates the width and height of the flowable based on the text's wrapping.
+        """
+        # Calculate the available width for wrapping, considering margins
+        max_width = availWidth - self.margin_left - self.margin_right - (self.checkbox_size + self.space_between)
+
+        # Determine the number of wrapped lines
+        wrapped_lines = simpleSplit(self.text, "Poppins", 10, max_width)
+
+        # Calculate total height: checkbox height + line spacing for additional lines
+        total_height = self.checkbox_size + (len(wrapped_lines) - 1) * self.line_spacing + self.line_spacing  # Add extra spacing for separation
+
+        # Return the required width and height
+        return availWidth, total_height
+
+
+# from reportlab.lib.styles import ParagraphStyle
+# from reportlab.platypus import Paragraph
+# from reportlab.lib.enums import TA_LEFT
+
+# class CheckboxItem(Flowable):
+#     def __init__(self, text, checkbox_size=10, space_between=5, max_width=400):
+#         super().__init__()
+#         self.text = text
+#         self.checkbox_size = checkbox_size
+#         self.space_between = space_between
+#         self.max_width = max_width
+
+#     def draw(self):
+#         self.canv.setStrokeColor(colors.white)
+#         self.canv.setFillColor(colors.white)
+#         self.canv.rect(0, -self.checkbox_size, self.checkbox_size, self.checkbox_size, stroke=1, fill=1)
+
+#         self.canv.setFillColor(colors.white)
+#         style = ParagraphStyle(
+#             'CheckboxText',
+#             fontName='Poppins',
+#             fontSize=10,
+#             textColor=colors.white,
+#             leading=12,
+#             alignment=TA_LEFT
+#         )
+
+#         p = Paragraph(self.text, style)
+#         available_width = self.max_width - (self.checkbox_size + self.space_between)
+#         w, h = p.wrap(available_width, 1000)
+#         p.drawOn(self.canv, self.checkbox_size + self.space_between, -h)
+
+#     def wrap(self, availWidth, availHeight):
+#         style = ParagraphStyle('CheckboxText', fontName='Poppins', fontSize=10, leading=12)
+#         p = Paragraph(self.text, style)
+#         w, h = p.wrap(self.max_width - (self.checkbox_size + self.space_between), availHeight)
+#         return self.max_width, max(h, self.checkbox_size) + self.space_between
+
+
+
 # Getting dynamic images from client_details table specific to each client
 def get_dynamic_images(table,record_id,attachment_column):
     record = table.get(record_id)
     attachments = record['fields'].get(attachment_column)
     file_names=[]
+    print("Getting dynamic images")
     if attachments:
         for attachment in attachments:
             image_url = attachment['url']
@@ -59,6 +192,7 @@ def get_dynamic_images(table,record_id,attachment_column):
     else:
         print(f"No attachments found in column '{attachment_column}' for record ID '{record_id}'.")
     return file_names
+
 
 def content_formatting_list(content, is_metrics=False):
     if is_metrics:
@@ -159,8 +293,54 @@ def content_formatting_list(content, is_metrics=False):
                 print(f"Error parsing response: {result}")
                 raise e
 
+def embed_existing_pdf(new_pdf, existing_pdf, last_pager,output_pdf):
+    writer = PdfWriter()
+    
+    # Add pages from the existing PDF
+    with open(existing_pdf, "rb") as existing_pdf_file:
+        existing_pdf_reader = PdfReader(existing_pdf_file)
+        writer.add_page(existing_pdf_reader.pages[0])
+    
+    print("Completed first page")
+    # Add the new PDF content
+    with open(new_pdf, "rb") as new_pdf_file:
+        new_pdf_reader = PdfReader(new_pdf_file)
+        for page in new_pdf_reader.pages:
+            writer.add_page(page)
+    
+    with open(last_pager, "rb") as new_pdf_file:
+        last_pdf_reader = PdfReader(new_pdf_file)
+        for page in last_pdf_reader.pages:
+            writer.add_page(page)
+    
+    # Write the final PDF to disk
+    with open(output_pdf, "wb") as output_file:
+        writer.write(output_file)
+
+def content_formatting_json(content):
+    prompt = f"""
+    Please convert the content to be only purely JSON text without formatting and without writing json before the actual json code.
+
+    Content: {content}"""
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[
+            {
+                "role": "system",
+                "content": "You are a JSON text formatter. Only output the exact JSON text requested, with no additional text, explanations, or formatting."
+            },
+            {"role": "user", "content": prompt}
+        ]
+    )
+
+    result = response['choices'][0]['message']['content']
+    print(type(result))
+    return result
+
 
 def create_personalized_pdf(user_details, output_path, image_path):
+
     styles = getSampleStyleSheet()
 
     # Style definitions with reduced spacing
@@ -169,7 +349,8 @@ def create_personalized_pdf(user_details, output_path, image_path):
         parent=styles["Heading1"],
         fontName="Anton",
         fontSize=24,
-        textColor=colors.HexColor("#c969f5"),
+        # textColor=colors.HexColor("#c969f5"),
+        textColor=colors.purple,
         alignment=1,
         spaceAfter=20,  # Reduced from 30
         borderPadding=15,  # Reduced from 20
@@ -178,12 +359,28 @@ def create_personalized_pdf(user_details, output_path, image_path):
         borderRadius=8
     )
 
+    # Style definitions with reduced spacing
+    planner_title_style= ParagraphStyle(
+        "GreetingStyle",
+        parent=styles["Normal"],
+        fontName="PoppinsBold",
+        fontSize=16,
+        # textColor=colors.HexColor("#f6f2f7"),
+        textColor=colors.HexColor("#c969f5"),
+        # textColor=colors.pink,
+        spaceBefore=15,  # Reduced from 20
+        spaceAfter=8,  # Reduced from 10
+        leading=18  # Reduced from 20
+    )
+
     greeting_style = ParagraphStyle(
         "GreetingStyle",
         parent=styles["Normal"],
         fontName="PoppinsBold",
         fontSize=16,
-        textColor=colors.HexColor("#f6f2f7"),
+        textColor=colors.HexColor("#6292cc"),
+        # textColor=colors.HexColor("#c969f5"),
+        # textColor=colors.black,
         spaceBefore=15,  # Reduced from 20
         spaceAfter=8,  # Reduced from 10
         leading=18  # Reduced from 20
@@ -195,9 +392,24 @@ def create_personalized_pdf(user_details, output_path, image_path):
         fontName="Anton",
         fontSize=18,
         textColor=colors.HexColor("#6292cc"),
+        # textColor=colors.lightblue,
         spaceBefore=15,  # Reduced from 20
         spaceAfter=8,  # Reduced from 10
         leading=22  # Reduced from 24
+    )
+
+    ice_breaker_style = ParagraphStyle(
+        "BodyStyle",
+        parent=styles["BodyText"],
+        fontName="Poppins",
+        fontSize=13,  # Reduced from 12
+        # textColor=colors.HexColor("#f6f2f7"),
+        textColor=colors.HexColor("#f5f0f5"),
+        # textColor=colors.black,
+        leading=14,  # Reduced from 16
+        spaceAfter=6,  # Reduced from 8
+        leftIndent=20,
+        firstLineIndent=-10
     )
 
     body_style = ParagraphStyle(
@@ -205,7 +417,8 @@ def create_personalized_pdf(user_details, output_path, image_path):
         parent=styles["BodyText"],
         fontName="Poppins",
         fontSize=11,  # Reduced from 12
-        textColor=colors.HexColor("#f6f2f7"),
+        # textColor=colors.HexColor("#f6f2f7"),
+        textColor=colors.navy,
         leading=14,  # Reduced from 16
         spaceAfter=6,  # Reduced from 8
         leftIndent=20,
@@ -217,7 +430,8 @@ def create_personalized_pdf(user_details, output_path, image_path):
         parent=styles["BodyText"],
         fontName="Poppins",
         fontSize=10,  # Reduced from 11
-        textColor=colors.HexColor("#f6f2f7"),
+        # textColor=colors.HexColor("#f6f2f7"),
+        textColor=colors.firebrick,
         leading=12,  # Reduced from 14
         spaceAfter=4,  # Reduced from 6
         leftIndent=25,
@@ -229,7 +443,8 @@ def create_personalized_pdf(user_details, output_path, image_path):
         parent=styles["Heading2"],
         fontName="Anton",
         fontSize=14,  # Reduced from 16
-        textColor=colors.HexColor("#6292cc"),
+        # textColor=colors.HexColor("#6292cc"),
+        textColor=colors.red,
         spaceBefore=12,  # Reduced from 15
         spaceAfter=3  # Reduced from 4
     )
@@ -239,7 +454,8 @@ def create_personalized_pdf(user_details, output_path, image_path):
         parent=styles["BodyText"],
         fontName="Poppins",
         fontSize=10,  # Reduced from 12
-        textColor=colors.HexColor("#f6f2f7"),
+        # textColor=colors.HexColor("#f6f2f7"),
+        textColor=colors.red,
         leading=14,  # Reduced from 16
         spaceAfter=3,  # Reduced from 4
         leftIndent=20
@@ -250,7 +466,8 @@ def create_personalized_pdf(user_details, output_path, image_path):
         parent=styles["BodyText"],
         fontName="PoppinsBold",
         fontSize=14,
-        textColor=colors.HexColor("#c969f5"),
+        # textColor=colors.HexColor("#c969f5"),
+        textColor=colors.yellow,
         leading=16,
         spaceBefore=12,
         spaceAfter=12,
@@ -285,99 +502,136 @@ def create_personalized_pdf(user_details, output_path, image_path):
     job_title = user_details.get('job_title', 'professional')
     industry = user_details.get('organization_industry', 'Real Estate')
     country = user_details.get('country', 'United Arab Emirates')
+    company = user_details.get('organization_name','TAIPPA')
     if industry in ['Unknown', '']:
         industry = 'Real Estate'
 
     # Add title and introduction
-    content.append(Paragraph("Personalized Industry Insights Report", main_title))
+    
+    # content.append(Paragraph(f"15-Days Sales Improvement Planner for {company}", main_title))
     content.append(create_divider())
     content.append(Spacer(1, 0.1 * inch))  # Reduced spacing
-    content.append(Paragraph(f"Hi {name},", greeting_style))
-    content.append(Paragraph(f"To help you stay ahead in your industry as a {job_title}, "
-                             "we've prepared a tailored insights report highlighting key competitors "
-                             "and market trends relevant to your business", body_style))
+
+    greeting = Paragraph(f"Hi {name},", greeting_style)
+    message = Paragraph(f"Breakthrough sales growth starts here: A powerful 15-day blueprint to revolutionize your {job_title} strategy and drive exceptional results.", ice_breaker_style)
+
+    content.append(greeting)
+    content.append(message)
+    # # Create a Table with the content
+    # table_data = [[greeting], [message]]
+    # table = Table(table_data, colWidths=[500])  # Adjust width as needed
+
+    # # Apply style to the Table
+    # table_style = TableStyle([
+    #     ('BACKGROUND', (0, 0), (-1, -1),colors.HexColor("#EDE6D6") ),
+    #     ('BOX', (0, 0), (-1, -1), 1, colors.black),
+    #     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    #     ('TOPPADDING', (0, 0), (-1, -1), 10),
+    #     ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+    #     ('LEFTPADDING', (0, 0), (-1, -1), 10),
+    #     ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+    # ])
+    # table.setStyle(table_style)
+
+    # # Add the table to your content
+    # content.append(table)
+    
+    # content.append(Paragraph(f"Hi {name},", greeting_style))
+    # content.append(Paragraph(f"Breakthrough sales growth starts here: A powerful 15-day blueprint to revolutionize your {job_title} strategy and drive exceptional results.",ice_breaker_style))
     content.append(Spacer(1, 0.2 * inch))  # Reduced spacing
-
-    # Market Competitors section
-    content.append(Paragraph("Your Market Competitors", section_title))
-    content.append(Paragraph("Stay informed about the top players in your market:", body_style))
-
-    # Fetch and format competitors list
-    try:
-        print(f"industry : {industry}")
-        competitors = get_competitors_list(industry, country)
-        print(f"competitors : {competitors}")
-        if isinstance(competitors, str) and not competitors.startswith("Error"):
-            competitor_lines = competitors.strip().split('\n')
-            for line in competitor_lines:
-                if line.strip():
-                    content.append(Paragraph(line.strip(), competitor_style))
-        else:
-            content.append(Paragraph("Competitor data currently unavailable.", body_style))
-    except Exception as e:
-        print(f"Error fetching competitors: {e}")
-        content.append(Paragraph("Competitor data currently unavailable.", body_style))
-
     content.append(Spacer(1, 0.2 * inch))
 
-    # Industry Insights section with metrics
-    content.append(Paragraph(f"Industry Insights for Email campaigns for {industry}", section_title))
+    personalized_planner = generate_personalized_planner(user_details)
+    # print(type(personalized_planner))
+    formatted_content = content_formatting_json(personalized_planner)
+    # print(f"\n-------formatted_content --------: {formatted_content}")
+    personalized_planner = json.loads(formatted_content)
+    # print(f"\n-------json formatted content ------------: {personalized_planner}")
+    # print(type(personalized_planner))
 
-    try:
-        metrics = get_cold_email_kpis(industry)
-        if isinstance(metrics, str) and not metrics.startswith("Error"):
-            metric_lines = metrics.strip().split('\n')
-            for line in metric_lines:
-                if not line.strip():
-                    continue
+    # img1 = Img(image_path[3])
+    # img1.drawWidth = 500  # Set image width
+    # img1.drawHeight = 200  # Set image height
+    # # content.append(img)
+    # img2 = Img(image_path[4])
+    # img2.drawWidth = 500  # Set image width
+    # img2.drawHeight = 200  # Set image height
+    # # content.append(img)
+    # img3 = Img(image_path[5])
+    # img3.drawWidth = 500  # Set image width
+    # img3.drawHeight = 200  # Set image height
+    # # content.append(img)
 
-                parts = line.split(':**')
-                if len(parts) == 2:
-                    metric_name = parts[0].replace('1.', '').replace('2.', '').replace('3.', '').replace('**',
-                                                                                                         '').strip()
-                    value = parts[1].strip()
+    # img4 = Img(image_path[6])
+    # img4.drawWidth = 500  # Set image width
+    # img4.drawHeight = 200  # Set image height
+    # # content.append(img)
 
-                    content.append(Paragraph(f"<b>{metric_name}</b>", metrics_header_style))
-                    if metric_name == "Open Rate":
-                        content.append(Paragraph("The percentage of recipients who open your email", metrics_style))
-                    elif metric_name == "Click-Through Rate (CTR)":
-                        content.append(
-                            Paragraph("The percentage of recipients who click on links in your email", metrics_style))
-                    elif metric_name == "Reply Rate":
-                        content.append(Paragraph("The percentage of recipients who reply to your email", metrics_style))
+    # img5 = Img(image_path[7])
+    # img5.drawWidth = 500  # Set image width
+    # img5.drawHeight = 200  # Set image height
+    # # content.append(img)
 
-                    content.append(Paragraph(f"Industry Average: {value}", metrics_style))
+    
+    img1 = Img(image_path[9])
+    img1.drawWidth = 500  # Set image width
+    img1.drawHeight = 200  # Set image height
+    # content.append(img)
+    img2 = Img(image_path[10])
+    img2.drawWidth = 500  # Set image width
+    img2.drawHeight = 200  # Set image height
+    # content.append(img)
+    img3 = Img(image_path[8])
+    img3.drawWidth = 500  # Set image width
+    img3.drawHeight = 200  # Set image height
+    # content.append(img)
 
-                    try:
-                        if "to" in value or "-" in value:
-                            content.append(Paragraph("Contact us for a personalized target", metrics_style))
-                        else:
-                            raw_value = float(value.replace('%', ''))
-                            if metric_name == "Open Rate":
-                                taippa_target = f"{raw_value * 1.1:.1f}%"
-                            elif metric_name == "Click-Through Rate (CTR)":
-                                taippa_target = f"{raw_value * 1.3:.1f}%"
-                            else:
-                                taippa_target = f"{raw_value * 1.5:.1f}%"
-                            content.append(Paragraph(f"Taippa Target: {taippa_target}", metrics_style))
-                    except ValueError:
-                        content.append(Paragraph("Contact us for a personalized target", metrics_style))
+    img4 = Img(image_path[7])
+    img4.drawWidth = 500  # Set image width
+    img4.drawHeight = 200  # Set image height
+    # content.append(img)
 
-                    content.append(Spacer(1, 0.1 * inch))  # Reduced spacing
-    except Exception as e:
-        print(f"Error processing metrics: {e}")
-        content.append(Paragraph("Industry metrics currently unavailable.", body_style))
+    img5 = Img(image_path[6])
+    img5.drawWidth = 500  # Set image width
+    img5.drawHeight = 200  # Set image height
+    # content.append(img)
 
-    # Growth section
-    content.append(Paragraph("Accelerate Your Growth with Taippa", section_title))
-    growth_text = ("Take your business to the next level with our exclusive strategies "
-                   "and tools designed for high-impact growth. Join us for a "
-                   "<b>free demo</b> and explore how Taippa can empower your client "
-                   "acquisition and revenue acceleration.")
-    content.append(Paragraph(growth_text, body_style))
+
+    images=[img1,img2,img3,img4,img5]
+    counter=1
+    image_index=0
+    content.append(images[image_index])
     content.append(Spacer(1, 0.2 * inch))
-    content.append(Paragraph("📩 Book Your Free Demo Today!", highlight_style))
+    image_index=1
+    for day, details in personalized_planner.items():
 
+        # Add Day heading
+        content.append(Spacer(1, 0.2 * inch))
+        print(day)
+        content.append(Paragraph(day, planner_title_style))
+        
+        # # Add Action Items
+        if 'Action items' in details:
+            for item in details['Action items']:
+                content.append(CheckboxItem(item, checkbox_size=12, space_between=8))
+                # content.append(Spacer(1, 0.1 * inch))
+                # checkbox = CheckboxItem(item, checkbox_size=12, space_between=8)
+                # table = Table([[checkbox, Paragraph(item, metrics_style)]])
+                # content.append(KeepTogether(table))
+                # content.append(Paragraph(f"• {item}", metrics_style))
+        
+        # Add some spacing between days
+        content.append(Spacer(1, 0.2 * inch))
+        content.append(Spacer(1, 0.2 * inch))
+        content.append(Spacer(1, 0.2 * inch))
+        if counter % 3 == 0 and counter!=15:
+            # content.append(Spacer(1, 0.2 * inch))
+            content.append(images[image_index])
+            content.append(Spacer(1, 0.2 * inch))
+            image_index+=1
+        counter+=1
+    content.append(Spacer(1, 0.2 * inch))
+    
     # Create the PDF with reduced margins
     doc = SimpleDocTemplate(
         output_path,
@@ -393,7 +647,9 @@ def create_personalized_pdf(user_details, output_path, image_path):
 def get_image_path():
     try:
         table = airtable_obj(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, AIRTABLE_CLIENT_TABLE_NAME)
-        attachment_column="company_lead_magnet_images"    
+        attachment_column="company_lead_magnet_images"  
+        print(table) 
+        print(AIRTABLE_API_KEY) 
         return get_dynamic_images(table,'recHwMDeb62Kgiqx1',attachment_column)
     except Exception as e:
         print(f"Error occured at {__name__} while retrieving the images")
@@ -405,14 +661,20 @@ def generate_lead_magnet_pdf(user_id):
             return "No user details found"
 
         print(f" Directory path for pdf: {os.path.dirname(os.path.abspath(__file__))}")
-        output_path = os.path.join(SCRIPT_DIR,"pdf/lead_magnet_personalized.pdf")
+        output_path = os.path.join(SCRIPT_DIR,"pdf/main_content.pdf")
+        first_pager = os.path.join(SCRIPT_DIR,"pdf/first_page.pdf")
+        last_pager = os.path.join(SCRIPT_DIR,"pdf/last_page.pdf")
+        final_pdf = os.path.join(SCRIPT_DIR,"pdf/lead_magnet_personalized.pdf")
         image_path = get_image_path()
         print(f"Image path: {image_path}")
+        # return True
         create_personalized_pdf(user_details,output_path, image_path)
+        embed_existing_pdf(output_path, first_pager, last_pager,final_pdf)
         print("Successfully created lead magnet pdf")
         print("Sending lead magnet email..")
         send_lead_magnet_email()
         print("Successfully sent lead magnet email")
+        
         return {"Status":"Successfull"}
     except Exception as e:
         print(f"Exception occured at {__name__} while generating the lead magnet pdf : {e}")
@@ -420,7 +682,9 @@ def generate_lead_magnet_pdf(user_id):
 if __name__=="__main__":
     output_pdf = "lead_magnet_personalized.pdf"
     # user_id for testing
-    user_id = "sravan.workemail@gmail.com"
+    user_id = "nadia@cgnet.ae"
+    user_id = "timofey.borzov@vtbcapital.com"
+    # user_id = "sravan.workemail@gmail.com"
     generate_lead_magnet_pdf(user_id)
     # print(f"PDF generated and saved at {output_pdf}")
     # print("Raw metrics:", metrics)

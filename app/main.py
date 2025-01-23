@@ -211,6 +211,9 @@ def execute_collection():
   except Exception as e:
     execute_error_block(f"Error occured while parsing the input. {e}")
 
+# user_id = "sravan.workemail@gmail.com"
+# generate_lead_magnet_pdf(user_id)
+
 if __name__ == '__main__':
   app.run(debug=True)
  
