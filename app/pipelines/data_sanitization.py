@@ -477,9 +477,6 @@ def send_to_airtable(airtable_instance, records):
         airtable_instance.update(record_id, update_data)
 
 
-
-
-
 # @app.route('/collect_lead_magnet', methods=['POST'])
 # def collect_lead_magnet():
 #     try:

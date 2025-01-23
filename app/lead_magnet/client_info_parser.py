@@ -14,12 +14,24 @@ AIRTABLE_API_KEY = os.getenv('AIRTABLE_API_KEY', 'patELEdV0LAx6Aba3.393bf0e41eb5
 AIRTABLE_CLEANED = Table(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, CUR_TABLE)
 # AIRTABLE_LEAD_MAGNET = Table(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, LEAD_MAGNET_TABLE)
 
+
+def unique_key_check_airtable(column_name,unique_value,raw_table):
+    try:
+        print('Running unique key check')
+        api = Api(AIRTABLE_API_KEY)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, raw_table)
+        records = airtable_obj.all()
+        print(f"\nCompleted unique key check")
+        return any(record['fields'].get(column_name) == unique_value for record in records) 
+    except Exception as e:
+        print(f"Error occured in {__name__} while performing unique value check in airtable.")
+
 def fetch_user_details(user_table,user_id):
     try:
         print('Fetching user information for lead magnet')
         records = user_table.all(formula=f"{{email}} = '{user_id}'")
         print(f"user_id : {user_id}")
-        print(records)
+        # print(records)
         if records:
             print('Successfully retrieved user information')
             return {
@@ -51,12 +63,11 @@ def export_to_airtable(data):
         print(f"\n------------Exporting results to Airtable ------------")
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, LEAD_MAGNET_TABLE)
-        response = airtable_obj.create(data)
-        # Check if the insertion was successful
-        if 'id' in response:
+        if unique_key_check_airtable('id',data['id'],LEAD_MAGNET_TABLE):
+            response = airtable_obj.create(data)
             print("Record inserted successfully:", response['id'])
         else:
-            print("Error inserting record:", response)
+            print("Record already exists. Skipping the export...:", response)
     except Exception as e:
         print(f"Error occured in {__name__} while exporting the data to Airtable. {e}")
 
@@ -65,7 +76,8 @@ def collect_information(user_id):
         # Fetch data from Airtable
         user_details = fetch_user_details(AIRTABLE_CLEANED,user_id)
         if user_details:
-            print(user_details)
+            # print(user_details)
+            print('Fetched user details')
             organization_industry = user_details.get('organization_industry','real_estate')
             export_to_airtable(user_details)
             return user_details

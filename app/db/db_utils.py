@@ -76,13 +76,13 @@ def parse_people_info(data):
                         )
         employment_summary = response['choices'][0]['message']['content']
         parsed_people_info={
-            "title":data['title'],
-            "headline":data['headline'],
-            "country":data['country'],
-            "city":data['city'],
-            "departments":data['departments'],
-            "subdepartments":data['subdepartments'],
-            "functions":data['functions'],
+            "title":data.get('title'),
+            "headline":data.get('headline'),
+            "country":data.get('country'),
+            "city":data.get('city'),
+            "departments":data.get('departments'),
+            "subdepartments":data.get('subdepartments'),
+            "functions":data.get('functions'),
             "employment_summary":employment_summary
         }
         return parsed_people_info
