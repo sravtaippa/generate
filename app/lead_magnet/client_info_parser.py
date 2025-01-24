@@ -14,7 +14,6 @@ AIRTABLE_API_KEY = os.getenv('AIRTABLE_API_KEY', 'patELEdV0LAx6Aba3.393bf0e41eb5
 AIRTABLE_CLEANED = Table(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, CUR_TABLE)
 # AIRTABLE_LEAD_MAGNET = Table(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, LEAD_MAGNET_TABLE)
 
-
 def unique_key_check_airtable(column_name,unique_value,raw_table):
     try:
         print('Running unique key check')
