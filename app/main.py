@@ -50,12 +50,26 @@ def initialize_data_sanitization():
     except Exception as e:
         execute_error_block(f"Error occured while initializing data sanitization module {e}")
 
+# @app.route("/generate_lead_magnet_v1", methods=["GET"])
+# def generate_lead_magnet_v1():
+#     try:
+#         user_id = request.args.get('user_id', default='sravan.workemail@gmail.com', type=str)
+#         print(f"User id: {user_id}")
+#         response = generate_lead_magnet_pdf(user_id)
+#         return response
+#     except Exception as e:
+#         execute_error_block(f"Error occured while generating lead magnet {e}")
+
+
 @app.route("/generate_lead_magnet", methods=["GET"])
 def generate_lead_magnet():
     try:
-        user_id = request.args.get('user_id', default='sravan.workemail@gmail.com', type=str)
-        print(f"User id: {user_id}")
-        response = generate_lead_magnet_pdf(user_id)
+        linkedin_url = request.args.get('linkedin_url', type=str)
+        email_id = request.args.get('email_id', type=str)
+        print(f"Linkedin url: {linkedin_url}")
+        print(f"Email id: {email_id}")
+        response = generate_lead_magnet_pdf(email_id,linkedin_url)
+        print(response)
         return response
     except Exception as e:
         execute_error_block(f"Error occured while generating lead magnet {e}")
