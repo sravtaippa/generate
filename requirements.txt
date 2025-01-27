@@ -11,3 +11,4 @@ numpy
 matplotlib
 seaborn
 reportlab
+PyPDF2

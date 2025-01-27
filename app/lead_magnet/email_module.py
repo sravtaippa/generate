@@ -73,7 +73,8 @@ class AirtableEmailSender:
                 logger.error("Authentication failed. Please verify your Airtable API key")
             else:
                 logger.error(f"HTTP Error accessing Airtable: {e.response.status_code} - {e.response.text}")
-            raise
+            return "Oops! It seems our server is a bit busy right now. Please try again shortly."
+            # raise
 
     def fetch_pdf_from_airtable(self, id_value: str) -> str:
         """
@@ -117,12 +118,13 @@ class AirtableEmailSender:
 
         except requests.exceptions.HTTPError as e:
             logger.error(f"HTTP Error accessing Airtable: {e.response.status_code} - {e.response.text}")
+            return "Oops! It seems our server is a bit busy right now. Please try again shortly."
             raise
         except KeyError as e:
             logger.error(f"Missing field in Airtable record: {e}")
             logger.error("Please verify that 'lead_magnet_pdf' field exists and contains attachments")
             raise
-
+            return "Oops! It seems our server is a bit busy right now. Please try again shortly."
     def download_pdf(self, pdf_url: str, save_path: Path) -> None:
         """
         Download PDF file from URL.
@@ -142,6 +144,7 @@ class AirtableEmailSender:
 
         except requests.exceptions.RequestException as e:
             logger.error(f"Error downloading PDF: {e}")
+            return "Oops! It seems our server is a bit busy right now. Please try again shortly."
             raise
 
     def send_email(self, receiver_email: str, subject: str, body: str,
@@ -157,11 +160,14 @@ class AirtableEmailSender:
             cleanup: Whether to delete the PDF file after sending
         """
 
-        
-        print(f"pdf_path : {pdf_path}") 
+
+        print(f"pdf_path : {pdf_path}")
 
         if not pdf_path.exists():
-            raise FileNotFoundError(f"PDF file not found at {pdf_path}")
+            # return "Oops! Seems like our server is little busy"
+            print(f"PDF file not found at {pdf_path}")
+            return "Oops! It seems our server is a bit busy right now. Please try again shortly."
+            # raise FileNotFoundError(f"PDF file not found at {pdf_path}")
 
         try:
             # Prepare email
@@ -197,36 +203,65 @@ class AirtableEmailSender:
 
         except smtplib.SMTPException as e:
             logger.error(f"SMTP error sending email: {e}")
+            return "Invalid Email ID"
             raise
         except Exception as e:
             logger.error(f"Unexpected error sending email: {e}")
+            return "Invalid Email ID"
             raise
 
-def main():
+def main(recipient_email_id,user_details,final_pdf):
     try:
         sender = AirtableEmailSender()
 
         # Configuration
         id_to_search = "66a0bdc2aa61c20001776e82"  # The ID value to search for
-        receiver_email = "sravan@taippa.com"
-        subject = "Your Requested PDF"
-        body = "Please find attached the PDF you requested."
-        pdf_path = Path("pdf/lead_magnet_personalized.pdf")
+        receiver_email = recipient_email_id
+        print(receiver_email)
+        company_name = user_details.get('organization_name','your company')
+        name = user_details.get('name','Sir')
+        title = user_details.get('title','professional')
+        subject = f"15-day Sales Booster for {company_name}"
 
+        body = f"""
+        Dear {name},
+
+
+        I hope you're doing well.
+
+        We have something exciting for you – The "15-day Sales Booster Plan for {company_name}".
+
+        If you have any questions or need further assistance, don’t hesitate to reach out.
+
+
+        Best regards,
+
+        Team Taippa
+
+        +971-293284822
+
+        """
+
+        # body = "Please find attached the PDF you requested."
+
+        # pdf_path = Path("pdf/lead_magnet_personalized.pdf")
+        pdf_path = Path(final_pdf)
         # Process
         # pdf_url = sender.fetch_pdf_from_airtable(id_to_search)
         # sender.download_pdf(pdf_url, pdf_path)
-        pdf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),"pdf/lead_magnet_personalized.pdf")
-        pdf_path = Path(pdf_path)
+        # pdf_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),"pdf/lead_magnet_personalized.pdf")
+        # pdf_path = Path(pdf_path)
         sender.send_email(receiver_email, subject, body, pdf_path)
         logger.info("Process completed successfully")
+        return f"Email successfully sent to {recipient_email_id}"
 
     except Exception as e:
         logger.error(f"Process failed: {e}")
-        raise
+        return "Invalid Email ID"
 
-def send_lead_magnet_email():
-    main()
+def send_lead_magnet_email(recipient_email_id,user_details,final_pdf):
+    return main(recipient_email_id,user_details,final_pdf)
 
 if __name__ == "__main__":
-    send_lead_magnet_email()
+    pass
+    # send_lead_magnet_email()

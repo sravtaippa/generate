@@ -41,11 +41,9 @@ pdfmetrics.registerFont(TTFont('Anton', os.path.join(FONTS_DIR, 'Anton-Regular.t
 pdfmetrics.registerFont(TTFont('Poppins', os.path.join(FONTS_DIR, 'Poppins-Regular.ttf')))
 pdfmetrics.registerFont(TTFont('PoppinsBold', os.path.join(FONTS_DIR, 'Poppins-Bold.ttf')))
 
-
 from reportlab.platypus import Flowable
 from reportlab.lib import colors
 from reportlab.lib.utils import simpleSplit
-
 
 class CheckboxItem(Flowable):
     """
@@ -226,24 +224,24 @@ def content_formatting_list(content, is_metrics=False):
 
 def embed_existing_pdf(new_pdf, existing_pdf, last_pager,output_pdf):
     writer = PdfWriter()
-    
+
     # Add pages from the existing PDF
     with open(existing_pdf, "rb") as existing_pdf_file:
         existing_pdf_reader = PdfReader(existing_pdf_file)
         writer.add_page(existing_pdf_reader.pages[0])
-    
+
     print("Completed first page")
     # Add the new PDF content
     with open(new_pdf, "rb") as new_pdf_file:
         new_pdf_reader = PdfReader(new_pdf_file)
         for page in new_pdf_reader.pages:
             writer.add_page(page)
-    
+
     with open(last_pager, "rb") as new_pdf_file:
         last_pdf_reader = PdfReader(new_pdf_file)
         for page in last_pdf_reader.pages:
             writer.add_page(page)
-    
+
     # Write the final PDF to disk
     with open(output_pdf, "wb") as output_file:
         writer.write(output_file)
@@ -334,7 +332,7 @@ def create_personalized_pdf(user_details, output_path, image_path):
         "GreetingStyle",
         parent=styles["Normal"],
         fontName="PoppinsBold",
-        fontSize=16,
+        fontSize=20,
         textColor=colors.HexColor("#c969f5"),
         spaceBefore=15,  # Reduced from 20
         spaceAfter=8,  # Reduced from 10
@@ -468,7 +466,7 @@ def create_personalized_pdf(user_details, output_path, image_path):
 
     # Get user details
     name = user_details.get('name', 'there')
-    job_title = user_details.get('job_title', 'professional')
+    job_title = user_details.get('title', 'professional')
     industry = user_details.get('organization_industry', 'Real Estate')
     country = user_details.get('country', 'United Arab Emirates')
     company = user_details.get('organization_name','TAIPPA')
@@ -476,7 +474,7 @@ def create_personalized_pdf(user_details, output_path, image_path):
         industry = 'Real Estate'
 
     # Add title and introduction
-    
+
     # content.append(Paragraph(f"15-Days Sales Improvement Planner for {company}", main_title))
     content.append(create_divider())
     content.append(Spacer(1, 0.1 * inch))  # Reduced spacing
@@ -504,7 +502,7 @@ def create_personalized_pdf(user_details, output_path, image_path):
 
     # # Add the table to your content
     # content.append(table)
-    
+
     # content.append(Paragraph(f"Hi {name},", greeting_style))
     # content.append(Paragraph(f"Breakthrough sales growth starts here: A powerful 15-day blueprint to revolutionize your {job_title} strategy and drive exceptional results.",ice_breaker_style))
     content.append(Spacer(1, 0.2 * inch))  # Reduced spacing
@@ -540,7 +538,7 @@ def create_personalized_pdf(user_details, output_path, image_path):
     # img5.drawWidth = 500  # Set image width
     # img5.drawHeight = 200  # Set image height
     # # content.append(img)
-    
+
     img1 = Img(image_path[9])
     img1.drawWidth = 500  # Set image width
     img1.drawHeight = 200  # Set image height
@@ -580,7 +578,7 @@ def create_personalized_pdf(user_details, output_path, image_path):
         content.append(Spacer(1, 0.2 * inch))
         print(day)
         content.append(Paragraph(day, planner_title_style))
-        
+
         # # Add Action Items
         if 'Action items' in details:
             for item in details['Action items']:
@@ -590,7 +588,7 @@ def create_personalized_pdf(user_details, output_path, image_path):
                 # table = Table([[checkbox, Paragraph(item, metrics_style)]])
                 # content.append(KeepTogether(table))
                 # content.append(Paragraph(f"• {item}", metrics_style))
-        
+
         # Add some spacing between days
         content.append(Spacer(1, 0.2 * inch))
         content.append(Spacer(1, 0.2 * inch))
@@ -604,6 +602,10 @@ def create_personalized_pdf(user_details, output_path, image_path):
     print('Completed the checklist generation')
     # content.append(Spacer(1, 0.2 * inch))
     # content.append(images[-1])
+    content.append(Spacer(1, 0.2 * inch))
+    content.append(Spacer(1, 0.2 * inch))
+    content.append(Spacer(1, 0.2 * inch))
+    content.append(Spacer(1, 0.2 * inch))
     content.append(Spacer(1, 0.2 * inch))
     content.append(Spacer(1, 0.2 * inch))
     # content.append(Paragraph("Accelerate Your Growth with Taippa", section_title))
@@ -629,18 +631,6 @@ def create_personalized_pdf(user_details, output_path, image_path):
     # # Create a Table with the content
     table_data = [[growth_text], [growth_text_2], [growth_text_3]]
     table = Table(table_data, colWidths=[500])  # Adjust width as needed
-
-    # # Apply style to the Table
-    # table_style = TableStyle([
-    #     ('BACKGROUND', (0, 0), (-1, -1),colors.white ),
-    #     ('BOX', (0, 0), (-1, -1), 1, colors.black),
-    #     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-    #     ('TOPPADDING', (0, 0), (-1, -1), 10),
-    #     ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-    #     ('LEFTPADDING', (0, 0), (-1, -1), 10),
-    #     ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-    # ])
-    # table.setStyle(table_style)
 
     # Apply style to the table
     table_style = TableStyle([
@@ -669,40 +659,68 @@ def create_personalized_pdf(user_details, output_path, image_path):
     )
     doc.build(content, onFirstPage=draw_fancy_background, onLaterPages=draw_fancy_background)
     print(f"PDF generated and saved at {output_path}")
-    
+
 def get_image_path():
     try:
         table = airtable_obj(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, AIRTABLE_CLIENT_TABLE_NAME)
-        attachment_column="company_lead_magnet_images"  
-        print(table) 
-        print(AIRTABLE_API_KEY) 
+        attachment_column="company_lead_magnet_images"
+        print(table)
+        print(AIRTABLE_API_KEY)
         return get_dynamic_images(table,'recHwMDeb62Kgiqx1',attachment_column)
     except Exception as e:
         print(f"Error occured at {__name__} while retrieving the images")
 
-def generate_lead_magnet_pdf(user_id):
+# def generate_lead_magnet_pdf(user_id):
+#     try:
+#         user_details = collect_information(user_id)
+#         if user_details is None:
+#             return "No user details found"
+
+#         print(f" Directory path for pdf: {os.path.dirname(os.path.abspath(__file__))}")
+#         output_path = os.path.join(SCRIPT_DIR,"pdf/lead_magnet_personalized.pdf")
+#         first_pager = os.path.join(SCRIPT_DIR,"pdf/first_page.pdf")
+#         last_pager = os.path.join(SCRIPT_DIR,"pdf/last_page.pdf")
+#         company_name = user_details.get('organization_name','your company')
+#         final_pdf = os.path.join(SCRIPT_DIR,f"pdf/15-day Sales Booster for {company_name}.pdf")
+#         image_path = get_image_path()
+#         print(f"Image path: {image_path}")
+#         # return True
+#         create_personalized_pdf(user_details,output_path, image_path)
+#         print("Successfully created lead magnet pdf")
+#         embed_existing_pdf(output_path, first_pager, last_pager,final_pdf)
+#         print("Sending lead magnet email..")
+#         send_lead_magnet_email(user_details,final_pdf)
+#         print("Successfully sent lead magnet email")
+#         return {"Status":"Successfull"}
+#     except Exception as e:
+#         print(f"Exception occured at {__name__} while generating the lead magnet pdf : {e}")
+
+def generate_lead_magnet_pdf(email,linkedin_url):
     try:
-        user_details = collect_information(user_id)
+        user_details = collect_information(linkedin_url)
         if user_details is None:
             return "No user details found"
-
+        print(user_details)
         print(f" Directory path for pdf: {os.path.dirname(os.path.abspath(__file__))}")
         output_path = os.path.join(SCRIPT_DIR,"pdf/lead_magnet_personalized.pdf")
         first_pager = os.path.join(SCRIPT_DIR,"pdf/first_page.pdf")
         last_pager = os.path.join(SCRIPT_DIR,"pdf/last_page.pdf")
-        final_pdf = os.path.join(SCRIPT_DIR,"pdf/final.pdf")
+        company_name = user_details.get('organization_name','your company')
+        final_pdf = os.path.join(SCRIPT_DIR,f"pdf/15-day Sales Booster for {company_name}.pdf")
         image_path = get_image_path()
         print(f"Image path: {image_path}")
         # return True
         create_personalized_pdf(user_details,output_path, image_path)
         print("Successfully created lead magnet pdf")
-        # print("Sending lead magnet email..")
-        # send_lead_magnet_email()
-        # print("Successfully sent lead magnet email")
         embed_existing_pdf(output_path, first_pager, last_pager,final_pdf)
-        return {"Status":"Successfull"}
+        print("Sending lead magnet email..")
+        email_status = send_lead_magnet_email(email,user_details,final_pdf)
+        print("Successfully sent lead magnet email")
+        print(email_status)
+        return {"Status":email_status}
     except Exception as e:
         print(f"Exception occured at {__name__} while generating the lead magnet pdf : {e}")
+        return "Oops! It seems our server is a bit busy right now. Please try again shortly."
 
 if __name__=="__main__":
     output_pdf = "lead_magnet_personalized.pdf"

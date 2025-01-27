@@ -7,6 +7,7 @@ from error_logger import execute_error_block
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
 # from lead_magnet.industry_insights import get_cold_email_kpis
 
+
 def people_enrichment(apollo_id):
     try:
         print(f"\n------------Started Persona Data Enrichment------------")
@@ -17,6 +18,19 @@ def people_enrichment(apollo_id):
         return response
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} for the data enrichment layer. {e}")
+
+def people_enrichment_linkedin(linkedin_url):
+    try:
+        print(f"\n------------Started Persona Data Enrichment------------")
+        # url = "https://api.apollo.io/api/v1/people/match?linkedin_url=https%3A%2F%2Fwww.linkedin.com%2Fin%2Fmagmostafa%2F&reveal_personal_emails=false&reveal_phone_number=false"
+        url = f"https://api.apollo.io/api/v1/people/match?linkedin_url={linkedin_url}&reveal_personal_emails=true&reveal_phone_number=false"
+        # url = f"https://api.apollo.io/api/v1/people/match?id={apollo_id}&reveal_personal_emails=false&reveal_phone_number=false"
+        response = requests.post(url, headers=APOLLO_HEADERS)
+        print(f"------------Completed Persona Data Enrichment------------")
+        return response
+    except Exception as e:
+        execute_error_block(f"Error occured in {__name__} for the data enrichment layer. {e}")
+
 
 def people_search(custom_search_url,query_params,client_id,qualify_leads):
   try:
