@@ -563,6 +563,79 @@ def send_to_airtable(airtable_instance, records):
 #     except Exception as e:
 #         return jsonify({"error": f"Error updating lead magnet data: {str(e)}"}), 500
 
+@app.route('/fetch-inbox-details', methods=['POST'])
+def fetch_inbox_details():
+    try:
+        # Define the Airtables to update
+        tables_to_update = {
+            "email_opened": airtable_email,
+            "email_sent": airtable_email_sent,
+            "replies_received": airtable_replies_received,
+            "link_opened": airtable_link
+        }
+
+        # Fetch client_details
+        client_details_records = airtable_new2.get_all()
+        client_details_df = pd.DataFrame([record['fields'] for record in client_details_records])
+        print(client_details_df)
+        if client_details_df.empty or 'instantly_campaign_id' not in client_details_df.columns or 'cleaned_table' not in client_details_df.columns:
+            return jsonify({"error": "No valid instantly_campaign_id or cleaned_table found in client_details"}), 400
+
+        # Create a mapping of campaign_id to cleaned_table
+        campaign_to_cleaned_table = dict(zip(
+            client_details_df['instantly_campaign_id'], 
+            client_details_df['cleaned_table']
+        ))
+
+        # Process each table
+        for table_name, airtable_instance in tables_to_update.items():
+            # Fetch records from the current table
+            table_records = airtable_instance.get_all()
+            table_df = pd.DataFrame([record['fields'] for record in table_records])
+
+            if table_df.empty or 'email' not in table_df.columns or 'campaign_id' not in table_df.columns:
+                continue
+
+            # Iterate through the records
+            for _, table_row in table_df.iterrows():
+                email = table_row['email']
+                campaign_id = table_row['campaign_id']
+
+                # Get the corresponding cleaned_table for the campaign_id
+                cleaned_table_name = campaign_to_cleaned_table.get(campaign_id)
+                if not cleaned_table_name:
+                    continue
+
+                # Access the corresponding cleaned_table
+                cleaned_table = Airtable(BASE_ID_NEW, cleaned_table_name, API_KEY_NEW)
+
+                # Fetch the record for the given email directly from cleaned_table
+                cleaned_records = cleaned_table.search('email', email)
+                if not cleaned_records:
+                    continue
+
+                # Extract the name and title fields from the first matching record
+                cleaned_record = cleaned_records[0]['fields']
+                name = cleaned_record.get('name')
+                job_title = cleaned_record.get('title')
+                organization_name = cleaned_record.get('organization_name')
+                photo_url= cleaned_record.get('photo_url')
+                print(cleaned_record)
+                # Update the current table with Name and job_title
+                airtable_instance.update_by_field(
+                    'email',  # Field to match
+                    email,  # Field value
+                    {"Name": name, "job_title": job_title, "organization_name":organization_name, "profile_picture_url":photo_url}
+                )
+
+        return jsonify({"message": "Name and job_title successfully saved in all specified tables"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+        
 
 @app.route('/post-data', methods=['GET'])
 def post_data():
