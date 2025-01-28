@@ -180,7 +180,7 @@ results_per_page = str(st.number_input(
 client_id = str(st.selectbox(
     label="Client id", 
     options=["berkleys_homes", "berkleys_homes_test", "taippa_marketing","plot_taippa"],
-    index=0  
+    index=1
 ))
 
 server_test = st.radio("Test in server:", options=["yes", "no"], index=1)
@@ -189,7 +189,7 @@ search_via_url = st.radio("Custom search via url:", options=["yes", "no"], index
 qualify_leads = st.radio("Qualify leads:", options=["yes", "no"], index=0)
 test_run_id=''
 if test_run=="yes":
-    test_run_id = st.text_input("Test run id:", "63568114be7c760001dc78c6")
+    test_run_id = st.text_input("LinkedIn url:", "https://www.linkedin.com/in/isravanbr/")
 
 custom_search_url=""
 if search_via_url =="yes":
