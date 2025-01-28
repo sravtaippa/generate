@@ -80,6 +80,14 @@ def test_sanitization():
     except Exception as e:
         print(f"Exception occured while testing sanitization module : {e}")
 
+@app.route("/fetch-inbox-details", methods=["GET"])
+def fetch_inbox_details_full():
+    try:
+        response = fetch_inbox_details()
+        return response
+    except Exception as e:
+        execute_error_block(f"Error occured while fetching inbox details {e}")
+
 @app.route("/data_ingestion", methods=["GET"])
 def execute_collection():
   try:
