@@ -19,7 +19,6 @@ def retrieve_client_tables(client_id):
     except Exception as e:
         print(f"Error occured in {__name__} while retrieving tables from airtable. {e}")
 
-
 def fetch_client_outreach_mappings(client_id):
     try:
         print(f"\nFetching details for outreach mapping")
@@ -78,7 +77,30 @@ def get_clients_config(client_config_table):
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while fetching client config details. {e}")
 
-def fetch_latest_page_number(client_config_table,client_id):
+def update_client_config(client_config_table,client_id,profiles_enriched):
+    try:
+        print('Updating latest page number')
+        api = Api(AIRTABLE_API_KEY)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, client_config_table)
+        # Fetch the record with the given client_id
+        print(f"\nFetching latest page number from the table")
+        data_records = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
+        if data_records:
+            record = data_records[0] 
+            record_id = record.get('id')
+            page_number = record.get('fields').get('page_number', 0)
+            # Increment the page number (or set your desired update)
+            new_page_number = int(page_number) + 1  # Example: Increment page number
+            # Update the record
+            airtable_obj.update(record_id, {'page_number': str(new_page_number),'records_fetched':str(profiles_enriched)})
+            print(f"Updated page_number to {new_page_number} for client_id {client_id}")
+        else:
+            print(f"No record found for client_id {client_id}")
+
+    except Exception as e:
+        execute_error_block(f"Error occured in {__name__} while updating latest page number. {e}")
+
+def fetch_page_config(client_config_table,client_id):
     try:
         print('Fetching latest page number')
         api = Api(AIRTABLE_API_KEY)
@@ -87,7 +109,8 @@ def fetch_latest_page_number(client_config_table,client_id):
         data_count = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
         record_details = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")[0]
         page_number = record_details.get('fields').get('page_number')
-        return page_number
+        records_required = record_details.get('fields').get('records_required')
+        return page_number,records_required
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while fetching latest page number. {e}")
 

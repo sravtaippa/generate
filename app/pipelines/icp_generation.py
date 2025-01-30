@@ -9,7 +9,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.tools import DuckDuckGoSearchResults
 import json
 import requests
-from db.db_utils import unique_key_check_airtable,export_to_airtable,fetch_latest_page_number
+from db.db_utils import unique_key_check_airtable,export_to_airtable
 
 from config import APOLLO_HEADERS
 
@@ -49,7 +49,6 @@ company_info_prompt = PromptTemplate(input_variables=["input"], template=company
 icp_chain = LLMChain(prompt=icp_prompt, llm=llm)
 company_info_chain = LLMChain(prompt=company_info_prompt, llm=llm)
 
-# Tool to fetch company information from DuckDuckGo
 search_tool = DuckDuckGoSearchResults()
 
 def fetch_website_content(website_url):
@@ -340,7 +339,6 @@ def generate_icp(client_id,website_url):
         icp_tags = get_apollo_tags(icp_result)
         icp_json = json.loads(icp_tags)
         print(icp_json)
-        # page_number = fetch_latest_page_number(CLIENT_CONFIG_TABLE_NAME,client_id)
         results_per_page=100
         person_titles = icp_json.get('job_titles')
         person_seniorities = icp_json.get('person_seniorities')
@@ -354,12 +352,11 @@ def generate_icp(client_id,website_url):
                     construct_query_param("organization_locations", person_locations),
                     construct_query_param("contact_email_status", email_status),
                     construct_query_param_range("organization_num_employees_ranges", organization_num_employees_ranges),
-                    # construct_query_param_keywords("q_keywords", q_keywords)
         ]
         query_params_test = query_params.copy()
         query_params_test.append("page=1")
         query_params.append("page={page_number}")
-        query_params.append(f"per_page={results_per_page}")
+        query_params.append("per_page={records_required}")
         query_params_test.append(f"per_page={results_per_page}")
         base_url = "https://api.apollo.io/api/v1/mixed_people/search"
         url_test = f"{base_url}?{'&'.join(query_params_test)}"
@@ -383,8 +380,9 @@ def generate_icp(client_id,website_url):
                 "icp_job_seniorities":str(person_seniorities),
                 "icp_employee_range":str(organization_num_employees_ranges),
                 "icp_locations":str(person_locations),
-                "page_number":'0',
-                "qualify_leads":'no'
+                "page_number":'1',
+                "qualify_leads":'no',
+                "records_required":'5'
             }
             export_to_airtable(config_data, CLIENT_CONFIG_TABLE_NAME)
         return dynamic_url
@@ -395,5 +393,3 @@ def generate_icp(client_id,website_url):
 
 if __name__=="__main__":
     pass
-    # url = generate_icp()
-    # print(url)
