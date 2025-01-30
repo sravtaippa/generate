@@ -11,10 +11,12 @@ import openai
 from urllib.parse import unquote
 
 from pipelines.data_sanitization import fetch_and_update_data, update_email_opens
-from pipelines.data_extractor import people_enrichment,people_search,test_run_pipeline
+from pipelines.data_extractor import people_enrichment,people_search,test_run_pipeline,run_demo_pipeline
+from pipelines.icp_generation import generate_icp
 from db.db_utils import fetch_client_details,export_to_airtable,unique_key_check_airtable,parse_people_info
 from error_logger import execute_error_block
 from lead_magnet.lead_magnet_pdf_generation import generate_lead_magnet_pdf
+from pipelines.data_sync import trigger_pipeline
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
 
 print(f"\n=============== Generate : Pipeline started  ===============")
@@ -86,7 +88,48 @@ def fetch_inbox_details_full():
         response = fetch_inbox_details()
         return response
     except Exception as e:
-        execute_error_block(f"Error occured while fetching inbox details {e}")
+        execute_error_block(f"Error occured while fetching inbox details : {e}")
+
+@app.route("/client_onboarding", methods=["GET"])
+def client_onboarding():
+    try:
+        client_id = "berkleys_homes"
+        website_url = "https://berkleyshomes.com/"
+        # client_id = "taippa_marketing"
+        # website_url = "https://taippa.com/"
+        status = generate_icp(client_id,website_url)
+        print("Client onboarding successful")
+        return {"Status":"Client onboarding successful" if status else "Client onboarding failed"} 
+        
+    except Exception as e:
+        return {"Status":f"Client onboarding failed: {e}"}
+        # execute_error_block(f"Error occured while client onboarding : {e}")
+
+@app.route("/demo_test", methods=["GET"])
+def demo_test():
+    try:
+        # linkedin_url = request.args.get('linkedin_url', type=str)
+        # client_id = request.args.get('client_id', type=str)
+        linkedin_url = "https://www.linkedin.com/in/isravanbr/"
+        client_id = 'berkleys_homes'
+        outreach_table = 'outreach_demo'
+        status = run_demo_pipeline(linkedin_url,client_id,outreach_table)
+        return {"Status":"Demo execution successful" if status else "Failed running demo pipeline"} 
+
+    except Exception as e:
+        return {"Status":f"Oops something wrong happened!: {e}"}
+        # execute_error_block(f"Error occured while client onboarding : {e}")
+
+@app.route("/scheduled_data_sync", methods=["GET"])
+def scheduled_data_sync():
+    try:
+        status = trigger_pipeline()
+        return {"Status":"Successful"}
+        # response=fetch_and_update_data(client_id)
+        # return {"Status":"Testing sanitization successful"}
+    except Exception as e:
+        print(f"Exception occured during scheduled data sync: {e}")
+        execute_error_block(f"Exception occured during scheduled data sync: {e}")
 
 @app.route("/data_ingestion", methods=["GET"])
 def execute_collection():
