@@ -93,10 +93,14 @@ def fetch_inbox_details_full():
 @app.route("/client_onboarding", methods=["GET"])
 def client_onboarding():
     try:
-        client_id = "berkleys_homes"
-        website_url = "https://berkleyshomes.com/"
+        # client_id = "berkleys_homes"
+        # website_url = "https://berkleyshomes.com/"
         # client_id = "taippa_marketing"
         # website_url = "https://taippa.com/"
+        # client_id = "plot_taippa"
+        # website_url = "https://www.exclusive-links.com/about-exclusive-links/meet-the-team/mirjam-rakem"
+        client_id = request.args.get('client_id', type=str)
+        website_url = request.args.get('website_url', type=str) 
         status = generate_icp(client_id,website_url)
         print("Client onboarding successful")
         return {"Status":"Client onboarding successful" if status else "Client onboarding failed"} 
@@ -131,74 +135,6 @@ def scheduled_data_sync():
         print(f"Exception occured during scheduled data sync: {e}")
         execute_error_block(f"Exception occured during scheduled data sync: {e}")
 
-@app.route("/data_ingestion", methods=["GET"])
-def execute_collection():
-  try:
-    print(f"\n------------ Started Data Collection ------------")  
-
-    # Construct the query string dynamically
-    client_id = request.args.get('client_id', type=str)
-    test_run_id = request.args.get('test_run_id', default='', type=str)
-    if not test_run_id:
-        # job roles : ceo,coo,cmo,marketing manager,marketing director,investor,partner
-        # job seniorities : owner,founder,director,vp,c level,president,vice president
-        # keywords : invest
-        custom_search_url = request.args.get('custom_search_url', default='', type=str)
-        custom_search_url = unquote(custom_search_url)
-        print(f"Decoded Custom Search Url added: {custom_search_url}")
-        # return {"Status" : custom_search_url}
-        qualify_leads = request.args.get('qualify_leads', default='yes', type=str)
-        job_titles = request.args.get('job_titles', default='', type=str)
-        person_seniorities = request.args.get('person_seniorities', default='', type=str)
-        person_locations = request.args.get('person_locations', default='', type=str)
-        organization_locations = request.args.get('organization_locations', default='', type=str)
-        email_status = request.args.get('email_status', default='', type=str)
-        organization_num_employees_ranges = request.args.get('organization_num_employees_ranges', default='', type=str)
-        q_keywords = request.args.get('q_keywords',default='',type=str)
-        page_number = int(request.args.get('page', default='1', type=str))
-        results_per_page = int(request.args.get('per_page', default='1', type=str))
-        x =  {"job_titles": job_titles, "person_seniorities": person_seniorities, "person_locations": person_locations, "organization_locations": organization_locations, "email_status": email_status, "organization_num_employees_ranges": organization_num_employees_ranges, "page_number": page_number, "Per page": results_per_page}
-        print(f"Collected data : {x}")
-        job_titles = job_titles.split(',')
-        person_seniorities = person_seniorities.split(',')
-        person_locations = ast.literal_eval(person_locations)
-        organization_locations = ast.literal_eval(organization_locations)
-        if q_keywords!= '' and len(q_keywords)>=0:
-            q_keywords = ast.literal_eval(q_keywords)
-            if q_keywords == []:
-                q_keywords = ''
-            else:
-                q_keywords = ' '.join(q_keywords)
-        email_status = email_status.split(',')
-        organization_num_employees_ranges = ast.literal_eval(organization_num_employees_ranges)
-        print(f"Here : {organization_num_employees_ranges}")
-        print('\n\n') 
-        x =  {"job_titles": job_titles, "person_seniorities": person_seniorities, "person_locations": person_locations, "organization_locations": organization_locations, "email_status": email_status, "organization_num_employees_ranges": organization_num_employees_ranges, "page_number": page_number, "Per page": results_per_page}
-        print(f"Sanitized data : {x}")
-        print('\n\n') 
-        query_params = [
-            construct_query_param("person_titles", job_titles),
-            construct_query_param("person_seniorities", person_seniorities),
-            construct_query_param("person_locations", person_locations),
-            construct_query_param("organization_locations", organization_locations),
-            construct_query_param("contact_email_status", email_status),
-            construct_query_param_range("organization_num_employees_ranges", organization_num_employees_ranges),
-            construct_query_param_keywords("q_keywords", q_keywords)
-        ]
-        query_params.append(f"page={page_number}")
-        query_params.append(f"per_page={results_per_page}")
-        success_status = people_search(custom_search_url,query_params,client_id,qualify_leads)
-        response=fetch_and_update_data(client_id)
-        print(response)
-        print('\n------------ Data Cleaning Completed: Data Ready for Outreach ------------\n')
-    else:
-        success_status = test_run_pipeline(test_run_id,client_id)
-        response=fetch_and_update_data(client_id)
-        print(response)
-        print('\n------------ Data Cleaning Completed: Data Ready for Outreach ------------\n')
-    return {'Status':f'Successfully enriched {success_status} profiles'} if success_status else {'Status':'No profiles enriched.'}
-  except Exception as e:
-    execute_error_block(f"Error occured while parsing the input. {e}")
 
 if __name__ == '__main__':
   app.run(debug=True)

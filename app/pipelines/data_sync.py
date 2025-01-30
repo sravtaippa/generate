@@ -2,7 +2,9 @@ import requests
 import openai
 import os
 from datetime import datetime
-from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable,retrieve_client_tables,fetch_client_outreach_mappings,get_clients_config,fetch_latest_page_number
+
+from pipelines.data_sanitization import fetch_and_update_data
+from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable,retrieve_client_tables,fetch_client_outreach_mappings,get_clients_config,fetch_page_config,update_client_config
 from pipelines.lead_qualifier import qualify_lead
 from error_logger import execute_error_block
 from pipelines.data_extractor import people_search_v2
@@ -20,21 +22,25 @@ def trigger_pipeline():
             client_details = client_config.get('fields')
             client_id = client_details.get('client_id')
             qualify_leads = client_details.get('qualify_leads')
-            last_page = int(fetch_latest_page_number(CLIENT_CONFIG_TABLE_NAME,client_id))
+            last_page,records_required = fetch_page_config(CLIENT_CONFIG_TABLE_NAME,client_id)
+            records_required 
             print(f"\n-------------------- Data Sync started for Client : {client_id} ------------------------\n") 
-            page_number = client_details.get('page_number')
+            # page_number = client_details.get('page_number')
             print(client_details.get('icp_url'))
             print(f"----- formatting the url ----------")
-            icp_url = client_details.get('icp_url').format(page_number=last_page+1)
+            icp_url = client_details.get('icp_url').format(page_number=last_page,records_required=records_required)
             profiles_enriched = people_search_v2(icp_url,client_id,qualify_leads)
             print(f"Profiles Enriched : {profiles_enriched}")
+            response=fetch_and_update_data(client_id)
+            print(response)
+            print(f"\n------------ Data populated for the outreach table for the client_id: {client_id}\n")
+            updated_status = update_client_config(CLIENT_CONFIG_TABLE_NAME,client_id,profiles_enriched)
             print(f"\n-------------------- Data Sync completed for Client : {client_id}------------------------\n") 
         print("\n================= Scheduled Pipeline Execution Completed ==========================================\n")
         return config_data
     except Exception as e:
         print(f"Exception occured while triggering the pipeline run {e}")
 
-#
 # def people_enrichment(apollo_id):
 #     try:
 #         print(f"\n------------Started Persona Data Enrichment------------")
