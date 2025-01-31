@@ -112,10 +112,10 @@ def client_onboarding():
 @app.route("/demo_test", methods=["GET"])
 def demo_test():
     try:
-        # linkedin_url = request.args.get('linkedin_url', type=str)
-        # client_id = request.args.get('client_id', type=str)
-        linkedin_url = "https://www.linkedin.com/in/isravanbr/"
-        client_id = 'berkleys_homes'
+        linkedin_url = request.args.get('linkedin_url', type=str)
+        client_id = request.args.get('client_id', type=str)
+        # linkedin_url = "https://www.linkedin.com/in/isravanbr/"
+        # client_id = 'berkleys_homes'
         outreach_table = 'outreach_demo'
         status = run_demo_pipeline(linkedin_url,client_id,outreach_table)
         return {"Status":"Demo execution successful" if status else "Failed running demo pipeline"} 

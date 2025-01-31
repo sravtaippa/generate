@@ -334,17 +334,19 @@ def construct_query_param(key, values):
 
 def generate_icp(client_id,website_url):
     try:
+        print(f"\n\n--------Generating ICP--------\n\n")
         openai.api_key = OPENAI_API_KEY
         icp_result = process_workflow(website_url)
         icp_tags = get_apollo_tags(icp_result)
         icp_json = json.loads(icp_tags)
-        print(icp_json)
+        # print(icp_json)
         results_per_page=100
         person_titles = icp_json.get('job_titles')
         person_seniorities = icp_json.get('person_seniorities')
         person_locations = icp_json.get('person_locations')
         email_status = ['verified']
         organization_num_employees_ranges = icp_json.get('employee_range')
+        print(f"\n\n--------Creating query params--------\n\n")
         query_params = [
                     construct_query_param("person_titles", person_titles),
                     construct_query_param("person_seniorities", person_seniorities),
@@ -362,8 +364,9 @@ def generate_icp(client_id,website_url):
         url_test = f"{base_url}?{'&'.join(query_params_test)}"
         dynamic_url = f"{base_url}?{'&'.join(query_params)}"
         headers = APOLLO_HEADERS
+        print(f"\n\nRunning the people search API test")
         response = requests.post(url_test, headers=headers)
-        print(response.text)
+        # print(response.text)
         if response.status_code == 200:
             print(f"\n------------Completed Persona Data Mining------------")
             data = response.json()
