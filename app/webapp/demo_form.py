@@ -94,10 +94,12 @@ if submit_button:
     #             f"https://magmostafa.pythonanywhere.com/demo_test?linkedin_url={linkedin_url}&client_id={client_id}"
     #             )
     try:
+        # response = requests.get(
+        #                 f"http://127.0.0.1:5000/demo_test?linkedin_url={linkedin_url}&client_id={client_id}"
+        #             )
         response = requests.get(
-                        f"http://127.0.0.1:5000/demo_test?linkedin_url={linkedin_url}&client_id={client_id}"
-                    )
-        
+                f"https://magmostafa.pythonanywhere.com/demo_test?linkedin_url={linkedin_url}&client_id={client_id}"
+                )
         if response.status_code == 200:
             st.success(f"📧 We'll be sending you a personalized email shortly.")
         else:
