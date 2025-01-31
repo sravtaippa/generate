@@ -12,3 +12,4 @@ matplotlib
 seaborn
 reportlab
 PyPDF2
+duckduckgo-search
