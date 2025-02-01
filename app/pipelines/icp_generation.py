@@ -339,7 +339,6 @@ def generate_icp(client_id,website_url):
         icp_result = process_workflow(website_url)
         icp_tags = get_apollo_tags(icp_result)
         icp_json = json.loads(icp_tags)
-        # print(icp_json)
         results_per_page=100
         person_titles = icp_json.get('job_titles')
         person_seniorities = icp_json.get('person_seniorities')
@@ -366,7 +365,6 @@ def generate_icp(client_id,website_url):
         headers = APOLLO_HEADERS
         print(f"\n\nRunning the people search API test")
         response = requests.post(url_test, headers=headers)
-        # print(response.text)
         if response.status_code == 200:
             print(f"\n------------Completed Persona Data Mining------------")
             data = response.json()
