@@ -281,7 +281,6 @@ def people_search(custom_search_url,query_params,client_id,qualify_leads):
   except Exception as e:
     execute_error_block(f"Error occured in {__name__} during data ingestion. {e}")
 
-
 def test_run_pipeline(test_run_id,client_id):
     try:
         raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
