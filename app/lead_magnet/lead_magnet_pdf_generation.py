@@ -14,9 +14,7 @@ import ast
 import openai
 import json
 
-
 from PyPDF2 import PdfReader, PdfWriter
-
 # from lead_magnet.industry_insights import get_cold_email_kpis
 from lead_magnet.client_info_parser import collect_information
 from lead_magnet.competitor_insights import get_competitors_list
@@ -30,7 +28,10 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY")
 AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
 AIRTABLE_CLIENT_TABLE_NAME = os.getenv("AIRTABLE_CLIENT_TABLE_NAME")
-CLIENT_NAME = 'taippa_marketing'
+CLIENT_INFO_TABLE_NAME = os.getenv("CLIENT_INFO_TABLE_NAME")
+CLIENT_NAME = 'cl_taippa_marketing'
+print(f"Client info table for Lead Magnet : {CLIENT_INFO_TABLE_NAME}")
+
 
 # Get the directory where the script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -189,7 +190,7 @@ def content_formatting_list(content, is_metrics=False):
         ]
 
         Content: {content}"""
-
+        
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
@@ -252,18 +253,31 @@ def content_formatting_json(content):
 
     Content: {content}"""
 
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            {
+    client = openai.OpenAI(api_key=OPENAI_API_KEY)
+    response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                {
                 "role": "system",
                 "content": "You are a JSON text formatter. Only output the exact JSON text requested, with no additional text, explanations, or formatting."
-            },
-            {"role": "user", "content": prompt}
-        ]
+                },
+                {"role": "user", "content": prompt}
+                ],
     )
 
-    result = response['choices'][0]['message']['content']
+    result = response.choices[0].message.content
+    # response = openai.ChatCompletion.create(
+    #     model="gpt-4",
+    #     messages=[
+    #         {
+    #             "role": "system",
+    #             "content": "You are a JSON text formatter. Only output the exact JSON text requested, with no additional text, explanations, or formatting."
+    #         },
+    #         {"role": "user", "content": prompt}
+    #     ]
+    # )
+
+    # result = response['choices'][0]['message']['content']
     print(type(result))
     return result
 
@@ -662,38 +676,13 @@ def create_personalized_pdf(user_details, output_path, image_path):
 
 def get_image_path():
     try:
-        table = airtable_obj(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, AIRTABLE_CLIENT_TABLE_NAME)
+        table = airtable_obj(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, CLIENT_INFO_TABLE_NAME)
         attachment_column="company_lead_magnet_images"
         print(table)
         print(AIRTABLE_API_KEY)
         return get_dynamic_images(table,'recHwMDeb62Kgiqx1',attachment_column)
     except Exception as e:
         print(f"Error occured at {__name__} while retrieving the images")
-
-# def generate_lead_magnet_pdf(user_id):
-#     try:
-#         user_details = collect_information(user_id)
-#         if user_details is None:
-#             return "No user details found"
-
-#         print(f" Directory path for pdf: {os.path.dirname(os.path.abspath(__file__))}")
-#         output_path = os.path.join(SCRIPT_DIR,"pdf/lead_magnet_personalized.pdf")
-#         first_pager = os.path.join(SCRIPT_DIR,"pdf/first_page.pdf")
-#         last_pager = os.path.join(SCRIPT_DIR,"pdf/last_page.pdf")
-#         company_name = user_details.get('organization_name','your company')
-#         final_pdf = os.path.join(SCRIPT_DIR,f"pdf/15-day Sales Booster for {company_name}.pdf")
-#         image_path = get_image_path()
-#         print(f"Image path: {image_path}")
-#         # return True
-#         create_personalized_pdf(user_details,output_path, image_path)
-#         print("Successfully created lead magnet pdf")
-#         embed_existing_pdf(output_path, first_pager, last_pager,final_pdf)
-#         print("Sending lead magnet email..")
-#         send_lead_magnet_email(user_details,final_pdf)
-#         print("Successfully sent lead magnet email")
-#         return {"Status":"Successfull"}
-#     except Exception as e:
-#         print(f"Exception occured at {__name__} while generating the lead magnet pdf : {e}")
 
 def generate_lead_magnet_pdf(email,linkedin_url):
     try:
