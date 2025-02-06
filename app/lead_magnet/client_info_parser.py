@@ -6,16 +6,18 @@ import json
 from pyairtable import Table,Api
 from pipelines.data_extractor import people_enrichment,people_enrichment_linkedin
 
+
 # from db.db_utils import export_to_airtable
 # from error_logger import execute_error_block
 
 # New Airtable Configuration
+
 AIRTABLE_BASE_ID = 'app5s8zl7DsUaDmtx'
 CUR_TABLE = 'profiles_cleaned'
 # LEAD_MAGNET_TABLE = 'lead_magnet_details'
 LEAD_MAGNET_TABLE = 'lead_magnet'
 AIRTABLE_API_KEY = os.getenv('AIRTABLE_API_KEY', 'patELEdV0LAx6Aba3.393bf0e41eb59b4b80de15b94a3d122eab50035c7c34189b53ec561de590dff3')
-
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 AIRTABLE_CLEANED = Table(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, CUR_TABLE)
 # AIRTABLE_LEAD_MAGNET = Table(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, LEAD_MAGNET_TABLE)
 
@@ -98,15 +100,16 @@ def collect_information(linkedin_url):
         if enrichment_api_response.status_code == 200:
             data = enrichment_api_response.json()
             data=data['person']
-            response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # or "gpt-4" for more advanced results
-            messages=[
-                {"role": "system", "content": "You are an expert at text summarization."},
-                {"role": "user", "content": f"Please shorten this description: {data['employment_history']}"}
-            ],
-            max_tokens=100  # Adjust based on the desired length of the output
+            client = openai.OpenAI(api_key=OPENAI_API_KEY)
+            response = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are an expert at text summarization."},
+                    {"role": "user", "content": f"Please shorten this description: {data['employment_history']}"}
+                ],
             )
-            employment_summary = response['choices'][0]['message']['content']
+            # employment_summary = response['choices'][0]['message']['content']
+            employment_summary = response.choices[0].message.content
             data_dict = {
                 'id': data.get('id'),
                 'first_name': data.get('first_name'),

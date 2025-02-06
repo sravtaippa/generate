@@ -55,6 +55,7 @@ def initialize_data_sanitization():
 @app.route("/generate_lead_magnet", methods=["GET"])
 def generate_lead_magnet():
     try:
+        # generate_lead_magnet?linkedin_url=https://www.linkedin.com/in/nithin-paul-7063b1183/&email_id=sravzone@gmail.com
         linkedin_url = request.args.get('linkedin_url', type=str)
         email_id = request.args.get('email_id', type=str)
         print(f"Linkedin url: {linkedin_url}")
