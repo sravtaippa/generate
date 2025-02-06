@@ -135,7 +135,6 @@ def scheduled_data_sync():
         print(f"Exception occured during scheduled data sync: {e}")
         execute_error_block(f"Exception occured during scheduled data sync: {e}")
 
-
 if __name__ == '__main__':
-  app.run(debug=True)
+  app.run(debug=True,use_reloader=False)
  
