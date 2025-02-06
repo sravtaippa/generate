@@ -252,3 +252,5 @@ st.sidebar.write("**Organization Employee Ranges:**", organization_num_employees
 
 # Footer
 st.markdown('<div class="footer">Generate | AI Powered Lead Generation System</div>', unsafe_allow_html=True)
+
+# https://api.apollo.io/api/v1/mixed_people/search?person_titles[]=Facilities%20director&person_titles[]=COO&person_titles[]=CEO&person_titles[]=operations%20director&person_titles[]=director%20of%20operations&person_locations[]=&organization_locations[]=United%20Arab%20Emirates&contact_email_status[]=verified&organization_num_employees_ranges[]=500%2C10000&page={page_number}&per_page={records_required}

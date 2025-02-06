@@ -1,29 +1,37 @@
+import os
 from pyairtable import Table,Api
 import openai
 from error_logger import execute_error_block
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS,PERPLEXITY_API_KEY
 
+# Config tables required
+CLIENT_DETAILS_TABLE_NAME = os.getenv("CLIENT_DETAILS_TABLE_NAME")
+CLIENT_CONFIG_TABLE_NAME = os.getenv("CLIENT_CONFIG_TABLE_NAME")
+CLIENT_INFO_TABLE_NAME = os.getenv("CLIENT_INFO_TABLE_NAME")
+
 def retrieve_client_tables(client_id):
     try:
         print('Retreiving tables')
         api = Api(AIRTABLE_API_KEY)
-        airtable_obj = api.table(AIRTABLE_BASE_ID, "client_details")
+        airtable_obj = api.table(AIRTABLE_BASE_ID, CLIENT_INFO_TABLE_NAME)
         records = airtable_obj.all()
         print(f"\nRan the client details fetch command")
+        records_list = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
+        if len(records_list) < 1:
+            execute_error_block(f"The following client_id `{client_id}` is not present in the table {CLIENT_INFO_TABLE_NAME}")
         record_details = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")[0]
-        # print(record_details) 
         raw_table = record_details.get('fields').get('raw_table')
         cleaned_table = record_details.get('fields').get('cleaned_table')
         outreach_table = record_details.get('fields').get('outreach_table')
         return raw_table,cleaned_table,outreach_table
     except Exception as e:
-        print(f"Error occured in {__name__} while retrieving tables from airtable. {e}")
+        execute_error_block(f"Error occured in {__name__} while retrieving tables from airtable. {e}")
 
 def fetch_client_outreach_mappings(client_id):
     try:
         print(f"\nFetching details for outreach mapping")
         api = Api(AIRTABLE_API_KEY)
-        airtable_obj = api.table(AIRTABLE_BASE_ID, "client_details")
+        airtable_obj = api.table(AIRTABLE_BASE_ID, CLIENT_INFO_TABLE_NAME)
         record = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")[0].get('fields')
         return {
             "email": record.get("email"),
@@ -49,7 +57,7 @@ def fetch_client_details(client_id):
     try:
         print(f"\nFetching Client Details")
         api = Api(AIRTABLE_API_KEY)
-        airtable_obj = api.table(AIRTABLE_BASE_ID, "client_details")
+        airtable_obj = api.table(AIRTABLE_BASE_ID, CLIENT_INFO_TABLE_NAME)
         record = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")[0]
         solution_benefits = record['fields']['solution_benefits']
         unique_features = record['fields']['unique_features']
@@ -68,11 +76,6 @@ def get_clients_config(client_config_table):
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, client_config_table)
         config_data = airtable_obj.all()
-        # data_count = len(airtable_obj.all())
-        # print(data_count)
-        # print(f"Length of the list: {data_count}")
-        # record_details = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")[0]
-        # page_number = record_details.get('fields').get('page_number')
         return config_data
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while fetching client config details. {e}")
@@ -82,16 +85,13 @@ def update_client_config(client_config_table,client_id,profiles_enriched):
         print('Updating latest page number')
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, client_config_table)
-        # Fetch the record with the given client_id
         print(f"\nFetching latest page number from the table")
         data_records = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
         if data_records:
             record = data_records[0] 
             record_id = record.get('id')
             page_number = record.get('fields').get('page_number', 0)
-            # Increment the page number (or set your desired update)
             new_page_number = int(page_number) + 1  # Example: Increment page number
-            # Update the record
             airtable_obj.update(record_id, {'page_number': str(new_page_number),'records_fetched':str(profiles_enriched)})
             print(f"Updated page_number to {new_page_number} for client_id {client_id}")
         else:
@@ -110,7 +110,8 @@ def fetch_page_config(client_config_table,client_id):
         record_details = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")[0]
         page_number = record_details.get('fields').get('page_number')
         records_required = record_details.get('fields').get('records_required')
-        return page_number,records_required
+        active_status = record_details.get('fields').get('is_active')
+        return page_number,records_required,active_status
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while fetching latest page number. {e}")
 
@@ -121,7 +122,6 @@ def export_to_airtable(data,raw_table):
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, raw_table)
         response = airtable_obj.create(data)
-        # Check if the insertion was successful
         if 'id' in response:
             print("Record inserted successfully:", response['id'])
         else:
@@ -144,15 +144,15 @@ def parse_people_info(data):
     try:
         print('----------Parsing the data input --------------]')
         employment_history = data['employment_history']
-        response = openai.ChatCompletion.create(
-                        model="gpt-3.5-turbo",  # or "gpt-4" for more advanced results
-                        messages=[
-                            {"role": "system", "content": "You are an expert at text summarization."},
-                            {"role": "user", "content": f"Please summarize this description: {employment_history}"}
-                        ],
-                        max_tokens=100  # Adjust based on the desired length of the output
-                        )
-        employment_summary = response['choices'][0]['message']['content']
+
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        response = client.chat.completions.create(
+          model="gpt-4",
+          messages=[{"role": "system", "content": "You are an expert at text summarization."},
+          {"role": "user", "content": f"Please summarize this description: {employment_history}"}
+          ],
+        )
+        employment_summary = response.choices[0].message.content
         parsed_people_info={
             "title":data.get('title'),
             "headline":data.get('headline'),
@@ -166,3 +166,32 @@ def parse_people_info(data):
         return parsed_people_info
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while parsing the data input. {e}")
+
+def update_client_info(client_info_table,client_id,company_value_proposition):
+    try:
+        api = Api(AIRTABLE_API_KEY)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, client_info_table)
+        print(f"\nFetching latest page number from the table")
+        data_records = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
+        if data_records:
+            record = data_records[0] 
+            record_id = record.get('id')
+            airtable_obj.update(record_id, {'client_value_proposition': str(company_value_proposition)})
+        else:
+            print(f"No record found for client_id {client_id}")
+    except Exception as e:
+        execute_error_block(f"Exception occured in {__name__} while updating company value proposition. {e}")
+
+
+def fetch_client_column(client_info_table,client_id,column_name):
+    try:
+        print(f'Fetching {column_name} for client {client_id}')
+        api = Api(AIRTABLE_API_KEY)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, client_info_table)
+        print(f"\n Fetching latest page number from the table")
+        data_count = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
+        record_details = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")[0]
+        column_value = record_details.get('fields').get(column_name)
+        return column_value
+    except Exception as e:
+        execute_error_block(f"Error occured in {__name__} while fetching client specific column details. {e}")

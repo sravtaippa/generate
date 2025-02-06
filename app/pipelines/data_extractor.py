@@ -2,13 +2,14 @@ import requests
 import openai
 import os
 from datetime import datetime
-from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable,retrieve_client_tables,fetch_client_outreach_mappings
+from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable,retrieve_client_tables,fetch_client_outreach_mappings,fetch_client_column
 from pipelines.lead_qualifier import qualify_lead
 from error_logger import execute_error_block
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
 # from lead_magnet.industry_insights import get_cold_email_kpis
 
 CLIENT_DETAILS_TABLE_NAME = os.getenv("CLIENT_DETAILS_TABLE_NAME")
+CLIENT_INFO_TABLE_NAME = os.getenv("CLIENT_INFO_TABLE_NAME")
 
 def people_enrichment(apollo_id):
     try:
@@ -48,7 +49,8 @@ def people_search_v2(search_url,client_id,qualify_leads):
         selected_profiles=0
         iteration=1
         if qualify_leads=='yes':
-            solution_benefits,unique_features,solution_impact_examples,domain,buyer_criteria,buyer_examples = fetch_client_details(client_id)
+            # solution_benefits,unique_features,solution_impact_examples,domain,buyer_criteria,buyer_examples = fetch_client_details(client_id)
+            client_value_proposition = fetch_client_column(CLIENT_INFO_TABLE_NAME,client_id,"client_value_proposition")
         print(f"\n------------Initiating People Search------------")
         for contact in data['people']:
             print(f"\n------------------------Iteration {iteration}------------------------------\n")
@@ -58,15 +60,7 @@ def people_search_v2(search_url,client_id,qualify_leads):
             unique_value = apollo_id
             persona_details=parse_people_info(contact)
             if qualify_leads=='yes':
-                qualification_status = qualify_lead(
-                    persona_details=persona_details,
-                    solution_benefits=solution_benefits,
-                    unique_features=unique_features,
-                    solution_impact_examples=solution_impact_examples,
-                    domain=domain,
-                    buyer_criteria=buyer_criteria,
-                    buyer_examples=buyer_examples
-                    )
+                qualification_status = qualify_lead(persona_details,client_value_proposition)
                
                 if not qualification_status:
                     print(f"\n------------Lead Disqualified------------")
@@ -88,15 +82,16 @@ def people_search_v2(search_url,client_id,qualify_leads):
             if enrichment_api_response.status_code == 200:
                 data = enrichment_api_response.json()
                 data=data['person']
-                response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",  # or "gpt-4" for more advanced results
+                client = openai.OpenAI(api_key=OPENAI_API_KEY)
+                response = client.chat.completions.create(
+                model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are an expert at text summarization."},
                     {"role": "user", "content": f"Please shorten this description: {data['employment_history']}"}
                 ],
-                max_tokens=100  # Adjust based on the desired length of the output
                 )
-                employment_summary = response['choices'][0]['message']['content']
+                # employment_summary = response['choices'][0]['message']['content']
+                employment_summary = response.choices[0].message.content
                 data_dict = {
                     'id': data.get('id'),
                     'first_name': data.get('first_name'),

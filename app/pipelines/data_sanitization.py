@@ -18,7 +18,9 @@ TABLE_NAME_OLD = 'profiles_raw'
 BASE_ID_NEW = 'app5s8zl7DsUaDmtx'
 TABLE_NAME_NEW = 'profiles_cleaned'
 TABLE_NAME_NEW1 = 'profiles_outreach'
-TABLE_NAME_NEW2 = 'client_details'
+# TABLE_NAME_NEW2 = 'client_details'
+TABLE_NAME_NEW2 = os.getenv("CLIENT_INFO_TABLE_NAME")
+print(f"Client table name for Santization module : {TABLE_NAME_NEW2}")
 TABLE_NAME_NEW3 = 'contacts_taippa_marketing'
 TABLE_NAME_EMAIL_OPENED = 'email_opened'
 TABLE_NAME_LINK_CLICKED = 'link_opened'
@@ -266,9 +268,10 @@ def fetch_and_update_data(client_id):
             "sender_name": "full_name",
             "sender_title": "job_title",
             "sender_company_website": "company_website",
-            "key_benefits": "solution_benefits",
-            "impact_metrics": "solution_impact_examples",
-            "unique_features": "unique_features",
+            # "key_benefits": "solution_benefits",
+            # "impact_metrics": "solution_impact_examples",
+            # "unique_features": "unique_features",
+            "client_value_proposition" : "client_value_proposition",
             "cta_options": "cta_options",
             "color_scheme": "color_scheme",
             "font_style": "font_style",
