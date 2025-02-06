@@ -65,7 +65,7 @@ def qualify_lead(persona_details,client_value_proposition):
         print('===============================================\n')
         print(f"Qualification status : {qualification_response}")
         print('===============================================\n')
-        qualification_status=qualification_response[:5]
+        qualification_status=qualification_response[:12]
         return True if 'YES' in qualification_status.upper() else False
     except Exception as e:
         

@@ -238,10 +238,10 @@ def embed_existing_pdf(new_pdf, existing_pdf, last_pager,output_pdf):
         for page in new_pdf_reader.pages:
             writer.add_page(page)
 
-    with open(last_pager, "rb") as new_pdf_file:
-        last_pdf_reader = PdfReader(new_pdf_file)
-        for page in last_pdf_reader.pages:
-            writer.add_page(page)
+    # with open(last_pager, "rb") as new_pdf_file:
+    #     last_pdf_reader = PdfReader(new_pdf_file)
+    #     for page in last_pdf_reader.pages:
+    #         writer.add_page(page)
 
     # Write the final PDF to disk
     with open(output_pdf, "wb") as output_file:
@@ -494,7 +494,7 @@ def create_personalized_pdf(user_details, output_path, image_path):
     content.append(Spacer(1, 0.1 * inch))  # Reduced spacing
 
     greeting = Paragraph(f"Hi {name},", greeting_style)
-    message = Paragraph(f"Breakthrough sales growth starts here: A powerful 15-day blueprint to revolutionize your {job_title} strategy and drive exceptional results.", ice_breaker_style)
+    message = Paragraph(f"Breakthrough sales growth starts here: A powerful 15-day blueprint to revolutionize your {job_title} strategy at {company} and drive exceptional results.", ice_breaker_style)
 
     content.append(greeting)
     content.append(message)
@@ -622,15 +622,6 @@ def create_personalized_pdf(user_details, output_path, image_path):
     content.append(Spacer(1, 0.2 * inch))
     content.append(Spacer(1, 0.2 * inch))
     content.append(Spacer(1, 0.2 * inch))
-    # content.append(Paragraph("Accelerate Your Growth with Taippa", section_title))
-    # growth_text = ("Take your business to the next level with our exclusive strategies "
-    #                "and tools designed for high-impact growth. Join us for a "
-    #                "<b>free demo</b> and explore how Taippa can empower your client "
-    #                "acquisition and revenue acceleration.")
-    # content.append(Paragraph(growth_text, ice_breaker_style))
-    # content.append(Spacer(1, 0.2 * inch))
-    # content.append(Paragraph("📩 Book Your Free Demo Today!", planner_title_style))
-
     content.append(Spacer(1, 0.2 * inch))
     content.append(Spacer(1, 0.2 * inch))
     content.append(Spacer(1, 0.2 * inch))
