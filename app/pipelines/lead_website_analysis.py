@@ -161,7 +161,7 @@ def get_apollo_tags(icp_information):
   return result
 
 
-def analyze_website(website_url):
+def analyze_website(website_url,explicit_icp_criteria):
   try:
     print(" Started Website Analysis")
     print("\n--------------------------------------------------------\n")
@@ -206,7 +206,69 @@ def analyze_website(website_url):
     Company Size: The expected employee range of companies that would benefit from company's offerings.
     Please base your response on logical assumptions about the potential customers and their industries in the specific market, and align the profiles with company's services.
     """
-    icp_result = index.query_with_sources(icp_description_query, llm=OpenAI(max_tokens=1000))
+    
+    icp_description_query_final = f"""
+    ### Task: Extract Ideal Customer Profile (ICP) from Website Content
+
+    #### **🔍 Objective**
+    Analyze the **company's website** to extract its **Ideal Customer Profile (ICP)** based on **industry, market positioning, and offerings**.  
+    The ICP will help retrieve **high-value prospects** from **Apollo.io** for **targeted outreach**.  
+
+    ---
+
+    #### **🚨 STRICT Criteria**  
+    ✔ **Primary Source:** Extract ICP attributes **strictly from website content**.  
+    ✔ **Explicit Criteria:** If provided (`{explicit_icp_criteria}`), prioritize it **alongside** website insights.  
+    ✔ **If `{explicit_icp_criteria}` = `"Not available"`, rely entirely on website content**.  
+    ✔ **STRICTLY exclude irrelevant profiles.**  
+
+    ---
+
+    #### **📌 ICP Attributes to Extract**  
+
+    ##### **1️⃣ Job Titles (Minimum 5 - STRICT, No Invalid Responses)**  
+    🔴 **IMPORTANT**:  
+    - **ALWAYS return at least 5 job titles**.  
+    - If fewer than 5 job titles exist, **infer closely related job titles** from context instead of returning fewer than 5.  
+    - If no exact matches are available, **derive general industry-relevant job titles**.  
+
+    ##### **2️⃣ Seniority Levels (Minimum 4 - STRICT, Unique Values Required)**  
+    🔴 **IMPORTANT**:  
+    - Extract at least **4 unique seniority levels**.  
+    - **DO NOT repeat the same seniority level** (e.g., avoid `["Senior", "Senior", "Senior", "Senior"]`).  
+    - If limited seniority data is available, **infer additional relevant seniority levels**.  
+
+    ##### **3️⃣ Geographic Targeting (Minimum 3 - STRICT, Unique Locations Required)**  
+    🔴 **IMPORTANT**:  
+    - Extract at least **3 distinct locations** (e.g., avoid `["Dubai", "Dubai", "Dubai"]`).  
+    - If the company focuses on a single region, **include broader geographical variations** (e.g., `"Dubai"`, `"UAE"`, `"Middle East"`).  
+
+    ##### **4️⃣ Ideal Company Size - Minimum 3 Ranges (STRICT)**  
+    - **Extract at least 3 distinct company size tags** (e.g., `'1-10'`, `'11-50'`, `'51-200'`).  
+
+    ---
+
+    #### **✅ Extraction Guidelines**  
+    ✔ **Website content is the primary source.**  
+    ✔ If `{explicit_icp_criteria}` is available, **merge it with extracted insights**.  
+    ✔ STRICTLY **ensure minimum counts for each category.**  
+    ✔ **NEVER return "INVALID" or an empty list—always generate the closest possible matches**.  
+    ✔ **Ensure diversity in extracted values (no duplicates within lists).**  
+
+    ---
+
+    #### **🚀 JSON-ONLY Output**  
+    ⚠️ **Return ONLY a JSON object** with unique values in each category—DO NOT include explanations.  
+
+    ```json
+    {{
+      "job_titles": ["<job_title_1>", "<job_title_2>", "<job_title_3>", "<job_title_4>", "<job_title_5>", ...],
+      "person_seniorities": ["<unique_seniority_1>", "<unique_seniority_2>", "<unique_seniority_3>", "<unique_seniority_4>", ...],
+      "person_locations": ["<unique_location_1>", "<unique_location_2>", "<unique_location_3>", ...],
+      "employee_range": ["<size_1>", "<size_2>", "<size_3>", ...]
+    }}
+    """
+    icp_result = index.query_with_sources(icp_description_query_final, llm=OpenAI(max_tokens=1000))
     icp_description = icp_result["answer"]
     print("Ideal Customer Profile Tags:", icp_description)
     print("source:", icp_result["sources"])
@@ -250,7 +312,54 @@ def analyze_website(website_url):
     - Do **not generalize**; instead, focus on precise insights derived from the website content.  
     - Present findings in **structured bullet points** to enhance clarity and ease of use.  
     """
-    value_proposition_details = index.query_with_sources(value_proposition_query, llm=OpenAI(max_tokens=1000))
+
+    value_proposition_query_v2 = """
+    Carefully analyze the website content to first **understand the company, its sector, and its target audience**.  
+    Extract key insights with **precise, relevant, and actionable details** tailored to outreach efforts.  
+    Ensure each section is structured into **clear bullet points under distinct headings** for readability and direct applicability.  
+
+    ### Output Format (Mandatory)  
+    - The extracted information **must be displayed under clear section headings**:  
+      - **Solution Benefits**  
+      - **Unique Features**  
+      - **Solution Impact Examples**  
+      - **Buyer Criteria**  
+    - Each section **must be in bullet points** rather than paragraphs.  
+    - Ensure all extracted details are **specific, actionable, and relevant** to the company’s product/service.  
+    - The information should be **immediately usable** for crafting personalized outreach emails.  
+    - **Never return ‘Not Available’; instead, derive insights** based on related content from the website.  
+
+    ### Step 1: Understand the Website & Sector  
+    - Identify the company's **industry, domain, and primary business focus**.  
+    - Determine whether it operates in **B2B, B2C, SaaS, Fintech, Healthcare, E-commerce, or another sector**.  
+    - Recognize the **type of customers** the company serves and the core problems it addresses.  
+
+    ### Step 2: Extract Key Business Insights  
+
+    #### **Solution Benefits**  
+    - Clearly define the **core benefits** of the company’s product/service in a way that resonates with its specific audience.  
+    - Highlight specific **value propositions**, such as cost savings, efficiency improvements, revenue growth, security enhancements, or regulatory compliance.  
+    - Provide quantified benefits where possible (e.g., "Reduces operational costs by 30%" or "Increases lead conversion rates by 50%").  
+    - If testimonials or customer success stories exist, extract **relevant statements that reinforce these benefits**.  
+
+    #### **Unique Features**  
+    - Identify distinct **functionalities, technologies, or methodologies** that set the product/service apart from competitors.  
+    - Mention any **patented technology, proprietary algorithms, or exclusive integrations** that enhance the offering.  
+    - Highlight industry-specific capabilities, automation features, AI-driven enhancements, or any **compliance-related advantages**.  
+
+    #### **Solution Impact Examples**  
+    - Provide **real-world examples, case studies, or use cases** demonstrating the impact of the product/service.  
+    - Specify relevant industries where the solution has been successfully implemented (e.g., "Used by leading fintech companies to streamline fraud detection").  
+    - If direct case studies are not available, infer logical impacts based on the product’s capabilities (e.g., "Given its AI-powered analytics, this tool likely helps e-commerce businesses optimize pricing strategies").  
+    - **Do not state ‘information not available’; instead, extract contextual insights** from related content to construct a compelling narrative.  
+
+    #### **Buyer Criteria**  
+    - Clearly define the **target customers** based on industry, business size, and geographic location.  
+    - Specify the typical **pain points or challenges** these buyers face that the product/service addresses.  
+    - Identify key decision-makers (e.g., CTOs, Marketing Directors, Procurement Managers) involved in the purchasing process.  
+    - Include details about **pricing expectations, regulatory considerations, and integration requirements** that may influence a buyer’s decision.  
+    """
+    value_proposition_details = index.query_with_sources(value_proposition_query_v2, llm=OpenAI(max_tokens=1000))
     value_proposition = value_proposition_details["answer"]
     print("Value Proposition Details:", value_proposition)
     print("source:", value_proposition_details["sources"])
