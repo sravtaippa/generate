@@ -191,7 +191,7 @@ def fetch_client_column(client_info_table,client_id,column_name):
         print(f"\n Fetching latest page number from the table")
         data_count = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
         record_details = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")[0]
-        column_value = record_details.get('fields').get(column_name)
+        column_value = record_details.get('fields').get(column_name,"Not available")
         return column_value
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while fetching client specific column details. {e}")

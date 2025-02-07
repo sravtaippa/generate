@@ -3,7 +3,7 @@ import json
 import os
 import json
 import requests
-from db.db_utils import unique_key_check_airtable,export_to_airtable,update_client_info
+from db.db_utils import unique_key_check_airtable,export_to_airtable,update_client_info,fetch_client_column
 from pipelines.lead_website_analysis import analyze_website
 
 from config import APOLLO_HEADERS
@@ -29,10 +29,14 @@ def generate_icp(client_id,website_url):
     try:
         print(f"\n\n--------Generating ICP--------\n\n")
         openai.api_key = OPENAI_API_KEY
-        icp_description, icp_apollo_tags, value_proposition_details = analyze_website(website_url)
+        explicit_icp_criteria = fetch_client_column(CLIENT_INFO_TABLE_NAME,client_id,"explicit_icp_criteria")
+        print(f"explicit_icp_criteria : {explicit_icp_criteria}")
+        icp_description, icp_apollo_tags, value_proposition_details = analyze_website(website_url,explicit_icp_criteria)
         icp_json = json.loads(icp_apollo_tags)
+        print(icp_json)
+        print(f"Completed creating ICP json")
         results_per_page=100
-        person_titles = icp_json.get('job_titles')
+        person_titles = icp_json.get('job_titles') 
         person_seniorities = icp_json.get('person_seniorities')
         person_locations = icp_json.get('person_locations')
         email_status = ['verified']
