@@ -195,3 +195,18 @@ def fetch_client_column(client_info_table,client_id,column_name):
         return column_value
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while fetching client specific column details. {e}")
+
+def add_client_tables_info(client_id,source_table_name,curated_table_name,outreach_table_name):
+    try:
+        api = Api(AIRTABLE_API_KEY)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, CLIENT_INFO_TABLE_NAME)
+        data_records = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
+        if data_records:
+            record = data_records[0] 
+            record_id = record.get('id')
+            airtable_obj.update(record_id, {'raw_table': str(source_table_name),'cleaned_table':str(curated_table_name),'outreach_table':str(outreach_table_name)})
+            print(f"Added client info table with the dependent tables")
+        else:
+            print(f"No record found for client_id {client_id}")
+    except Exception as e:
+        print(f"Error occured while adding client tables info: {e}")
