@@ -308,7 +308,7 @@ def get_apollo_tags(icp_information):
             intern,
         ]
 
-        Pick person_locations that fall under these categories which are relevant to the given Ideal Customer Profile, understanding the sector (select minimum 3 at least):
+        Pick person_locations that fall under these categories which are relevant to the given Ideal Customer Profile (minimum 1 required):
         person_locations = [
             Dubai,
             UAE,
@@ -355,7 +355,7 @@ def get_apollo_tags(icp_information):
             '5001,10000',
         ]
 
-        Output should ONLY be a JSON object with the following structure:
+        Return only a **STRICT** JSON object in the following format:
         {{
           "job_titles": [job_title1, job_title2, job_title3],
           "person_seniorities": [person_seniority1, person_seniority2, person_seniority3],
