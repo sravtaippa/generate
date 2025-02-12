@@ -11,7 +11,8 @@ from langchain.indexes.vectorstore import VectorstoreIndexCreator
 from transformers import GPT2TokenizerFast  # For token counting
 from langchain_community.vectorstores import Chroma
 from error_logger import execute_error_block
-import datetime
+from datetime import datetime, timezone
+# import datetime
 
 
 # Set up your Apify API token and OpenAI API key
@@ -386,21 +387,13 @@ def analyze_website(website_url,explicit_icp_criteria="Not available"):
         ),
     )
 
-    time_stamp = datetime.datetime.now(datetime.UTC).strftime('%Y-%m-%d-%H-%M-%S')
+    time_stamp = datetime.now(timezone.utc).strftime('%Y-%m-%d-%H-%M-%S')
     print(f"Time : {time_stamp}")
     chroma_folder = f"chroma_data_{website_url.replace('https://', '').replace('/', '_')}_{time_stamp}"
     print(f"Chroma folder name: {chroma_folder}")
     tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
     print(f"Dataset id of the loader : {loader.dataset_id}") # Gives datasetid of the loader
-    print("\n--------------------------------------------------------\n")
-    time_stamp = datetime.datetime.now(datetime.UTC).strftime('%Y-%m-%d-%H-%M-%S')
-    print(f"Time : {time_stamp}")
-    website_url = 'https://www.tmeworldwide.com/'
-    # chroma_folder = './client_data_'+str(time_stamp)
-    chroma_folder = f"chroma_data_{website_url.replace('https://', '').replace('/', '_')}_{time_stamp}"
-
-    print(f"chroma folder: {chroma_folder}")
-    tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+    
     # Step 1: Define Embeddings & Vector Store Index
     embedding_function = OpenAIEmbeddings()
 
