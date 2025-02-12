@@ -14,12 +14,10 @@ from error_logger import execute_error_block
 from datetime import datetime, timezone
 # import datetime
 
-
 # Set up your Apify API token and OpenAI API key
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 APIFY_API_TOKEN = os.getenv("APIFY_API_TOKEN")
 apify = ApifyWrapper()
-
 
 def get_client_value_proposition(tokenizer,index):
   try:

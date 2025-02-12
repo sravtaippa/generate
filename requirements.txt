@@ -12,4 +12,11 @@ matplotlib
 seaborn
 reportlab
 PyPDF2
-duckduckgo-search
+apify-client
+langchain_community
+langchain_openai
+langchain_core
+langchain
+langchain-chroma
+transformers
+chromadb
