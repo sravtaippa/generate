@@ -422,6 +422,8 @@ def analyze_website(website_url,explicit_icp_criteria="Not available"):
 
 def chroma_db_testing():
     try:
+        import sqlite3
+        print(sqlite3.sqlite_version)
         print(f"testing chroma sqlite3 ")
         embedding_function = OpenAIEmbeddings()
         chroma_folder = "./chroma_db_test"
