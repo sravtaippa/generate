@@ -364,11 +364,146 @@ def get_apollo_tags(icp_information):
 
         Do not include any explanations, text, or additional information outside the JSON object.
         """
-  
+
+    updated_json_prompt = f"""
+        From the information gathered regarding the Ideal Customer Profile of the company: {icp_information}, segregate the details into different sections:
+        1. job_titles
+        2. person_seniorities
+        3. person_locations
+        4. employee_range
+
+        Strictly pick values **only from the given lists** below. Do not generate or infer any values outside these lists.
+
+        **Job Titles** (Select at least 5, only from this list):
+        job_titles = [
+            "ceo",
+            "coo",
+            "cto",
+            "cmo",
+            "cio",
+            "cfo",
+            "e-commerce specialist",
+            "vp of sales",
+            "marketing manager",
+            "marketing coordinator",
+            "digital marketing manager",
+            "director of marketing",
+            "director of sales",
+            "business development managers",
+            "sales associate",
+            "vp of marketing",
+            "vp of engineering",
+            "director of product management",
+            "director of operations",
+            "director of hr",
+            "director of engineering",
+            "sales manager",
+            "product manager",
+            "operations manager",
+            "branding manager",
+            "hr manager",
+            "it manager",
+            "customer success manager",
+            "data scientist",
+            "product designer",
+            "marketing specialist",
+            "sales representative",
+            "business analyst",
+            "customer support specialist",
+            "marketing assistant",
+            "sales associate",
+            "hr coordinator",
+            "business development managers",
+            "administrative assistant",
+            "freelancer",
+            "contractor",
+            "growth hacker",
+            "scrum master",
+            "social media strategist",
+            "content creator"
+        ]
+
+        **Person Seniorities** (Only select from this list):
+        person_seniorities = [
+            "owner",
+            "founder",
+            "c_suite",
+            "partner",
+            "vp",
+            "head",
+            "director",
+            "manager",
+            "senior",
+            "entry",
+            "intern"
+        ]
+
+        **Person Locations** (Minimum 1 required, only from this list):
+        person_locations = [
+            "Dubai",
+            "UAE",
+            "United Arab Emirates",
+            "Abu Dhabi",
+            "Sharjah",
+            "Ajman",
+            "Riyadh",
+            "Manama",
+            "Bahrain",
+            "Muscat",
+            "Kuwait",
+            "Jordan",
+            "Lebanon",
+            "Qatar",
+            "Oman",
+            "Saudi Arabia",
+            "Australia",
+            "France",
+            "South Africa",
+            "India",
+            "China",
+            "United States",
+            "Russia",
+            "Germany",
+            "Italy",
+            "Canada",
+            "United Kingdom"
+        ]
+
+        **Employee Range** (Select only from this list):
+        employee_range = [
+            "1,100",
+            "1,500",
+            "500,10000",
+            "50,1000",
+            "1,1000",
+            "1,50",
+            "11,50",
+            "51,200",
+            "201,500",
+            "501,1000",
+            "1000,5000",
+            "5001,10000"
+        ]
+
+        **STRICT JSON OUTPUT REQUIREMENT**  
+        - The output **must be a valid JSON object**.  
+        - **No explanations, no additional text, no extra formatting.**  
+
+        **Expected JSON Output Format**:
+        {{
+          "job_titles": [job_title1, job_title2, job_title3],
+          "person_seniorities": [person_seniority1, person_seniority2, person_seniority3],
+          "person_locations": [person_location1, person_location2, person_location3],
+          "employee_range": [employee_range1, employee_range2, employee_range3]
+        }}
+
+        **Do not return anything other than the JSON object.**
+    """
+
     client = openai.OpenAI(api_key=OPENAI_API_KEY)
     response = client.chat.completions.create(
       model="gpt-4",
-      messages=[{"role": "user", "content": prompt}]
+      messages=[{"role": "user", "content": updated_json_prompt}]
     )
     # print(response.choices[0].message.content)
     result = response.choices[0].message.content
