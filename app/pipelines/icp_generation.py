@@ -66,6 +66,7 @@ def generate_icp(client_id,website_url):
         update_client_info(CLIENT_INFO_TABLE_NAME,client_id,value_proposition_details)
         print(f"Successfully updated value proposition details for the client")
         print(f"\n\nRunning the people search API test")
+        print(f"\n\n------------Apollo Url for testing : {url_test}------------------------")
         response = requests.post(url_test, headers=headers)
         if response.status_code == 200:
             print(f"\n------------Completed Persona Data Mining------------")
