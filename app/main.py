@@ -103,12 +103,12 @@ def client_onboarding():
         # website_url = "https://www.exclusive-links.com/about-exclusive-links/meet-the-team/mirjam-rakem"
         client_id = request.args.get('client_id', type=str)
         website_url = request.args.get('website_url', type=str)
-        source_table_name,curated_table_name,outreach_table_name = create_client_tables(client_id) 
-        if not(source_table_name and curated_table_name and outreach_table_name):
-            print(f"Exception occured while creating tables")
-            raise
-        add_client_tables_info(client_id,source_table_name,curated_table_name,outreach_table_name)
-        # status = generate_icp(client_id,website_url)
+        # source_table_name,curated_table_name,outreach_table_name = create_client_tables(client_id) 
+        # if not(source_table_name and curated_table_name and outreach_table_name):
+        #     print(f"Exception occured while creating tables")
+        #     raise
+        # add_client_tables_info(client_id,source_table_name,curated_table_name,outreach_table_name)
+        status = generate_icp(client_id,website_url)
         print("Client onboarding successful")
         return {"Status":"Client onboarding successful" if status else "Client onboarding failed"} 
         
