@@ -97,6 +97,7 @@ def client_onboarding():
     try:
         client_id = request.args.get('client_id', type=str)
         website_url = request.args.get('website_url', type=str)
+        
         status = generate_icp(client_id,website_url)
         print("Client onboarding successful")
         return {"Status":"Client onboarding successful" if status else "Client onboarding failed"}
