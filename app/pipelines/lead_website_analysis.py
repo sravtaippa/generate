@@ -418,6 +418,24 @@ def analyze_website(website_url,explicit_icp_criteria="Not available"):
   except Exception as e:
     print(f"Error occured while analyzing the website : {e}")
 
+
+def chroma_db_testing():
+    try:
+        print(f"testing chroma sqlite3 ")
+        embedding_function = OpenAIEmbeddings()
+        chroma_folder = "./chroma_db_test"
+        index = VectorstoreIndexCreator(
+                vectorstore_cls=Chroma,  
+                embedding=embedding_function,  
+                vectorstore_kwargs={"persist_directory": chroma_folder}  
+        )
+        print(f"Testing completed. Index: {index}")
+        
+        return True
+    except Exception as e:
+        print(f"Error occured while testing chromadb")
+        return False
+
 if __name__ == "__main__":
   website_url = "https://www.tmeworldwide.com/"
   analyze_website(website_url)
