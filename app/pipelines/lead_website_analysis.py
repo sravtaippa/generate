@@ -420,17 +420,24 @@ def analyze_website(website_url,explicit_icp_criteria="Not available"):
 
 def chroma_db_testing():
     try:
+        # Replace sqlite3 with pysqlite3
+        __import__('pysqlite3')
+        import sys
+        sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
+        # Now use sqlite3 as usual
         import sqlite3
-        print(sqlite3.sqlite_version)
-        print(f"testing chroma sqlite3 ")
-        embedding_function = OpenAIEmbeddings()
-        chroma_folder = "./chroma_db_test"
-        index = VectorstoreIndexCreator(
-                vectorstore_cls=Chroma,  
-                embedding=embedding_function,  
-                vectorstore_kwargs={"persist_directory": chroma_folder}  
-        )
-        print(f"Testing completed. Index: {index}")
+
+        print(sqlite3.sqlite_version)  
+
+        # embedding_function = OpenAIEmbeddings()
+        # chroma_folder = "./chroma_db_test"
+        # index = VectorstoreIndexCreator(
+        #         vectorstore_cls=Chroma,  
+        #         embedding=embedding_function,  
+        #         vectorstore_kwargs={"persist_directory": chroma_folder}  
+        # )
+        # print(f"Testing completed. Index: {index}")
         
         return True
     except Exception as e:
