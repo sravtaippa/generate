@@ -18,6 +18,7 @@ from db.db_utils import fetch_client_details,export_to_airtable,unique_key_check
 from error_logger import execute_error_block
 from lead_magnet.lead_magnet_pdf_generation import generate_lead_magnet_pdf
 from pipelines.data_sync import trigger_pipeline
+from pipelines.lead_website_analysis import chroma_db_testing
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
 
 print(f"\n=============== Generate : Pipeline started  ===============")
@@ -75,6 +76,15 @@ def update_email_opens_clicked():
     except Exception as e:
         execute_error_block(f"Error occured while counting email opened and email clicked {e}")
 
+@app.route("/test_chroma",methods=["GET"])
+def test_chroma():
+    try:
+        status = chroma_db_testing()
+
+        return {"Status":status}
+    except Exception as e:
+        print(f"Error occured while testing chroma db sqlite version")
+
 @app.route("/test_sanitization", methods=["GET"])
 def test_sanitization():
     try:
@@ -92,12 +102,13 @@ def fetch_inbox_details_full():
     except Exception as e:
         execute_error_block(f"Error occured while fetching inbox details : {e}")
 
+
 @app.route("/client_onboarding", methods=["GET"])
 def client_onboarding():
     try:
         client_id = request.args.get('client_id', type=str)
         website_url = request.args.get('website_url', type=str)
-        
+
         status = generate_icp(client_id,website_url)
         print("Client onboarding successful")
         return {"Status":"Client onboarding successful" if status else "Client onboarding failed"}
