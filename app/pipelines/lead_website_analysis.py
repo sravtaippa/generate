@@ -397,12 +397,13 @@ def analyze_website(website_url,explicit_icp_criteria="Not available"):
     # Step 1: Define Embeddings & Vector Store Index
     embedding_function = OpenAIEmbeddings()
 
+    print(f"Fetching vector store index")
     index = VectorstoreIndexCreator(
         vectorstore_cls=Chroma,  
         embedding=embedding_function,  
         vectorstore_kwargs={"persist_directory": chroma_folder}  
     ).from_loaders([loader])  
-
+    print(f"Started website analysis...")
     icp_tags,icp_analysis = get_icp(tokenizer,index)
     apollo_tags = get_apollo_tags(icp_tags)
     client_value_proposition = get_client_value_proposition(tokenizer,index)
