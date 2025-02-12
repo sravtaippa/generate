@@ -14,6 +14,10 @@ from error_logger import execute_error_block
 from datetime import datetime, timezone
 # import datetime
 
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
 # Set up your Apify API token and OpenAI API key
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 APIFY_API_TOKEN = os.getenv("APIFY_API_TOKEN")
@@ -90,7 +94,7 @@ def get_client_value_proposition(tokenizer,index):
 
     llm = OpenAI(temperature=0, max_tokens=1500)  # Increased output space
     client_value_proposition = llm.invoke(client_value_proposition_prompt)
-
+    
     print("\nClient Value Proposition:", client_value_proposition)
     print("\nSources:", sources)
     return client_value_proposition
@@ -208,6 +212,7 @@ def get_icp(tokenizer,index):
 
       📌 **Structured Response:**  
       """
+      
       llm = OpenAI(temperature=0, max_tokens=1500)  # Increased output space
 
       icp_tags = llm.invoke(prompt_expanded)
@@ -396,6 +401,9 @@ def analyze_website(website_url,explicit_icp_criteria="Not available"):
     embedding_function = OpenAIEmbeddings()
 
     print(f"Fetching vector store index")
+    # Now use sqlite3 as usual
+    import sqlite3
+    print(f"Sqlite3 version : {sqlite3.sqlite_version}")  
     index = VectorstoreIndexCreator(
         vectorstore_cls=Chroma,  
         embedding=embedding_function,  
@@ -427,18 +435,8 @@ def chroma_db_testing():
 
         # Now use sqlite3 as usual
         import sqlite3
-
         print(sqlite3.sqlite_version)  
 
-        # embedding_function = OpenAIEmbeddings()
-        # chroma_folder = "./chroma_db_test"
-        # index = VectorstoreIndexCreator(
-        #         vectorstore_cls=Chroma,  
-        #         embedding=embedding_function,  
-        #         vectorstore_kwargs={"persist_directory": chroma_folder}  
-        # )
-        # print(f"Testing completed. Index: {index}")
-        
         return True
     except Exception as e:
         print(f"Error occured while testing chromadb")
