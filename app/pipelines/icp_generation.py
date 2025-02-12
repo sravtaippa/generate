@@ -25,6 +25,12 @@ def construct_query_param(key, values):
     print(res)
     return "&".join([f"{key}[]={value.replace(' ', '%20').replace(',', '%2C')}" for value in values])
 
+def lowercase_keys(json_data, keys_to_lowercase):
+    for key in keys_to_lowercase:
+        if key in json_data and isinstance(json_data[key], list):
+            json_data[key] = [value.lower() for value in json_data[key] if isinstance(value, str)]
+    return json_data
+
 def generate_icp(client_id,website_url):
     try:
         print(f"\n\n--------Generating ICP--------\n\n")
@@ -35,8 +41,12 @@ def generate_icp(client_id,website_url):
         print(f"\n\n----ICP Description retrieved: {icp_description}------\n\n")
         print(f"\n\n----ICP Apollo Tags retrieved: {icp_apollo_tags}------\n\n")
         print(f"\n\n----Client Value Proposition retrieved: {value_proposition_details}------\n\n")
-        icp_json = json.loads(icp_apollo_tags)
-        print(icp_json)
+        parsed_json = json.loads(icp_apollo_tags)
+        print(parsed_json)
+        keys_to_lowercase = ["job_titles", "person_seniorities", "person_locations"]
+        # Convert values to lowercase
+        icp_json = lowercase_keys(parsed_json, keys_to_lowercase)
+        print(f"Updated json: {icp_json}")
         print(f"Completed creating ICP json")
         results_per_page=100
         person_titles = icp_json.get('job_titles') 
