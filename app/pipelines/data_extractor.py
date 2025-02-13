@@ -92,6 +92,7 @@ def people_search_v2(search_url,client_id,qualify_leads):
                 )
                 # employment_summary = response['choices'][0]['message']['content']
                 employment_summary = response.choices[0].message.content
+                timestamp = datetime.now()
                 data_dict = {
                     'id': data.get('id'),
                     'first_name': data.get('first_name'),
@@ -125,7 +126,8 @@ def people_search_v2(search_url,client_id,qualify_leads):
                     'organization_state': data.get('organization').get('state') if data.get('organization') else '',
                     'organization_country': data.get('organization').get('country') if data.get('organization') else '',
                     'organization_short_description': data.get('organization').get('short_description') if data.get('organization') else '',
-                    'organization_technology_names': str(data.get('organization').get('technology_names')) if data.get('organization') else ''
+                    'organization_technology_names': str(data.get('organization').get('technology_names')) if data.get('organization') else '',
+                    'created_time':str(timestamp),
                 }
                 export_to_airtable(data_dict,raw_table)
                 selected_profiles+=1
@@ -250,6 +252,7 @@ def people_search(custom_search_url,query_params,client_id,qualify_leads):
                     'organization_technology_names': str(data.get('organization').get('technology_names')) if data.get('organization') else '',
                     'created_time':str(timestamp),
                 }
+                print(f"Data dictionary to be added to airtable: {data_dict}")
                 export_to_airtable(data_dict,raw_table)
                 selected_profiles+=1
                 print(f"\n------------Data ingestion successful for record id :{apollo_id}------------")
