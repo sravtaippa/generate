@@ -191,8 +191,13 @@ def fetch_client_column(client_info_table,client_id,column_name):
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, client_info_table)
         print(f"\n Fetching latest page number from the table")
-        data_count = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
-        record_details = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")[0]
+        record_details = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
+        print(record_details)
+        print(f"Matching record count present in the client info table for client_id {client_id} : {len(record_details)}")
+        records_count = len(record_details)
+        if records_count <1:
+            execute_error_block(f"No records found for the corresponding client_id {client_id} in the {client_info_table} table")
+        record_details = record_details[0]
         column_value = record_details.get('fields').get(column_name,"Not available")
         return column_value
     except Exception as e:
