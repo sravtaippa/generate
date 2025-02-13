@@ -17,9 +17,9 @@ def retrieve_client_tables(client_id):
         records = airtable_obj.all()
         print(f"\nRan the client details fetch command")
         records_list = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
+        print(f"Filter formula {{client_id}} = '{client_id}'")
         if len(records_list) < 1:
             execute_error_block(f"The following client_id `{client_id}` is not present in the table {CLIENT_INFO_TABLE_NAME}")
-        print(f"Filter formula {{client_id}} = '{client_id}'")
         record_details = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")[0]
         raw_table = record_details.get('fields').get('raw_table')
         cleaned_table = record_details.get('fields').get('cleaned_table')
