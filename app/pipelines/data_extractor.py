@@ -144,7 +144,6 @@ def people_search_v2(search_url,client_id,qualify_leads):
   except Exception as e:
     execute_error_block(f"Error occured in {__name__} during data ingestion. {e}")
 
-
 def people_search(custom_search_url,query_params,client_id,qualify_leads):
   try:
     print(f"\n------------Started Persona Data Mining------------")
@@ -153,7 +152,9 @@ def people_search(custom_search_url,query_params,client_id,qualify_leads):
     if custom_search_url != "":
         url = custom_search_url
         # url = "https://api.apollo.io/api/v1/mixed_people/search?person_titles[]=Facilities%20director&person_titles[]=COO&person_titles[]=CEO&person_titles[]=operations%20director&person_titles[]=director%20of%20operations&person_locations[]=&organization_locations[]=United%20Arab%20Emirates&contact_email_status[]=verified&organization_num_employees_ranges[]=500%2C10000&page=11&per_page=40"
-    print(url)  
+    print(url)
+    # timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")  
+    timestamp = datetime.now()
     response = requests.post(url, headers=APOLLO_HEADERS)
     print(f"Execution status code: {response.status_code}")
     if response.status_code == 200:
@@ -185,22 +186,11 @@ def people_search(custom_search_url,query_params,client_id,qualify_leads):
                     buyer_criteria=buyer_criteria,
                     buyer_examples=buyer_examples
                     )
-                # qualification_status_test = qualify_lead_test(
-                #     persona_details=persona_details,
-                #     solution_benefits=solution_benefits,
-                #     unique_features=unique_features,
-                #     solution_impact_examples=solution_impact_examples,
-                #     domain=domain,
-                #     buyer_criteria=buyer_criteria,
-                #     buyer_examples=buyer_examples
-                #     )
-                # continue
                 if not qualification_status:
                     print(f"\n------------Lead Disqualified------------")
                     print('Skipping the entry...')
                     continue
                 print(f"\n------------Lead Qualified------------")
-
             else:
                 print(f"Skipping lead qualification...")
             print(f"\n------------Data ingestion started for record id :{apollo_id}------------")
@@ -257,7 +247,8 @@ def people_search(custom_search_url,query_params,client_id,qualify_leads):
                     'organization_state': data.get('organization').get('state') if data.get('organization') else '',
                     'organization_country': data.get('organization').get('country') if data.get('organization') else '',
                     'organization_short_description': data.get('organization').get('short_description') if data.get('organization') else '',
-                    'organization_technology_names': str(data.get('organization').get('technology_names')) if data.get('organization') else ''
+                    'organization_technology_names': str(data.get('organization').get('technology_names')) if data.get('organization') else '',
+                    'created_time':str(timestamp),
                 }
                 export_to_airtable(data_dict,raw_table)
                 selected_profiles+=1

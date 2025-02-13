@@ -109,7 +109,6 @@ def send_to_airtable_if_new(df, airtable_instance, unique_field, desired_fields=
             print(f"Error processing record {i}: {e}")
 
 def clean_name(df, column_name):
-    
     def standardize_capitalization(text):
         if isinstance(text, str):
             text = text.strip()  # Strip whitespace
