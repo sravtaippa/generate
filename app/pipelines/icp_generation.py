@@ -1,4 +1,5 @@
 import openai
+import time
 import json
 import os
 import json
@@ -33,7 +34,7 @@ def lowercase_keys(json_data, keys_to_lowercase):
 
 def generate_icp(client_id,website_url):
     try:
-        print(f"\n\n--------Generating ICP--------\n\n")
+        print(f"\n\n--------Generating ICP --------\n\n")
         openai.api_key = OPENAI_API_KEY
         explicit_icp_criteria = fetch_client_column(CLIENT_INFO_TABLE_NAME,client_id,"explicit_icp_criteria")
         print(f"explicit_icp_criteria : {explicit_icp_criteria}")
