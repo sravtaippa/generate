@@ -88,6 +88,7 @@ def update_client_config(client_config_table,client_id,profiles_enriched):
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, client_config_table)
         print(f"\nFetching latest page number from the table")
+        print(f"Client id = '{client_id}'")
         data_records = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
         if data_records:
             record = data_records[0] 
@@ -193,6 +194,7 @@ def fetch_client_column(client_info_table,client_id,column_name):
         airtable_obj = api.table(AIRTABLE_BASE_ID, client_info_table)
         print(f"\n Fetching latest page number from the table")
         record_details = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
+        print(f"Client id : `{client_id}`, len = {len(client_id)}")
         print(record_details)
         print(f"Matching record count present in the client info table for client_id {client_id} : {len(record_details)}")
         records_count = len(record_details)
