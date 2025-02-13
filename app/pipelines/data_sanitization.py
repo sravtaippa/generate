@@ -6,6 +6,7 @@ import os
 import re
 import json
 from db.db_utils import retrieve_client_tables
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -50,7 +51,8 @@ def fetch_max_created_time(airtable_instance):
     Fetch the maximum created_time from profiles_cleaned.
     """
     records = airtable_instance.get_all()
-    created_times = [pd.to_datetime(record['createdTime']) for record in records if 'createdTime' in record]
+    
+    created_times = [pd.to_datetime(record['created_time']) for record in records if 'created_time' in record]
     return max(created_times) if created_times else None
 
 def filter_new_records(df, max_created_time):
@@ -87,9 +89,10 @@ def send_to_airtable_if_new(df, airtable_instance, unique_field, desired_fields=
 
             if field_mapping:
                 record_data = {field_mapping.get(k, k): v for k, v in record_data.items()}
-
+            
             if 'created_time' in record_data:
                 del record_data['created_time']
+                record_data["created_time"] = str(datetime.now())
 
             if default_values:
                 for key, value in default_values.items():
@@ -242,6 +245,7 @@ def fetch_and_update_data(client_id):
             df = filter_new_records(df, max_created_time)
 
         df['unique_id'] = df['id'].fillna("Unknown") + "_" + df['email'].fillna("Unknown")
+        # df['created_time'] = str(datetime.now())
         df = df.drop_duplicates(subset=['id', 'email'])
         filtered_df = df[df['email'] != "Unknown"]
 

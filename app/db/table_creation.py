@@ -159,6 +159,10 @@ def generate_table(phase,table_name,description):
                         "type": "multilineText"
                     },
                     {
+                        "name": "unique_id",
+                        "type": "multilineText"
+                    },
+                    {
                         "name": "created_time",
                         "type": "multilineText"
                     },
@@ -258,10 +262,6 @@ def generate_table(phase,table_name,description):
                     "type": "multilineText"
                 },
                 {
-                    "name": "created_date",
-                    "type": "multilineText"
-                },
-                {
                     "name": "linkedin_profile_url",
                     "type": "multilineText"
                 },
@@ -292,7 +292,11 @@ def generate_table(phase,table_name,description):
                 {
                     "name": "client_value_proposition",
                     "type": "multilineText"
-                }
+                },
+                {
+                    "name": "created_time",
+                    "type": "multilineText"
+                },
             ]
             }
         response = requests.post(url, headers=headers, data=json.dumps(schema)) 
@@ -305,6 +309,7 @@ def generate_table(phase,table_name,description):
     
     except Exception as e:
         print(f"Error occured while generating table for {phase} layer. {e}")
+        raise 
 
 def table_exists(table_name):
     response = requests.get(url, headers=headers)
