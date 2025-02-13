@@ -215,6 +215,7 @@ def add_client_tables_info(client_id,source_table_name,curated_table_name,outrea
         retries = 7
         while retries!= 0:
             print(f"Checking data count in the client info table for client_id {client_id}...")
+            data_records = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
             if data_records:
                 record = data_records[0] 
                 record_id = record.get('id')
