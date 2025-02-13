@@ -1,5 +1,6 @@
 import requests
 import json
+from error_logger import execute_error_block
 
 # Replace with your Airtable Base ID and Personal Access Token (PAT)
 API_KEY = "pataU3bOHPNEqpE9J.01f448eb1dadb92df25ec47c8f4483e29f7be7307cd6d2172cf11f7b7120de00"
@@ -304,12 +305,12 @@ def generate_table(phase,table_name,description):
             print(f"Table `{table_name}` created successfully for {phase} layer")
             # print(response.json())
         else:
-            print(f"Failed to create table: {response.text}")
+            execute_error_block(f"Failed to create table: {response.text}")
             raise 
     
     except Exception as e:
-        print(f"Error occured while generating table for {phase} layer. {e}")
-        raise 
+        execute_error_block(f"Error occured while generating table for {phase} layer. {e}")
+        # raise 
 
 def table_exists(table_name):
     response = requests.get(url, headers=headers)
@@ -321,8 +322,8 @@ def table_exists(table_name):
                 return True
         return False
     else:
-        print(f"Failed to fetch tables: {response.status_code} - {response.text}")
-        return False
+        execute_error_block(f"Failed to fetch tables: {response.status_code} - {response.text}")
+        # return False
 
 def create_client_tables(client_id):
   try:
@@ -336,10 +337,10 @@ def create_client_tables(client_id):
     print(f"Successfully created tables for {client_id}")
     return src_table, cur_table, outreach_table
   except Exception as e:
-    print(f"Exception occured while creating table: {e}")
-
+    execute_error_block(f"Exception occured while creating table: {e}")
+  
 if __name__ == "__main__":
     try:
         create_client_tables("testing")
     except Exception as e:
-        print(f"Exception occured while creating table :{e}")
+        execute_error_block(f"Exception occured while creating table :{e}")
