@@ -102,7 +102,6 @@ def fetch_inbox_details_full():
     except Exception as e:
         execute_error_block(f"Error occured while fetching inbox details : {e}")
 
-
 @app.route("/client_onboarding", methods=["GET"])
 def client_onboarding():
     try:
@@ -110,6 +109,7 @@ def client_onboarding():
         website_url = request.args.get('website_url', type=str)
         src_table, cur_table, outreach_table = create_client_tables(client_id)
         add_client_tables_info(client_id,src_table,cur_table,outreach_table)
+        status = True
         # status = generate_icp(client_id,website_url)
         # print("Client onboarding successful")
         print("Started data sync...")
