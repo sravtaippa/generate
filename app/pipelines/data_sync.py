@@ -41,7 +41,7 @@ def trigger_pipeline():
                 updated_status = update_client_config(CLIENT_CONFIG_TABLE_NAME,client_id,profiles_enriched)
                 print(f"\n-------------------- Data Sync completed for Client : {client_id}------------------------\n") 
             except Exception as e:
-                print(f"Error occured during data sync for client.")
+                print(f"Error occured during data sync for client.{e}")
         print("\n================= Scheduled Pipeline Execution Completed ==========================================\n")
         return config_data
     except Exception as e:
