@@ -305,7 +305,8 @@ def fetch_and_update_data(client_id):
                 "unique_id",
                 "id",
                 "associated_client_id",
-                "employment_summary"
+                "employment_summary",
+                "created_time"
             ],
             field_mapping=campaign_field_mapping,
             icp_to_outreach=icp_to_outreach_mapping,
