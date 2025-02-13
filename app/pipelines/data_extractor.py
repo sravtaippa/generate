@@ -36,11 +36,11 @@ def people_enrichment_linkedin(linkedin_url):
 
 def people_search_v2(search_url,client_id,qualify_leads):
   try:
-    print(f"\n------------Started Persona Data Mining------------")
+    print(f"\n------------Started Persona Data Mining for client : {client_id}------------")
     response = requests.post(search_url, headers=APOLLO_HEADERS)
     print(f"Execution status code: {response.status_code}")
     if response.status_code == 200:
-        print(f"\n------------Completed Persona Data Mining------------")
+        print(f"\n------------Completed Persona Data Mining for client : {client_id}------------")
         data = response.json()
         print(f"No of profiles collected : {len(data['people'])}")
         # return str(len(data['people']))
