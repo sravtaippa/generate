@@ -1,4 +1,5 @@
 import os
+import time
 from pyairtable import Table,Api
 import openai
 from error_logger import execute_error_block
@@ -190,7 +191,7 @@ def update_client_info(client_info_table,client_id,company_value_proposition):
 def fetch_client_column(client_info_table,client_id,column_name):
     try:
         print(f'Fetching {column_name} for client {client_id}')
-        api = Api(AIRTABLE_API_KEY)
+        api = Api(AIRTABLE_API_KEY) 
         airtable_obj = api.table(AIRTABLE_BASE_ID, client_info_table)
         print(f"\n Fetching latest page number from the table")
         record_details = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
@@ -211,12 +212,19 @@ def add_client_tables_info(client_id,source_table_name,curated_table_name,outrea
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, CLIENT_INFO_TABLE_NAME)
         data_records = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
-        if data_records:
-            record = data_records[0] 
-            record_id = record.get('id')
-            airtable_obj.update(record_id, {'raw_table': str(source_table_name),'cleaned_table':str(curated_table_name),'outreach_table':str(outreach_table_name)})
-            print(f"Added client info table with the dependent tables")
-        else:
-            print(f"No record found for client_id {client_id}")
+        retries = 7
+        while retries!= 0:
+            print(f"Checking data count in the client info table for client_id {client_id}...")
+            if data_records:
+                record = data_records[0] 
+                record_id = record.get('id')
+                airtable_obj.update(record_id, {'raw_table': str(source_table_name),'cleaned_table':str(curated_table_name),'outreach_table':str(outreach_table_name)})
+                print(f"Added client info table with the dependent tables")
+                return
+            else:
+                print(f"Retrying the table check... Retries left : {retries}")
+                time.sleep(10)
+                retries -= 1
+        execute_error_block(f"No record found for client_id {client_id} in client_info table for updating dependent tables info")
     except Exception as e:
         execute_error_block(f"Error occured while adding client tables info: {e}")
