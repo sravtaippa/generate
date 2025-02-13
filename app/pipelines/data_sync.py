@@ -25,7 +25,7 @@ def trigger_pipeline():
                 qualify_leads = client_details.get('qualify_leads')
                 last_page,records_required,active_status = fetch_page_config(CLIENT_CONFIG_TABLE_NAME,client_id)
                 print(f"\n-------------------- Data Sync started for Client : {client_id} ------------------------\n") 
-                if active_status.upper() == 'NO':
+                if active_status and active_status.upper() == 'NO':
                     print(f"Skipping data sync since the entry is not active")
                     print(f"\n-------------------- Data Sync Skipped for Client : {client_id}------------------------\n")
                     continue
