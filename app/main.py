@@ -105,7 +105,7 @@ def fetch_inbox_details_full():
 @app.route("/client_onboarding", methods=["GET"])
 def client_onboarding():
     try:
-        print(f"\n\n------------- Client Onboarding Process Started for client_id: {client_id}-----------------\n\n")
+        print(f"\n\n------------- Client Onboarding Process Started for client_id-----------------\n\n")
         client_id = request.args.get('client_id', type=str)
         website_url = request.args.get('website_url', type=str)
         if client_id == "" or client_id in (None) or website_url == "" or website_url in (None):
