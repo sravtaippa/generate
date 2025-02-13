@@ -5,15 +5,16 @@ robust error handling, and complete workflow alignment.
 """
 
 import os
-import json
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
 from time import sleep
-import requests
 import openai
 import colorama
 from colorama import Fore, Style
+import requests
+import json
+from typing import Dict
 
 # Initialize colorama
 colorama.init()
@@ -113,7 +114,7 @@ class AirtableManager:
 
         params = {
             'filterByFormula': f"IS_AFTER({{created_date}}, '{one_day_ago}')",
-            'maxRecords': 15,  # Matching Make.com scenario limit
+            'maxRecords': 15,
             'sort[0][field]': 'created_date',
             'sort[0][direction]': 'desc'
         }
@@ -228,6 +229,7 @@ class PerplexityEnricher:
             self.logger.error(f"Error enriching lead: {e}")
             return ""
 
+
 class EmailGenerator:
     def __init__(self, api_key: str):
         self.logger = DebugLogger("EmailGen")
@@ -239,16 +241,15 @@ class EmailGenerator:
         """Gets optimal email template structure for the domain"""
         prompt = f"""You're an cold outreach expert in the {domain} domain working in Dubai, U.A.E
 
-        You're tasked with producing the best cold outreach email template for a campaign.
-        What should the structure and format be for a {business_type} business?
-        Use industry best practices to maximize open rates, click-through rates and conversion rates.
-        """
+You're tasked with producing the best cold outreach email template for a campaign. What should the structure and the format of the email body be. Use all the industry best practices in {business_type} marketing to generate the ideal template and structure to maximize open rates, click through rates and conversion rates.
+"""
 
         try:
             response = openai.ChatCompletion.create(
                 model="gpt-4",
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.7
+                temperature=1.0,
+                max_tokens=4000
             )
             return response.choices[0].message.content
         except Exception as e:
@@ -266,60 +267,123 @@ class EmailGenerator:
         )
 
         try:
-            prompt = f"""You're writing a cold outreach email.
+            # Generate email generation prompt
+            prompt = f"""You're an expert prompt engineer and cold outreach copy writer.
 
-Return ONLY a JSON object with this exact structure:
-{{
-    "Subject": "The email subject line",
-    "Email_Body": "The main email body",
-    "Follow_up": "The follow-up email content"
-}}
+Generate a prompt that will generate a complete cold outreach email that will maximize open rates, clickthrough rates and conversion rates. The email generated should cover everything from the subject to the signoff in the email. The prompt should use the information provided below and not hallucinate additional information or require additional information.
 
-Recipient Information:
-- Name: {lead.recipient_first_name} {lead.recipient_last_name}
-- Role: {lead.recipient_role}
-- Company: {lead.recipient_company}
-- Bio: {lead.recipient_bio}
+Below is the information about the recipient of the email:
+Recipient's Role: {lead.recipient_role}
+Recipient's Name: {lead.recipient_first_name} {lead.recipient_last_name}
+Recipient's LinkedIn bio: {lead.recipient_bio}
+Recipient's Employment Summary: {lead.employment_summary}
 
-Client Information:
-- Benefits: {client_data.get('solution_benefits', '')}
-- Features: {client_data.get('unique_features', '')}
-- Domain: {client_data.get('domain', '')}
-- Business Type: {client_data.get('business_type', '')}
+More information about recipient: {enriched_data}
 
-Additional Context:
-{enriched_data}
+Below is the information about the sender of the email (only use this information in the footer of the email):
+Sender name: {lead.sender_name}
+Sender Title: {lead.sender_title}
+Sender Company: {lead.sender_company}
+Sender Email: {lead.sender_email}
+Sender Website: {lead.sender_company_website}
+Sender Product's key benefits: {lead.key_benefits}
+Sender Product's unique selling points: {lead.unique_features}
+Sender's Social Proof: {lead.impact_metrics}
+Sender's preferred CTA: {lead.cta_options}
+Sender's Client: {client_data.get('business_type', '')}
+Sender's Domain: {client_data.get('domain', '')}
+Sender's Business Model: {client_data.get('business_type', '')}
 
-Follow this template structure:
+Below is the template the email should follow:
 {template}
 
-The email should:
-1. Start with a personalized ice breaker
-2. Show clear relevance to the recipient
-3. Address specific pain points
-4. Use industry-specific language
-5. Have a clear call to action
-6. Include proper signature with all sender details
+Make sure you include all the relevant information such as sender and Recipient information.
 
-Format the email with {lead.font_style} font style and {lead.color_scheme} color scheme for visual appeal.
-Sign off with:
-{lead.sender_name}
-{lead.sender_title}
-{lead.sender_company}
-{lead.sender_company_website}"""
+Language Guidelines:
+Make sure the language is polarizing and strong.
+Speak the language of the Recipient use their jargons and lingo to better relate to them.
 
-            response = openai.ChatCompletion.create(
+Your output should only be the prompt and nothing else. The email should not have any empty name spaces or variables that are not provided. Do not hallucinate information or use information not provided. Utilize only the information available."""
+
+            # Get the prompt for email generation
+            prompt_response = openai.ChatCompletion.create(
                 model="gpt-4",
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.7,
-                max_tokens=2000
+                temperature=1.0,
+                max_tokens=4000
             )
 
-            content = response.choices[0].message.content.strip()
-            self.logger.debug(f"Raw response: {content}")
+            # Use the generated prompt to create the actual email
+            email_prompt = f"""{prompt_response.choices[0].message.content}
 
+The email should not have unfilled name spaces write the complete email only with only the information provided. Do not leave variable names or spaces that need to be filled in."""
+
+            email_response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[{"role": "user", "content": email_prompt}],
+                temperature=1.0,
+                max_tokens=4000
+            )
+
+            # Generate HTML version with styling
+            html_prompt = f"""Using the email body below, create an HTML email with inline CSS using style attributes for visual appeal. Only use INLINE CSS and DO NOT USE INTERNAL CSS.
+
+Include: Font: {lead.font_style} which is Clean and professional and use the color scheme {lead.color_scheme}
+
+Proper spacing (e.g., padding and line height) for readability. Highlighted key points with bold text or subtle background colors. A styled CTA button with clear and readable text. The email should look highly professional and organized. The email should have a clean border. Do not make the email extravagant and focus on readability on mobile devices.
+
+Email Body: {email_response.choices[0].message.content}
+
+The output should be only purely JSON text without formatting and without writing json before the actual json code.
+{{
+    "subject":"",
+    "emailBodyHTML":""
+}}"""
+
+            html_response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[{"role": "user", "content": html_prompt}],
+                temperature=1.0,
+                max_tokens=4000
+            )
+
+            # Generate follow-up email
+            followup_prompt = f"""You are an AI agent that generates professional follow-up emails. Your task is to create a polite and engaging follow-up email to send if no response was received after a specified period. The follow-up should remind the recipient of the previous email, express understanding of their busy schedule, and encourage a response while maintaining professionalism.
+
+The follow up email should highlight some of the key benefits: {lead.key_benefits}
+or unique feature: {lead.unique_features}
+that have not been already highlighted in the previous email.
+
+The email should be action oriented and have a clear CTA.
+
+The Email should be in HTML and Inline CSS follow the same color scheme, fonts and design from the previous email sent.
+
+The output should be only purely JSON text without formatting and without writing json before the actual json code.
+{{
+    "followUpHTML":""
+}}
+
+Below is the previous email sent:
+{html_response.choices[0].message.content}"""
+
+            followup_response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[{"role": "user", "content": followup_prompt}],
+                temperature=1.0,
+                max_tokens=4000
+            )
+
+            # Parse response into JSON format
             try:
-                email_content = json.loads(content)
+                html_content = json.loads(html_response.choices[0].message.content)
+                followup_content = json.loads(followup_response.choices[0].message.content)
+
+                email_content = {
+                    "Subject": html_content.get("subject", ""),
+                    "Email_Body": html_content.get("emailBodyHTML", ""),
+                    "Follow_up": followup_content.get("followUpHTML", "")
+                }
+
                 self.logger.success("Generated email content")
                 return email_content
             except json.JSONDecodeError as je:
@@ -330,19 +394,6 @@ Sign off with:
             self.logger.error(f"Error generating email: {str(e)}")
             return {}
 
-
-
-import requests
-import json
-from typing import Dict
-
-import requests
-import json
-from typing import Dict
-
-import requests
-import json
-from typing import Dict
 
 class InstantlyManager:
     def __init__(self, api_key: str):
@@ -357,25 +408,30 @@ class InstantlyManager:
 
     def add_to_campaign(self, campaign_id: str, lead: 'LeadData', email_content: Dict[str, str]) -> bool:
         """Adds a lead to an email campaign"""
-        url = f"{self.base_url}/leads"  # Corrected endpoint
+        url = f"{self.base_url}/leads"
 
-        # Prepare the payload for the request
-        lead_data = {
+        # Prepare the payload according to working API format
+        payload = {
+            "campaign": campaign_id,
             "email": lead.recipient_email,
-            "firstName": lead.recipient_first_name or "",
-            "lastName": lead.recipient_last_name or "",
-            "companyName": lead.recipient_company or "",
-            "variables": {
+            "first_name": lead.recipient_first_name,
+            "last_name": lead.recipient_last_name,
+            "company_name": lead.recipient_company,
+            "personalization": f"Hi {{{{first_name}}}}, I noticed your work at {{{{company_name}}}}",
+            "website": lead.sender_company_website or "",
+            "payload": {
+                "firstName": lead.recipient_first_name,
+                "lastName": lead.recipient_last_name,
+                "companyName": lead.recipient_company,
+                "website": lead.sender_company_website or "",
                 "Subject": email_content.get('Subject', ''),
                 "EmailBody": email_content.get('Email_Body', ''),
                 "FollowUp": email_content.get('Follow_up', ''),
-                "uniqueId": lead.unique_id or ''
-            }
-        }
-
-        payload = {
-            "campaignId": campaign_id,
-            "leads": [lead_data]
+                "recipientRole": lead.recipient_role
+            },
+            "skip_if_in_workspace": True,
+            "skip_if_in_campaign": True,
+            "verify_leads_on_import": True
         }
 
         try:
@@ -385,25 +441,27 @@ class InstantlyManager:
             # Make the POST request to add the lead
             response = requests.post(url, headers=self.headers, json=payload)
 
-            # Log the response details for debugging
+            # Log the response details
             self.logger.debug(f"Response status code: {response.status_code}")
             self.logger.debug(f"Response text: {response.text}")
 
-            # Check for HTTP errors
-            response.raise_for_status()
-
-            # Parse the JSON response
-            response_data = response.json()
-            if response_data.get('success', False):
-                self.logger.success("Successfully added lead to campaign")
+            # Check for success
+            if response.status_code == 200:
+                response_data = response.json()
+                self.logger.success(f"Successfully added lead to campaign")
                 return True
             else:
-                error_msg = response_data.get('message', 'Unknown error')
-                self.logger.error(f"Failed to add lead: {error_msg}")
+                if response.text:
+                    try:
+                        error_data = response.json()
+                        error_msg = error_data.get('message', 'Unknown error')
+                        self.logger.error(f"API Error: {error_msg}")
+                    except ValueError:
+                        self.logger.error(f"Error response: {response.text}")
                 return False
 
         except requests.exceptions.RequestException as e:
-            if e.response is not None:
+            if hasattr(e, 'response') and e.response is not None:
                 try:
                     error_data = e.response.json()
                     error_msg = error_data.get('message', str(e))
@@ -416,17 +474,14 @@ class InstantlyManager:
             return False
 
         except Exception as e:
-            # Catch any unexpected exceptions and log them
             self.logger.error(f"Unexpected error occurred while adding lead to campaign: {str(e)}")
             return False
-
 
 
 class LeadProcessor:
     def __init__(self, api_keys: Dict[str, str]):
         self.logger = DebugLogger("LeadProcessor")
 
-        # Extract required API keys
         airtable_key = api_keys.get('airtable_api_key')
         perplexity_key = api_keys.get('perplexity_api_key')
         openai_key = api_keys.get('openai_api_key')
@@ -454,7 +509,6 @@ class LeadProcessor:
         )
 
     def process_single_lead(self, lead_record: Dict):
-        """Process a single lead with full Make.com scenario functionality"""
         # Extract lead data
         lead = LeadData(
             unique_id=lead_record['id'],
@@ -481,7 +535,6 @@ class LeadProcessor:
         )
 
         try:
-            # Step 1: Get client data with retry
             client_data = self.retry_handler.retry_operation(
                 self.airtable.get_client_details,
                 lead.associated_client_id
@@ -552,7 +605,7 @@ class LeadProcessor:
             # Step 6: Add to Instantly campaign
             campaign_success = self.retry_handler.retry_operation(
                 self.instantly.add_to_campaign,
-                "22795e87-2a6f-49be-b007-6f7f21840b05",  # Campaign ID from Make.com
+                "22795e87-2a6f-49be-b007-6f7f21840b05",  # Your correct campaign ID
                 lead,
                 email_content
             )
