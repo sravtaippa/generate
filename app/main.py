@@ -108,7 +108,7 @@ def client_onboarding():
         print(f"\n\n------------- Client Onboarding Process Started for client_id-----------------\n\n")
         client_id = request.args.get('client_id', type=str)
         website_url = request.args.get('website_url', type=str)
-        if client_id == "" or client_id in (None) or website_url == "" or website_url in (None):
+        if client_id in ["",None] or website_url in ["",None]:
             print(f"Invalid information passed. client_id : {client_id}, website_url: {website_url}")
             return {"Status":f"Invalid information passed. client_id : {client_id}, website_url: {website_url}"}
         print(f"Fetched parameters-> client_id : {client_id}, website_url : {website_url}")
