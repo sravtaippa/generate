@@ -110,8 +110,8 @@ def client_onboarding():
         src_table, cur_table, outreach_table = create_client_tables(client_id)
         add_client_tables_info(client_id,src_table,cur_table,outreach_table)
         status = True
-        # status = generate_icp(client_id,website_url)
-        # print("Client onboarding successful")
+        status = generate_icp(client_id,website_url)
+        print("Client onboarding successful")
         print("Started data sync...")
         trigger_pipeline()
         return {"Status":"Client onboarding successful" if status else "Client onboarding failed"}
