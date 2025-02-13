@@ -11,7 +11,7 @@ import openai
 from urllib.parse import unquote
 
 from pipelines.data_sanitization import fetch_and_update_data, update_email_opens
-from pipelines.data_extractor import people_enrichment,people_search,test_run_pipeline,run_demo_pipeline
+from pipelines.data_extractor import people_enrichment,test_run_pipeline,run_demo_pipeline
 from db.table_creation import create_client_tables
 from pipelines.icp_generation import generate_icp
 from db.db_utils import fetch_client_details,export_to_airtable,unique_key_check_airtable,parse_people_info,add_client_tables_info
