@@ -67,7 +67,6 @@ def people_search_v2(search_url,client_id,qualify_leads):
                     print('Skipping the entry...')
                     continue
                 print(f"\n------------Lead Qualified------------")
-
             else:
                 print(f"Skipping lead qualification...")
             print(f"\n------------Data ingestion started for record id :{apollo_id}------------")
