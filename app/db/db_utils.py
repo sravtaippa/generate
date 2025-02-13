@@ -209,4 +209,4 @@ def add_client_tables_info(client_id,source_table_name,curated_table_name,outrea
         else:
             print(f"No record found for client_id {client_id}")
     except Exception as e:
-        print(f"Error occured while adding client tables info: {e}")
+        execute_error_block(f"Error occured while adding client tables info: {e}")

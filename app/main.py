@@ -108,13 +108,15 @@ def client_onboarding():
     try:
         client_id = request.args.get('client_id', type=str)
         website_url = request.args.get('website_url', type=str)
-
+        src_table, cur_table, outreach_table = create_client_tables(client_id)
+        add_client_tables_info(client_id,src_table,cur_table,outreach_table)
         status = generate_icp(client_id,website_url)
         print("Client onboarding successful")
+        print("Started data sync...")
+        trigger_pipeline()
         return {"Status":"Client onboarding successful" if status else "Client onboarding failed"}
     except Exception as e:
         return {"Status":f"Client onboarding failed: {e}"}
-        # execute_error_block(f"Error occured while client onboarding : {e}")
 
 @app.route("/demo_test", methods=["GET"])
 def demo_test():
