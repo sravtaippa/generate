@@ -105,12 +105,13 @@ def fetch_page_config(client_config_table,client_id):
         print('Fetching latest page number')
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, client_config_table)
-        print(f"\n Fetching latest page number from the table")
+        print(f"\n Fetching latest page configuration from the table for the client: {client_id}")
         data_count = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
         record_details = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")[0]
         page_number = record_details.get('fields').get('page_number')
         records_required = record_details.get('fields').get('records_required')
         active_status = record_details.get('fields').get('is_active')
+        print(f"Successfully fetched latest page configuration from the client config table for the client: {client_id}")
         return page_number,records_required,active_status
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while fetching latest page number. {e}")
