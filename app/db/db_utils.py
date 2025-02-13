@@ -76,6 +76,7 @@ def get_clients_config(client_config_table):
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, client_config_table)
         config_data = airtable_obj.all()
+        print('Successfully fetched clients list from config table')
         return config_data
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while fetching client config details. {e}")

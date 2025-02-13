@@ -105,18 +105,26 @@ def fetch_inbox_details_full():
 @app.route("/client_onboarding", methods=["GET"])
 def client_onboarding():
     try:
+        print(f"\n\n------------- Client Onboarding Process Started for client_id: {client_id}-----------------\n\n")
         client_id = request.args.get('client_id', type=str)
         website_url = request.args.get('website_url', type=str)
+        if client_id == "" or client_id in (None) or website_url == "" or website_url in (None):
+            print(f"Invalid information passed. client_id : {client_id}, website_url: {website_url}")
+            return {"Status":f"Invalid information passed. client_id : {client_id}, website_url: {website_url}"}
+        print(f"Fetched parameters-> client_id : {client_id}, website_url : {website_url}")
         src_table, cur_table, outreach_table = create_client_tables(client_id)
+        print(f"------ Client tables created for client_id : {client_id} -------------")
         add_client_tables_info(client_id,src_table,cur_table,outreach_table)
-        status = True
+        print(f"------ Added client tables info to the airtable for client_id : {client_id} -------------")
         status = generate_icp(client_id,website_url)
-        print("Client onboarding successful")
-        print("Started data sync...")
+        print(f"------ Successfully generated ICP and Client value proposition for the client: {client_id} -------------")
+        print("\n\n--------Started Data Sync ---------\n\n")
         trigger_pipeline()
-        return {"Status":"Client onboarding successful" if status else "Client onboarding failed"}
+        print("\n\n--------Completed Data Sync ---------\n\n")
+        print("Client onboarding successful")
+        return {"Status":"Client onboarding process completed" if status else "Client onboarding process failed"}
     except Exception as e:
-        return {"Status":f"Client onboarding failed: {e}"}
+        return {"Status":f"Client onboarding process failed: {e}"}
 
 @app.route("/demo_test", methods=["GET"])
 def demo_test():

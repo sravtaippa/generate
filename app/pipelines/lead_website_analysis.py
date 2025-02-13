@@ -183,7 +183,7 @@ def get_icp(tokenizer,index):
           - If the company’s client locations are not explicitly mentioned, **extract the company's location and include nearby countries**.  
 
           ##### **4️⃣ Ideal Company Size - Minimum 3 Ranges (STRICT)**  
-          - **Extract at least 3 distinct company size tags** (e.g., `'1-10'`, `'11-50'`, `'51-200'`).  
+          - **Extract at least 3 distinct company size tags** (e.g., `'1,10'`, `'11,50'`, `'51,200'`).  
 
           ---
 
@@ -469,7 +469,7 @@ def get_apollo_tags(icp_information):
             "United Kingdom"
         ]
 
-        **Employee Range** (Select only from this list):
+        **Employee Range** (Select only the available options as it is from this list):
         employee_range = [
             "1,100",
             "1,500",
@@ -518,7 +518,7 @@ def analyze_website(website_url,explicit_icp_criteria="Not available"):
     print("Initiating the Apify Actor run...")
     loader = apify.call_actor(
         actor_id="apify/website-content-crawler",
-        run_input={"startUrls": [{"url": website_url}], "maxCrawlPages": 20},
+        run_input={"startUrls": [{"url": website_url}], "maxCrawlPages": 30},
         dataset_mapping_function=lambda item: Document(
             page_content=item["text"] or "", metadata={"source": item["url"]}
         ),
