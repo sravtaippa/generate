@@ -292,6 +292,7 @@ class AirtableManager:
         except Exception as e:
             self.logger.error(f"Error creating record: {e}")
             return None
+        
 class PerplexityEnricher:
     def __init__(self, api_key: str):
         self.logger = DebugLogger("Perplexity")
@@ -387,7 +388,23 @@ Sign off with:
 {lead.sender_company_website}"""
 
             # Make the API call with explicit formatting
-            response = openai.ChatCompletion.create(
+            # response = openai.ChatCompletion.create(
+            #     model="gpt-4",
+            #     messages=[{
+            #         "role": "system",
+            #         "content": "You are a professional email writer. Always return responses in valid JSON format."
+            #     }, {
+            #         "role": "user",
+            #         "content": prompt
+            #     }],
+            #     temperature=0.7,
+            #     max_tokens=2000
+            # )
+
+            # content = response.choices[0].message.content.strip()
+            
+            client = openai.OpenAI(api_key=self.api_key)
+            response = client.chat.completions.create(
                 model="gpt-4",
                 messages=[{
                     "role": "system",
@@ -399,8 +416,8 @@ Sign off with:
                 temperature=0.7,
                 max_tokens=2000
             )
-
-            content = response.choices[0].message.content.strip()
+            # print(response.choices[0].message.content)
+            content = response.choices[0].message.content
 
             try:
                 email_content = json.loads(content)
