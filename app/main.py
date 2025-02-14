@@ -19,6 +19,7 @@ from error_logger import execute_error_block
 from lead_magnet.lead_magnet_pdf_generation import generate_lead_magnet_pdf
 from pipelines.data_sync import trigger_pipeline
 from pipelines.lead_website_analysis import chroma_db_testing
+from pipelines.login_email_confirmation import login_email_sender
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
 
 print(f"\n=============== Generate : Pipeline started  ===============")
@@ -108,10 +109,13 @@ def client_onboarding():
         print(f"\n\n------------- Client Onboarding Process Started for client_id-----------------\n\n")
         client_id = request.args.get('client_id', type=str)
         website_url = request.args.get('website_url', type=str)
-        if client_id in ["",None] or website_url in ["",None]:
-            print(f"Invalid information passed. client_id : {client_id}, website_url: {website_url}")
+        password = request.args.get('password', type=str)
+        recipient_name = request.args.get('recipient_name', 'Customer')
+        recipient_email = request.args.get('recipient_email')
+        if client_id in ["",None] or website_url in ["",None] or password in ["",None] or recipient_email in ["",None] or recipient_name in ["",None]:
+            print(f"Invalid information passed. client_id : {client_id}, website_url: {website_url}, recipient_email {recipient_email}, password: {password}, recipient_name: {recipient_name}")
             return {"Status":f"Invalid information passed. client_id : {client_id}, website_url: {website_url}"}
-        print(f"Fetched parameters-> client_id : {client_id}, website_url : {website_url}")
+        print(f"Fetched parameters-> client_id : {client_id}, website_url: {website_url}, recipient_email {recipient_email}, password: {password}, recipient_name: {recipient_name}")
         src_table, cur_table, outreach_table = create_client_tables(client_id)
         print(f"------ Client tables created for client_id : {client_id} -------------")
         add_client_tables_info(client_id,src_table,cur_table,outreach_table)
@@ -122,6 +126,9 @@ def client_onboarding():
         trigger_pipeline()
         print("\n\n--------Completed Data Sync ---------\n\n")
         print("Client onboarding successful")
+        print(f"\n\n------------Sending Email to Client for credentials --------------------\n\n")
+        login_email_sender(recipient_name,recipient_email,client_id,password)
+        print("\n\n=======================Client onboarding completed successfuly======================\n\n")
         return {"Status":"Client onboarding process completed" if status else "Client onboarding process failed"}
     except Exception as e:
         return {"Status":f"Client onboarding process failed: {e}"}
