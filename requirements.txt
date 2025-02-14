@@ -2,7 +2,7 @@ streamlit_tags
 flask
 airtable
 pyairtable
-openai==0.28
+openai==1.61.0
 urllib3
 streamlit
 pycountry
