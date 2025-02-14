@@ -9,6 +9,7 @@ import requests
 import ast
 import openai
 from urllib.parse import unquote
+import time
 
 from pipelines.data_sanitization import fetch_and_update_data, update_email_opens
 from pipelines.data_extractor import people_enrichment,test_run_pipeline,run_demo_pipeline
@@ -106,6 +107,7 @@ def fetch_inbox_details_full():
 @app.route("/client_onboarding", methods=["GET"])
 def client_onboarding():
     try:
+        start_time = time.time()  # Start timer
         print(f"\n\n------------- Client Onboarding Process Started for client_id-----------------\n\n")
         client_id = request.args.get('client_id', type=str)
         website_url = request.args.get('website_url', type=str)
@@ -128,6 +130,9 @@ def client_onboarding():
         print("Client onboarding successful")
         print(f"\n\n------------Sending Email to Client for credentials --------------------\n\n")
         login_email_sender(recipient_name,recipient_email,client_id,password)
+        end_time = time.time()  # End timer
+        elapsed_minutes = (end_time - start_time) / 60  # Convert seconds to minutes
+        print(f"~~~~~~~~~ Execution Time: {elapsed_minutes:.2f} minutes ~~~~~~~~~~~~")
         print("\n\n=======================Client onboarding completed successfuly======================\n\n")
         return {"Status":"Client onboarding process completed" if status else "Client onboarding process failed"}
     except Exception as e:
