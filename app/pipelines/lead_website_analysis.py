@@ -13,6 +13,8 @@ from langchain_community.vectorstores import Chroma
 from error_logger import execute_error_block
 from datetime import datetime, timezone
 # import datetime
+import time
+import json
 
 __import__('pysqlite3')
 import sys
@@ -518,7 +520,7 @@ def analyze_website(website_url,explicit_icp_criteria="Not available"):
     print("Initiating the Apify Actor run...")
     loader = apify.call_actor(
         actor_id="apify/website-content-crawler",
-        run_input={"startUrls": [{"url": website_url}], "maxCrawlPages": 30},
+        run_input={"startUrls": [{"url": website_url}], "maxCrawlPages": 10},
         dataset_mapping_function=lambda item: Document(
             page_content=item["text"] or "", metadata={"source": item["url"]}
         ),
@@ -545,7 +547,17 @@ def analyze_website(website_url,explicit_icp_criteria="Not available"):
     ).from_loaders([loader])  
     print(f"Started website analysis...")
     icp_tags,icp_analysis = get_icp(tokenizer,index)
-    apollo_tags = get_apollo_tags(icp_tags)
+    retries = 5
+    while retries > 0:
+      apollo_tags = get_apollo_tags(icp_tags)
+      try:
+        json.loads(apollo_tags)
+        print(f"The apollo tags are now in JSON format")
+        break
+      except ValueError:
+        retries -= 1
+        print(f"Retrying the JSON tags creation...")
+
     client_value_proposition = get_client_value_proposition(tokenizer,index)
     print(f"Apollo tags: {apollo_tags}")
 
