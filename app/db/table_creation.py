@@ -295,6 +295,22 @@ def generate_table(phase,table_name,description):
                     "type": "multilineText"
                 },
                 {
+                    "name": "processed",
+                    "type": "multilineText"
+                },
+                {
+                    "name": "processed_date",
+                    "type": "multilineText"
+                },
+                {
+                    "name": "instantly_status",
+                    "type": "multilineText"
+                },
+                {
+                    "name": "enriched_data",
+                    "type": "multilineText"
+                },
+                {
                     "name": "created_time",
                     "type": "multilineText"
                 },
