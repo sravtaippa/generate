@@ -225,6 +225,7 @@ def get_icp(tokenizer,index):
           Analyze the **company's website content** to extract its **Ideal Customer Profile (ICP)** based on **industry, market positioning, and offerings**.  
           The ICP will help retrieve **high-value prospects** from **Apollo.io** for **targeted outreach**.  
           company's website content: {trimmed_context}
+          The ouptut should be short and precise and STRICTLY in English language
       """
       llm = OpenAI(temperature=0, max_tokens=1500)  # Increased output space
 
