@@ -253,15 +253,26 @@ def run_demo_pipeline(linkedin_url,client_id,outreach_table):
         if enrichment_api_response.status_code == 200:
             data = enrichment_api_response.json()
             data=data['person']
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",  # or "gpt-4" for more advanced results
+            # response = openai.ChatCompletion.create(
+            #     model="gpt-3.5-turbo",  # or "gpt-4" for more advanced results
+            #     messages=[
+            #         {"role": "system", "content": "You are an expert at text summarization."},
+            #         {"role": "user", "content": f"Please shorten this description: {data['employment_history']}"}
+            #     ],
+            #     max_tokens=100  # Adjust based on the desired length of the output
+            #     )
+            # employment_summary = response['choices'][0]['message']['content']
+            client = openai.OpenAI(api_key=OPENAI_API_KEY)
+            response = client.chat.completions.create(
+                model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are an expert at text summarization."},
                     {"role": "user", "content": f"Please shorten this description: {data['employment_history']}"}
                 ],
-                max_tokens=100  # Adjust based on the desired length of the output
-                )
-            employment_summary = response['choices'][0]['message']['content']
+            )
+            
+            # employment_summary = response['choices'][0]['message']['content']
+            employment_summary = response.choices[0].message.content
             unique_id = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             data_dict = {
                     'id': unique_id,
