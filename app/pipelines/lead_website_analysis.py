@@ -521,13 +521,22 @@ def analyze_website(website_url,explicit_icp_criteria="Not available"):
     print(" Started Website Analysis")
     print("\n--------------------------------------------------------\n")
     print("Initiating the Apify Actor run...")
+    # loader = apify.call_actor(
+    #     actor_id="apify/website-content-crawler",
+    #     run_input={"startUrls": [{"url": website_url}], "maxCrawlPages": 10},
+    #     dataset_mapping_function=lambda item: Document(
+    #         page_content=item["text"] or "", metadata={"source": item["url"]}
+    #     ),
+    # )
     loader = apify.call_actor(
         actor_id="apify/website-content-crawler",
-        run_input={"startUrls": [{"url": website_url}], "maxCrawlPages": 10},
+        run_input={"startUrls": [{"url": website_url}], "maxCrawlPages": 20},
         dataset_mapping_function=lambda item: Document(
             page_content=item["text"] or "", metadata={"source": item["url"]}
         ),
+        timeout_secs=180
     )
+
 
     time_stamp = datetime.now(timezone.utc).strftime('%Y-%m-%d-%H-%M-%S')
     print(f"Time : {time_stamp}")
