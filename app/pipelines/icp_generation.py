@@ -97,7 +97,7 @@ def generate_icp(client_id,website_url):
                 "icp_locations":str(person_locations),
                 "page_number":'1',
                 "qualify_leads":'no',
-                "records_required":'5',
+                "records_required":'2',
                 "is_active":"yes",
             }
             export_to_airtable(config_data, CLIENT_CONFIG_TABLE_NAME)

@@ -291,7 +291,11 @@ def get_apollo_tags(icp_information):
             growth hacker,
             scrum master,
             social media strategist,
-            content creator
+            content creator,
+            real estate developer,
+            luxury property investor,
+            international investor,
+            business owner,
         ]
 
         Pick person_seniorities that fall under these categories which are relevant to the given Ideal Customer Profile :
@@ -305,8 +309,6 @@ def get_apollo_tags(icp_information):
             director,
             manager,
             senior,
-            entry,
-            intern,
         ]
 
         Pick person_locations that fall under these categories which are relevant to the given Ideal Customer Profile (minimum 1 required):
