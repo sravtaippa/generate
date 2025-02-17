@@ -534,7 +534,7 @@ def analyze_website(website_url,explicit_icp_criteria="Not available"):
         dataset_mapping_function=lambda item: Document(
             page_content=item["text"] or "", metadata={"source": item["url"]}
         ),
-        timeout_secs=180
+        timeout_secs=140
     )
 
 

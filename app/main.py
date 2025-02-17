@@ -124,6 +124,36 @@ def client_onboarding():
         print(f"------ Added client tables info to the airtable for client_id : {client_id} -------------")
         status = generate_icp(client_id,website_url)
         print(f"------ Successfully generated ICP and Client value proposition for the client: {client_id} -------------")
+        print(f"\n\n------------Sending Email to Client for credentials --------------------\n\n")
+        login_email_sender(recipient_name,recipient_email,client_id,password)
+        end_time = time.time()  # End timer
+        elapsed_minutes = (end_time - start_time) / 60  # Convert seconds to minutes
+        print(f"~~~~~~~~~ Execution Time: {elapsed_minutes:.2f} minutes ~~~~~~~~~~~~")
+        print("\n\n=======================Client onboarding completed successfuly======================\n\n")
+        return {"Status":"Client onboarding process completed" if status else "Client onboarding process failed"}
+    except Exception as e:
+        return {"Status":f"Client onboarding process failed: {e}"}
+
+@app.route("/client_onboarding_test", methods=["GET"])
+def client_onboarding_test():
+    try:
+        start_time = time.time()  # Start timer
+        print(f"\n\n------------- Client Onboarding Process Started for client_id-----------------\n\n")
+        client_id = request.args.get('client_id', type=str)
+        website_url = request.args.get('website_url', type=str)
+        password = request.args.get('password', type=str)
+        recipient_name = request.args.get('recipient_name', 'Customer')
+        recipient_email = request.args.get('recipient_email')
+        if client_id in ["",None] or website_url in ["",None] or password in ["",None] or recipient_email in ["",None] or recipient_name in ["",None]:
+            print(f"Invalid information passed. client_id : {client_id}, website_url: {website_url}, recipient_email {recipient_email}, password: {password}, recipient_name: {recipient_name}")
+            return {"Status":f"Invalid information passed. client_id : {client_id}, website_url: {website_url}"}
+        print(f"Fetched parameters-> client_id : {client_id}, website_url: {website_url}, recipient_email {recipient_email}, password: {password}, recipient_name: {recipient_name}")
+        src_table, cur_table, outreach_table = create_client_tables(client_id)
+        print(f"------ Client tables created for client_id : {client_id} -------------")
+        add_client_tables_info(client_id,src_table,cur_table,outreach_table)
+        print(f"------ Added client tables info to the airtable for client_id : {client_id} -------------")
+        status = generate_icp(client_id,website_url)
+        print(f"------ Successfully generated ICP and Client value proposition for the client: {client_id} -------------")
         print("\n\n--------Started Data Sync ---------\n\n")
         trigger_pipeline()
         print("\n\n--------Completed Data Sync ---------\n\n")
@@ -137,7 +167,7 @@ def client_onboarding():
         return {"Status":"Client onboarding process completed" if status else "Client onboarding process failed"}
     except Exception as e:
         return {"Status":f"Client onboarding process failed: {e}"}
-
+    
 @app.route("/demo_test", methods=["GET"])
 def demo_test():
     try:
