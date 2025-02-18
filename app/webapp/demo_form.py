@@ -1,6 +1,6 @@
 import streamlit as st
 import requests
-
+from app.pipelines.lead_website_analysis import query_web_content,get_website_content
 # Page Configurations
 st.set_page_config(page_title="Generate - Smart Miner", page_icon="🌍", layout="centered")
 
