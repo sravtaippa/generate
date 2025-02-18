@@ -17,7 +17,7 @@ def get_website_content(website_url):
     try:
         loader = apify.call_actor(
             actor_id="apify/website-content-crawler",
-            run_input={"startUrls": [{"url": website_url}], "maxCrawlPages": 1},
+            run_input={"startUrls": [{"url": website_url}], "maxCrawlPages": 40},
             dataset_mapping_function=lambda item: Document(
                 page_content=item["text"] or "", metadata={"source": item["url"]}
             ),
