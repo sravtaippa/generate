@@ -38,6 +38,15 @@ def testing_connection():
     except:
         execute_error_block(f"Error occured while testing. {e}")
 
+@app.route('/apollo_webhook', methods=['POST'])
+def apollo_webhook():
+    try:
+        data = request.get_json()
+        print("Received data:", data)
+        return jsonify({"status": "success", "message": "Data received"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 def construct_query_param(key, values):
     return "&".join([f"{key}[]={value.replace(' ', '%20').replace(',', '%2C')}" for value in values])
 

@@ -5,7 +5,6 @@ from langchain_community.utilities import ApifyWrapper
 from langchain_core.document_loaders.base import Document
 from langchain_openai import OpenAI
 from langchain_openai.embeddings import OpenAIEmbeddings
-from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain.indexes.vectorstore import VectorstoreIndexCreator
 # from langchain.llms import OpenAI
 from transformers import GPT2TokenizerFast  # For token counting
@@ -16,9 +15,9 @@ from datetime import datetime, timezone
 import time
 import json
 
-__import__('pysqlite3')
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+# __import__('pysqlite3')
+# import sys
+# sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 # Set up your Apify API token and OpenAI API key
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -518,16 +517,13 @@ def get_apollo_tags(icp_information):
 
 def analyze_website(website_url,explicit_icp_criteria="Not available"):
   try:
+    __import__('pysqlite3')
+    import sys
+    sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
     print(" Started Website Analysis")
     print("\n--------------------------------------------------------\n")
     print("Initiating the Apify Actor run...")
-    # loader = apify.call_actor(
-    #     actor_id="apify/website-content-crawler",
-    #     run_input={"startUrls": [{"url": website_url}], "maxCrawlPages": 10},
-    #     dataset_mapping_function=lambda item: Document(
-    #         page_content=item["text"] or "", metadata={"source": item["url"]}
-    #     ),
-    # )
+
     loader = apify.call_actor(
         actor_id="apify/website-content-crawler",
         run_input={"startUrls": [{"url": website_url}], "maxCrawlPages": 20},
@@ -536,7 +532,6 @@ def analyze_website(website_url,explicit_icp_criteria="Not available"):
         ),
         timeout_secs=140
     )
-
 
     time_stamp = datetime.now(timezone.utc).strftime('%Y-%m-%d-%H-%M-%S')
     print(f"Time : {time_stamp}")
@@ -582,6 +577,35 @@ def analyze_website(website_url,explicit_icp_criteria="Not available"):
   except Exception as e:
     print(f"Error occured while analyzing the website : {e}")
 
+def get_website_content(website_url):
+  try:
+
+    # Run the Website Content Crawler on a website, wait for it to finish, and save its results into a LangChain document loader:
+    loader = apify.call_actor(
+        actor_id="apify/website-content-crawler",
+        run_input={"startUrls": [{"url": website_url}], "maxCrawlPages": 30},
+        dataset_mapping_function=lambda item: Document(
+            page_content=item["text"] or "", metadata={"source": item["url"]}
+        ),
+    )
+    return loader
+
+  except Exception as e:
+    execute_error_block(f"Exception occured while analyzing the website content : {e}")
+
+def query_web_content(loader,query):
+  try:
+    # Initialize the vector database with the text documents:
+    index = VectorstoreIndexCreator(embedding=OpenAIEmbeddings()).from_loaders([loader])
+
+    result = index.query_with_sources(query, llm=OpenAI())
+
+    print("answer:", result["answer"])
+    print("source:", result["sources"])
+    return {"answer":result["answer"],"source":result["sources"]}
+  
+  except Exception as e:
+    execute_error_block(f"Exception occured while querying web content: {e}")
 
 def chroma_db_testing():
     try:
