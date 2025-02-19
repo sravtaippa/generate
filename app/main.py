@@ -15,7 +15,7 @@ from pipelines.data_sanitization import fetch_and_update_data, update_email_open
 from pipelines.data_extractor import people_enrichment,test_run_pipeline,run_demo_pipeline
 from db.table_creation import create_client_tables
 from pipelines.icp_generation import generate_icp
-from db.db_utils import fetch_client_details,export_to_airtable,unique_key_check_airtable,parse_people_info,add_client_tables_info
+from db.db_utils import fetch_client_details,export_to_airtable,unique_key_check_airtable,parse_people_info,add_client_tables_info,add_apollo_webhook_info
 from error_logger import execute_error_block
 from lead_magnet.lead_magnet_pdf_generation import generate_lead_magnet_pdf
 from pipelines.data_sync import trigger_pipeline
@@ -41,8 +41,14 @@ def testing_connection():
 @app.route('/apollo_webhook', methods=['POST'])
 def apollo_webhook():
     try:
-        data = request.get_json()
-        print("Received data:", data)
+        received_data = request.get_json()
+        print("Received data:", received_data)
+        apollo_table = "apollo_webhook"
+        data = {
+            "apollo_id":received_data['people'][0]['id'],
+            "response":received_data
+        }
+        add_apollo_webhook_info(data,apollo_table)
         return jsonify({"status": "success", "message": "Data received"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500

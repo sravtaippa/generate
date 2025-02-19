@@ -188,6 +188,20 @@ def update_client_info(client_info_table,client_id,company_value_proposition):
         execute_error_block(f"Exception occured in {__name__} while updating company value proposition. {e}")
 
 
+def add_apollo_webhook_info(data,apollo_table):
+    try:
+        print(f"\nExporting results to Airtable")
+        api = Api(AIRTABLE_API_KEY)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, apollo_table)
+        response = airtable_obj.create(data)
+        if 'id' in response:
+            print("Record inserted successfully for the apollo webhook:", response['id'])
+        else:
+            print("Error inserting record for the apollo webhook:", response)
+    except Exception as e:
+        execute_error_block(f"Error occured in {__name__} while adding apollo webhook details. {e}")
+
+
 def fetch_client_column(client_info_table,client_id,column_name):
     try:
         print(f'Fetching {column_name} for client {client_id}')
