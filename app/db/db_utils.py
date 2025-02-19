@@ -191,6 +191,7 @@ def update_client_info(client_info_table,client_id,company_value_proposition):
 def add_apollo_webhook_info(data,apollo_table):
     try:
         print(f"\nExporting results to Airtable")
+        print(f"Request data for airtable: {data}")
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, apollo_table)
         response = airtable_obj.create(data)
