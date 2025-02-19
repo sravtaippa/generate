@@ -45,10 +45,10 @@ def apollo_webhook():
         print("Received data:", received_data)
         apollo_table = "apollo_webhook"
         data = {
-            "apollo_id":received_data['people'][0]['id'],
-            "response":received_data
+            "apollo_id":str(received_data['people'][0]['id']),
+            "response":str(received_data)
         }
-        add_apollo_webhook_info(str(data),apollo_table)
+        add_apollo_webhook_info(data,apollo_table)
         return jsonify({"status": "success", "message": "Data received"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
