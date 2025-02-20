@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 
 from pipelines.data_sanitization import fetch_and_update_data
-from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable,retrieve_client_tables,fetch_client_outreach_mappings,get_clients_config,fetch_page_config,update_client_config
+from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable,retrieve_client_tables,fetch_client_outreach_mappings,get_clients_config,fetch_page_config,update_client_config,phone_number_updation
 from pipelines.lead_qualifier import qualify_lead
 from error_logger import execute_error_block
 from pipelines.data_extractor import people_search_v2
@@ -35,7 +35,11 @@ def trigger_pipeline():
                 icp_url = client_details.get('icp_url').format(page_number=last_page,records_required=records_required)
                 print(f" Apollo Search Url for the client {client_id}: {icp_url}")
                 print(f"Starting People Search for the client {client_id}")
-                profiles_enriched = people_search_v2(icp_url,client_id,qualify_leads)
+                profiles_enriched,ingested_apollo_ids = people_search_v2(icp_url,client_id,qualify_leads)
+                raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
+                print(f"Started Phone number updation for all the ingested Apollo records")
+                for apollo_id in ingested_apollo_ids:
+                    phone_number_updation(apollo_id,cleaned_table,outreach_table)
                 print(f"Profiles Enriched for client_id {client_id}: {profiles_enriched}")
                 response=fetch_and_update_data(client_id)
                 print(response)

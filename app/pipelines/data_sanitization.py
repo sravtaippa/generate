@@ -5,7 +5,7 @@ import numpy as np
 import os
 import re
 import json
-from db.db_utils import retrieve_client_tables
+from db.db_utils import retrieve_client_tables,phone_number_updation
 from datetime import datetime
 
 app = Flask(__name__)

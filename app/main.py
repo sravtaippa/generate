@@ -51,27 +51,17 @@ def apollo_webhook():
         print("Received data:", received_data)
         apollo_table = "apollo_webhook"
         phone = get_sanitized_phone_number(received_data)
+        apollo_id = str(received_data['people'][0]['id'])
         data = {
-            "apollo_id":str(received_data['people'][0]['id']),
+            "apollo_id":apollo_id,
             "response":str(received_data),
             "phone":str(phone)
         }
-
         add_apollo_webhook_info(data,apollo_table)
         return jsonify({"status": "success", "message": "Data received"}), 200
     
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
-
-def construct_query_param(key, values):
-    return "&".join([f"{key}[]={value.replace(' ', '%20').replace(',', '%2C')}" for value in values])
-
-def construct_query_param_range(key, values):
-    print("&".join([f"{key}[]={value.replace(',', '%2C')}" for value in values]))
-    return "&".join([f"{key}[]={value.replace(',', '%2C')}" for value in values])
-
-def construct_query_param_keywords(key, value):
-    return f"{key}={value.replace(',', '%2C').replace(' ','%20')}" 
 
 @app.route("/data_sanitization", methods=["GET"])
 def initialize_data_sanitization():
