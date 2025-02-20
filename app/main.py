@@ -41,14 +41,22 @@ def testing_connection():
 @app.route('/apollo_webhook', methods=['POST'])
 def apollo_webhook():
     try:
+        def get_sanitized_phone_number(data):
+            try:
+                return data.get('people', [{}])[0].get('phone_numbers', [{}])[0].get('sanitized_number', 'NA')
+            except (IndexError, KeyError, TypeError):
+                return "NA"
+        
         received_data = request.get_json()
         print("Received data:", received_data)
         apollo_table = "apollo_webhook"
+        phone = get_sanitized_phone_number(received_data)
         data = {
             "apollo_id":str(received_data['people'][0]['id']),
-            "response":str(received_data)
+            "response":str(received_data),
+            "phone":str(phone)
         }
-        
+
         add_apollo_webhook_info(data,apollo_table)
         return jsonify({"status": "success", "message": "Data received"}), 200
     
