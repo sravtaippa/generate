@@ -286,5 +286,6 @@ def phone_number_updation(apollo_id,cur_table_name,outreach_table_name):
     update_phone_numbers(apollo_id,cur_table_name,cur_col_name,col_value)
     update_phone_numbers(apollo_id,outreach_table_name,outreach_col_name,col_value)
     print("Successfully updated the phone numbers for the apollo entries")
+    return phone
   except Exception as e:
     execute_error_block(f"Error occured while updating phone numbers for Apollo entries")
