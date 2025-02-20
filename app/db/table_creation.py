@@ -48,6 +48,10 @@ def generate_table(phase,table_name,description):
                         "type": "multilineText"
                     },
                     {
+                        "name": "phone",
+                        "type": "multilineText"
+                    },
+                    {
                         "name": "linkedin_url",
                         "type": "multilineText"
                     },
@@ -203,6 +207,10 @@ def generate_table(phase,table_name,description):
                     "type": "multilineText"
                 },
                 {
+                    "name": "recipient_phone",
+                    "type": "multilineText"
+                },
+                {
                     "name": "recipient_email",
                     "type": "multilineText"
                 },
@@ -224,18 +232,6 @@ def generate_table(phase,table_name,description):
                 },
                 {
                     "name": "sender_company_website",
-                    "type": "multilineText"
-                },
-                {
-                    "name": "key_benefits",
-                    "type": "multilineText"
-                },
-                {
-                    "name": "unique_features",
-                    "type": "multilineText"
-                },
-                {
-                    "name": "impact_metrics",
                     "type": "multilineText"
                 },
                 {
