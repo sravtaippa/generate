@@ -245,28 +245,28 @@ def add_client_tables_info(client_id,source_table_name,curated_table_name,outrea
     except Exception as e:
         execute_error_block(f"Error occured while adding client tables info: {e}")
 
-def get_apollo_webhook(apollo_id):
+def get_apollo_phone_number(apollo_id):
   try:
-        print('Fetching Apollo webhook details')
+        print('Fetching Apollo phone number from the webhook response')
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, "apollo_webhook")
         data = record_details = airtable_obj.all(formula=f"{{apollo_id}} = '{apollo_id}'")
         if len(data) > 0:
           record_details = airtable_obj.all(formula=f"{{apollo_id}} = '{apollo_id}'")[0]
           response = record_details.get('fields').get('phone')
-          print(f"Successfully fetched latest webhook response for apollo_id: {apollo_id}")
+          print(f"Successfully fetched phone number from Apollo for the apollo_id: {apollo_id}")
         else:
           return {"status":f"error, no record found for apollo_id {apollo_id}"}
         return response
   except Exception as e:
-        print(f"Error occured in {__name__} while fetching the apollo phone number. {e}")
+        execute_error_block(f"Error occured in {__name__} while fetching the apollo phone number. {e}")
 
 def update_phone_numbers(apollo_id,table_name,col_name,col_value):
   try:
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
         print(f"Apollo id = '{apollo_id}'")
-        data_records = airtable_obj.all(formula=f"{{apollo_id}} = '{apollo_id}'")
+        data_records = airtable_obj.all(formula=f"{{id}} = '{apollo_id}'")
         if data_records:
             record = data_records[0] 
             record_id = record.get('id')
@@ -275,4 +275,18 @@ def update_phone_numbers(apollo_id,table_name,col_name,col_value):
         else:
             print(f"No record found for apollo_id {apollo_id}")
   except Exception as e:
-    print(f"Exception occured while updating the phone numbers")
+    execute_error_block(f"Exception occured while updating the phone numbers: {e}")
+
+def phone_number_updation(apollo_id):
+  try:
+    phone = get_apollo_phone_number(apollo_id)
+    cur_table_name = "cur_artisan2002"
+    outreach_table_name = "outreach_artisan2002"
+    cur_col_name = "phone"
+    outreach_col_name = "recipient_phone"
+    col_value = phone
+    update_phone_numbers(apollo_id,cur_table_name,cur_col_name,col_value)
+    update_phone_numbers(apollo_id,outreach_table_name,outreach_col_name,col_value)
+    print("Successfully updated the phone numbers for the apollo entries")
+  except Exception as e:
+    execute_error_block(f"Error occured while updating phone numbers for Apollo entries")
