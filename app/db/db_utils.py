@@ -244,3 +244,35 @@ def add_client_tables_info(client_id,source_table_name,curated_table_name,outrea
         execute_error_block(f"No record found for client_id {client_id} in client_info table for updating dependent tables info")
     except Exception as e:
         execute_error_block(f"Error occured while adding client tables info: {e}")
+
+def get_apollo_webhook(apollo_id):
+  try:
+        print('Fetching Apollo webhook details')
+        api = Api(AIRTABLE_API_KEY)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, "apollo_webhook")
+        data = record_details = airtable_obj.all(formula=f"{{apollo_id}} = '{apollo_id}'")
+        if len(data) > 0:
+          record_details = airtable_obj.all(formula=f"{{apollo_id}} = '{apollo_id}'")[0]
+          response = record_details.get('fields').get('phone')
+          print(f"Successfully fetched latest webhook response for apollo_id: {apollo_id}")
+        else:
+          return {"status":f"error, no record found for apollo_id {apollo_id}"}
+        return response
+  except Exception as e:
+        print(f"Error occured in {__name__} while fetching the apollo phone number. {e}")
+
+def update_phone_numbers(apollo_id,table_name,col_name,col_value):
+  try:
+        api = Api(AIRTABLE_API_KEY)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
+        print(f"Apollo id = '{apollo_id}'")
+        data_records = airtable_obj.all(formula=f"{{apollo_id}} = '{apollo_id}'")
+        if data_records:
+            record = data_records[0] 
+            record_id = record.get('id')
+            airtable_obj.update(record_id, {col_name:str(col_value)})
+            print(f"Updated phone number to {col_value} for apollo_id {apollo_id}")
+        else:
+            print(f"No record found for apollo_id {apollo_id}")
+  except Exception as e:
+    print(f"Exception occured while updating the phone numbers")

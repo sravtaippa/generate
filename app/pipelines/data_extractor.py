@@ -12,13 +12,15 @@ CLIENT_DETAILS_TABLE_NAME = os.getenv("CLIENT_DETAILS_TABLE_NAME")
 CLIENT_INFO_TABLE_NAME = os.getenv("CLIENT_INFO_TABLE_NAME")
 
 
-def people_enrichment_v2(apollo_id,linkedin_url):
+def people_enrichment_v2(apollo_id):
     try:
-        url = f"https://api.apollo.io/api/v1/people/match?id={apollo_id}&linkedin_url={linkedin_url}&reveal_personal_emails=true&reveal_phone_number=true&webhook_url=https%3A%2F%2Fmagmostafa.pythonanywhere.com%2Fapollo_webhook"
+        url = f"https://api.apollo.io/api/v1/people/match?id={apollo_id}&reveal_personal_emails=true&reveal_phone_number=true&webhook_url=https%3A%2F%2Fmagmostafa.pythonanywhere.com%2Fapollo_webhook"
         response = requests.post(url, headers=APOLLO_HEADERS)
-        pass
+        print(f"Extracting phone numbers via people enrichment")
+        return response
+        
     except Exception as e:
-        pass
+        print(f"Error occured during people enrichment for the apollo_id {apollo_id}")
 
 def people_enrichment(apollo_id):
     try:
