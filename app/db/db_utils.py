@@ -277,11 +277,9 @@ def update_phone_numbers(apollo_id,table_name,col_name,col_value):
   except Exception as e:
     execute_error_block(f"Exception occured while updating the phone numbers: {e}")
 
-def phone_number_updation(apollo_id):
+def phone_number_updation(apollo_id,cur_table_name,outreach_table_name):
   try:
     phone = get_apollo_phone_number(apollo_id)
-    cur_table_name = "cur_artisan2002"
-    outreach_table_name = "outreach_artisan2002"
     cur_col_name = "phone"
     outreach_col_name = "recipient_phone"
     col_value = phone

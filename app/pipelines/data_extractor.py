@@ -54,13 +54,11 @@ def people_search_v2(search_url,client_id,qualify_leads):
         print(f"\n============ Completed Persona Data Mining for client : {client_id} ============")
         data = response.json()
         print(f"No of profiles collected : {len(data['people'])}")
-        # return str(len(data['people']))
         profiles_found = len(data['people'])
         enriched_profiles=0
         selected_profiles=0
         iteration=1
         if qualify_leads=='yes':
-            # solution_benefits,unique_features,solution_impact_examples,domain,buyer_criteria,buyer_examples = fetch_client_details(client_id)
             client_value_proposition = fetch_client_column(CLIENT_INFO_TABLE_NAME,client_id,"client_value_proposition")
         print(f"\n\n=====================Starting the People Search Iteration===================\n\n")
         for contact in data['people']:
@@ -68,6 +66,7 @@ def people_search_v2(search_url,client_id,qualify_leads):
             print('Collecting the info')
             iteration += 1
             apollo_id = contact['id']
+            ingested_apollo_ids = []
             unique_value = apollo_id
             persona_details=parse_people_info(contact)
             if qualify_leads=='yes':
@@ -87,7 +86,7 @@ def people_search_v2(search_url,client_id,qualify_leads):
                 print(f'Record with the following id: {apollo_id} already exists. Skipping the entry...')
                 continue   
             
-            enrichment_api_response = people_enrichment(apollo_id)
+            enrichment_api_response = people_enrichment_v2(apollo_id)
             enriched_profiles+=1
             if enrichment_api_response.status_code == 200:
                 data = enrichment_api_response.json()
@@ -140,6 +139,7 @@ def people_search_v2(search_url,client_id,qualify_leads):
                     'created_time':str(timestamp),
                 }
                 export_to_airtable(data_dict,raw_table)
+                ingested_apollo_ids.append(apollo_id)
                 selected_profiles+=1
                 print(f"\n------------Data ingestion successful for record id :{apollo_id}, client_id : {client_id}------------\n")
             else:
@@ -149,7 +149,7 @@ def people_search_v2(search_url,client_id,qualify_leads):
         print(f"Total profiles found: {profiles_found}")
         print(f"Total profiles enriched: {enriched_profiles}")
         print(f"Total profiles uploaded: {selected_profiles}")
-        return selected_profiles  
+        return selected_profiles,ingested_apollo_ids  
     else:
         print(f"\n------------ ERROR : Persona Search API Failed ------------")
         return False
