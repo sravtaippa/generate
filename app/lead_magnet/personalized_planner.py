@@ -6,7 +6,120 @@ import requests
 from lead_magnet.client_info_parser import collect_information
 # from lead_magnet.client_info_parser import collect_information
 
+import os
+import requests
+
 def generate_personalized_planner(details):
+    """
+    Generates a 15-day planner to enhance productivity and sales for an organization using OpenAI's GPT-4 model.
+    
+    Args:
+        details (dict): Organization details including name, industry, employee count, technologies, description, state, and country.
+    
+    Returns:
+        str: The generated 15-day planner in JSON format or an error message.
+    """
+
+    # Retrieve API key securely
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return "Error: API key not found. Please set OPENAI_API_KEY as an environment variable."
+
+    # Organization details with fallbacks
+    organization_name = details.get('organization_name', 'the organization')
+    organization_industry = details.get('organization_industry', 'the industry')
+    organization_employee_count = details.get('organization_employee_count', 'N/A')
+    organization_technologies = details.get('organization_technologies', 'various technologies')
+    organization_description = details.get('organization_description', 'a growing company')
+    organization_state = details.get('organization_state', 'N/A')
+    organization_country = details.get('organization_country', 'N/A')
+
+    # Optimized Prompt
+    prompt = f"""
+    Objective:
+    Generate a **15-day structured planner** to enhance sales and growth for {organization_name}.
+
+    **Organization Profile:**
+    - **Name:** {organization_name}
+    - **Industry:** {organization_industry}
+    - **Employees:** {organization_employee_count}
+    - **Technologies Used:** {organization_technologies}
+    - **Description:** {organization_description}
+    - **Location:** {organization_state}, {organization_country}
+
+    **Planner Requirements:**
+    - **Each day's plan must have a title and actionable steps.**
+    - **Ensure strategies are aligned with {organization_industry} and company size.**
+    - **Provide specific, measurable tasks to improve sales and business growth.**
+    - **Avoid generic suggestions; customize recommendations based on the given details.**
+    - **The output should be structured in valid JSON format** with **no additional text**.
+
+    **Example JSON Structure:**
+    {{
+        "Day 1: [Title]": {{
+            "Action items": [
+                "[Specific Action 1]",
+                "[Specific Action 2]",
+                "[Specific Action 3]"
+            ]
+        }},
+        "Day 2: [Title]": {{
+            "Action items": [
+                "[Specific Action 1]",
+                "[Specific Action 2]",
+                "[Specific Action 3]"
+            ]
+        }},
+        ...
+        "Day 15: [Title]": {{
+            "Action items": [
+                "[Specific Action 1]",
+                "[Specific Action 2]",
+                "[Specific Action 3]"
+            ]
+        }}
+    }}
+    """
+
+    # API request payload
+    payload = {
+        "model": "gpt-4-turbo",  # Using GPT-4 Turbo for best performance
+        "messages": [
+            {"role": "system", "content": "You are an expert in sales and business strategy. Generate a structured 15-day planner strictly in JSON format."},
+            {"role": "user", "content": prompt}
+        ],
+        "max_tokens": 4000,
+        "temperature": 0.7,
+        "top_p": 0.9,
+    }
+
+    # Headers with proper authorization format
+    headers = {
+        "Authorization": f"Bearer {api_key}",  # Ensure API key is correctly formatted
+        "Content-Type": "application/json"
+    }
+
+    # Send API request with proper error handling
+    try:
+        response = requests.post("https://api.openai.com/v1/chat/completions", json=payload, headers=headers)
+        
+        # Handle Unauthorized Error
+        if response.status_code == 401:
+            return "Error: Unauthorized. Please check your API key and ensure it is correct."
+
+        response.raise_for_status()  # Raise exception for HTTP errors
+        data = response.json()
+
+        # Parse response
+        if "choices" in data and len(data["choices"]) > 0:
+            return data["choices"][0]["message"]["content"].strip()
+        return "No content generated."
+    
+    except requests.exceptions.RequestException as e:
+        return f"API request failed: {e}"
+
+
+def generate_personalized_planner_v1(details):
     """
     Generates a 15-day planner to enhance productivity and sales for an organization using the Perplexity API.
     
