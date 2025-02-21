@@ -57,7 +57,6 @@ def fetch_user_details(user_table,user_id):
                 'github_url': data.get('github_url'),
                 'facebook_url': data.get('facebook_url'),
                 'employment_history': str(data.get('employment_history')),
-                'employment_summary':str(employment_summary),
                 'organization_name': data.get('organization').get('name'),
                 'organization_website': data.get('organization').get('website_url') if data.get('organization') else '',
                 'organization_linkedin': data.get('organization').get('linkedin_url') if data.get('organization') else '',
@@ -154,26 +153,6 @@ def collect_information(linkedin_url):
     except Exception as e:
         print(f"Error occured during collecting information for linkedin url. {e}")
         # execute_error_block(f"Error occured during test run. {e}")
-
-
-# def collect_information(user_id):
-#     try:
-#         # Fetch data from Airtable
-        
-#         user_details = fetch_user_details(AIRTABLE_CLEANED,user_id)
-#         if user_details:
-#             # print(user_details)
-#             print('Fetched user details')
-#             organization_industry = user_details.get('organization_industry','real_estate')
-#             export_to_airtable(user_details)
-#             return user_details
-#         else:
-#             print("No data found for the requested user")
-#             return None
-#         # matched_records = match_and_return_records(AIRTABLE_USER_ID, new3_df)
-
-#     except Exception as e:
-#         print(f"Exception occured in {__name__} while collecting user information: {e}")
 
 if __name__ == '__main__':
     data = collect_information('nadia@cgnet.ae')

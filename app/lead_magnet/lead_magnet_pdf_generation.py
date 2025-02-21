@@ -98,6 +98,73 @@ class CheckboxItem(Flowable):
         # Return the required width and height
         return availWidth, total_height
 
+def ice_breaker_generator_v2(company_short_description): 
+    try:
+        prompt = f"""
+        Generate a concise and engaging icebreaker based on the following company description.  
+        The icebreaker should:
+        - Acknowledge the company's industry, expertise, or key achievements if available.  
+        - Be warm, natural, and professional.  
+        - Show that we understand the company and its value.  
+        - Be brief (1-2 sentences) and relevant for initiating a conversation.  
+        - Do not ask any questions.  
+        - Do not enclose the output in quotes.  
+
+        Company description: {company_short_description}
+
+        This icebreaker will be used in a lead magnet PDF to demonstrate our understanding of the company and create an engaging introduction. Please ensure it is crafted accordingly.
+        """
+
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        response = client.chat.completions.create(
+                    model="gpt-4",
+                    messages=[
+                    {
+                    "role": "system",
+                    "content": "You are an expert in creating compelling introductions for lead magnets. Generate a short, engaging, and well-crafted icebreaker suitable for a lead magnet PDF. The output should be text-only, without any additional formatting, disclaimers, or explanations."
+                    },
+                    {"role": "user", "content": prompt}
+                    ],
+        )
+
+        result = response.choices[0].message.content.strip()
+        return result
+    except Exception as e:
+        print(f"Error occured while generating the ice breaker: {e}")
+
+def ice_breaker_generator(company_short_description): 
+    try:
+        prompt = f"""
+        Generate a concise and engaging icebreaker based on the following company description. 
+        The icebreaker should:
+        - Acknowledge the company's industry, expertise, or key achievements if available.  
+        - Be warm, natural, and professional.  
+        - Show that we understand the company and its value.  
+        - Be brief (1-2 sentences) and relevant for initiating a conversation.  
+        - Don't ask any questions
+
+        Company description: "{company_short_description}"
+
+        This icebreaker will be sent to the client to demonstrate that we have knowledge about their company. Please ensure it is crafted accordingly.
+        """
+
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        response = client.chat.completions.create(
+                    model="gpt-4",
+                    messages=[
+                    {
+                    "role": "system",
+                    "content": "You are an expert ice breaker creator. Generate a short, engaging, and well-crafted icebreaker. The output should be text-only, without any additional formatting, disclaimers, or explanations."
+                    },
+                    {"role": "user", "content": prompt}
+                    ],
+        )
+
+        result = response.choices[0].message.content.strip()
+        return result
+    except Exception as e:
+        print(f"Error occured while generating the ice breaker content: {e}")
+
 
 # Getting dynamic images from client_details table specific to each client
 def get_dynamic_images(table,record_id,attachment_column):
@@ -227,9 +294,9 @@ def embed_existing_pdf(new_pdf, existing_pdf, last_pager,output_pdf):
     writer = PdfWriter()
 
     # Add pages from the existing PDF
-    with open(existing_pdf, "rb") as existing_pdf_file:
-        existing_pdf_reader = PdfReader(existing_pdf_file)
-        writer.add_page(existing_pdf_reader.pages[0])
+    # with open(existing_pdf, "rb") as existing_pdf_file:
+    #     existing_pdf_reader = PdfReader(existing_pdf_file)
+    #     writer.add_page(existing_pdf_reader.pages[0])
 
     print("Completed first page")
     # Add the new PDF content
@@ -266,18 +333,6 @@ def content_formatting_json(content):
     )
 
     result = response.choices[0].message.content
-    # response = openai.ChatCompletion.create(
-    #     model="gpt-4",
-    #     messages=[
-    #         {
-    #             "role": "system",
-    #             "content": "You are a JSON text formatter. Only output the exact JSON text requested, with no additional text, explanations, or formatting."
-    #         },
-    #         {"role": "user", "content": prompt}
-    #     ]
-    # )
-
-    # result = response['choices'][0]['message']['content']
     print(type(result))
     return result
 
@@ -494,28 +549,15 @@ def create_personalized_pdf(user_details, output_path, image_path):
     content.append(Spacer(1, 0.1 * inch))  # Reduced spacing
 
     greeting = Paragraph(f"Hi {name},", greeting_style)
-    message = Paragraph(f"Breakthrough sales growth starts here: A powerful 15-day blueprint to revolutionize your {job_title} strategy at {company} and drive exceptional results.", ice_breaker_style)
-
+    organization_short_description = user_details.get("organization_short_description")
+    if organization_short_description not in ["",None]:
+        ice_breaker_content = ice_breaker_generator(organization_short_description)
+        message = Paragraph(ice_breaker_content, ice_breaker_style)
+    else:
+        message = Paragraph(f"Breakthrough sales growth starts here: A powerful 15-day blueprint to revolutionize your {job_title} strategy at {company} and drive exceptional results.", ice_breaker_style)
+    
     content.append(greeting)
     content.append(message)
-    # # Create a Table with the content
-    # table_data = [[greeting], [message]]
-    # table = Table(table_data, colWidths=[500])  # Adjust width as needed
-
-    # # Apply style to the Table
-    # table_style = TableStyle([
-    #     ('BACKGROUND', (0, 0), (-1, -1),colors.HexColor("#EDE6D6") ),
-    #     ('BOX', (0, 0), (-1, -1), 1, colors.black),
-    #     ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-    #     ('TOPPADDING', (0, 0), (-1, -1), 10),
-    #     ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
-    #     ('LEFTPADDING', (0, 0), (-1, -1), 10),
-    #     ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-    # ])
-    # table.setStyle(table_style)
-
-    # # Add the table to your content
-    # content.append(table)
 
     # content.append(Paragraph(f"Hi {name},", greeting_style))
     # content.append(Paragraph(f"Breakthrough sales growth starts here: A powerful 15-day blueprint to revolutionize your {job_title} strategy and drive exceptional results.",ice_breaker_style))
@@ -523,35 +565,11 @@ def create_personalized_pdf(user_details, output_path, image_path):
     content.append(Spacer(1, 0.2 * inch))
 
     personalized_planner = generate_personalized_planner(user_details)
-    # print(type(personalized_planner))
+    print(f"--------------------Personalized planner : {personalized_planner}------------------")
     formatted_content = content_formatting_json(personalized_planner)
+    print(f"--------------------Formatted content : {formatted_content}------------------")
     # print(f"\n-------formatted_content --------: {formatted_content}")
     personalized_planner = json.loads(formatted_content)
-    # print(f"\n-------json formatted content ------------: {personalized_planner}")
-    # print(type(personalized_planner))
-
-    # img1 = Img(image_path[3])
-    # img1.drawWidth = 500  # Set image width
-    # img1.drawHeight = 200  # Set image height
-    # # content.append(img)
-    # img2 = Img(image_path[4])
-    # img2.drawWidth = 500  # Set image width
-    # img2.drawHeight = 200  # Set image height
-    # # content.append(img)
-    # img3 = Img(image_path[5])
-    # img3.drawWidth = 500  # Set image width
-    # img3.drawHeight = 200  # Set image height
-    # # content.append(img)
-
-    # img4 = Img(image_path[6])
-    # img4.drawWidth = 500  # Set image width
-    # img4.drawHeight = 200  # Set image height
-    # # content.append(img)
-
-    # img5 = Img(image_path[7])
-    # img5.drawWidth = 500  # Set image width
-    # img5.drawHeight = 200  # Set image height
-    # # content.append(img)
 
     img1 = Img(image_path[9])
     img1.drawWidth = 500  # Set image width
@@ -586,8 +604,10 @@ def create_personalized_pdf(user_details, output_path, image_path):
     content.append(images[image_index])
     content.append(Spacer(1, 0.2 * inch))
     image_index=1
+    print(f"Items: {personalized_planner.items()}")
     for day, details in personalized_planner.items():
-
+        print(f"---here---")
+        print(day)
         # Add Day heading
         content.append(Spacer(1, 0.2 * inch))
         print(day)
@@ -689,7 +709,6 @@ def generate_lead_magnet_pdf(email,linkedin_url):
         final_pdf = os.path.join(SCRIPT_DIR,f"pdf/15-day Sales Booster for {company_name}.pdf")
         image_path = get_image_path()
         print(f"Image path: {image_path}")
-        # return True
         create_personalized_pdf(user_details,output_path, image_path)
         print("Successfully created lead magnet pdf")
         embed_existing_pdf(output_path, first_pager, last_pager,final_pdf)
