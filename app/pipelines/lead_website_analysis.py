@@ -15,9 +15,20 @@ from datetime import datetime, timezone
 import time
 import json
 
-# __import__('pysqlite3')
-# import sys
-# sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+######## New imports ###################
+import os
+import pinecone
+# from langchain.vectorstores import Pinecone as PineconeVectorStore
+from langchain.embeddings.openai import OpenAIEmbeddings
+from apify_client import ApifyClient
+from langchain.schema import Document
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+# from langchain.vectorstores import Pinecone
+from langchain_pinecone import PineconeVectorStore
+from pinecone import Pinecone, ServerlessSpec
+from langchain_openai import ChatOpenAI
+from langchain.chains import RetrievalQA
+##########################################
 
 # Set up your Apify API token and OpenAI API key
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -543,7 +554,7 @@ def analyze_website(website_url,explicit_icp_criteria="Not available"):
     # Step 1: Define Embeddings & Vector Store Index
     embedding_function = OpenAIEmbeddings()
 
-    print(f"Fetching vector store index")
+    print(f"Fetching vector  store index")
     # Now use sqlite3 as usual
     import sqlite3
     print(f"Sqlite3 version : {sqlite3.sqlite_version}")  
@@ -579,7 +590,6 @@ def analyze_website(website_url,explicit_icp_criteria="Not available"):
 
 def get_website_content(website_url):
   try:
-
     # Run the Website Content Crawler on a website, wait for it to finish, and save its results into a LangChain document loader:
     loader = apify.call_actor(
         actor_id="apify/website-content-crawler",
@@ -622,6 +632,78 @@ def chroma_db_testing():
     except Exception as e:
         print(f"Error occured while testing chromadb")
         return False
+    
+
+def scrape_website(website_url):
+  try: 
+    print("Started Website Scraping using Apify...")
+    apify_api_key = os.getenv("APIFY_API_TOKEN")
+    apify_client = ApifyClient(apify_api_key)
+    result = apify_client.actor("apify/website-content-crawler").call(
+    run_input={"startUrls": [{"url": website_url}], "maxCrawlPages": 20},
+    timeout_secs=130
+    )
+    # How to get the items stored inside the Apify result
+    dataset_id = result["defaultDatasetId"]
+    dataset = apify_client.dataset(dataset_id)
+    list_page = dataset.list_items()  # Get the ListPage object
+    items = list_page.items  # Access the 'items' attribute directly
+    documents = [
+    Document(page_content=item.get("text", ""), metadata={"source": item["url"]})
+    for item in items
+    ]
+    print(f"Number of webpages scraped: {len(documents)}")
+    return documents
+  
+  except Exception as e:
+    print(f"Exception occured while scraping the website: {e}")
+
+def retrieve_info(vector_store):
+  try:
+    query = "Tell me about this company?"
+    llm = ChatOpenAI(
+        model = "gpt-4o",
+        temperature = 0
+    )
+    qa = RetrievalQA.from_chain_type(
+        llm=llm,
+        chain_type="stuff",
+        retriever=vector_store.as_retriever()
+    )
+    output = qa.invoke(query)
+    return output['result']
+  except Exception as e:
+    print(f"Exception occured while retrieving info from the vector db: {e}")
+
+def web_analysis(website_url,index_name,client_id):
+  try:
+    pinecone_api_key = os.getenv("PINECONE_API_KEY")
+    pinecone_env = os.getenv("PINECONE_ENVIORONMENT")
+    documents = scrape_website(website_url)
+    text_splitter = RecursiveCharacterTextSplitter()
+    split_docs = text_splitter.split_documents(documents)
+    # pc = Pinecone(index_name)
+    client = Pinecone(api_key=pinecone_api_key, environment=pinecone_env)
+    indexes = client.list_indexes().names()
+    if index_name not in indexes:
+            print(f"Not there, creating...")
+            client.create_index(
+                name=index_name,
+                dimension=1536,  # OpenAI embeddings use 1536 dimensions
+                metric="cosine",  # Similarity metric: cosine, euclidean, dotproduct
+                spec=ServerlessSpec(cloud="aws", region="us-east-1")  # Adjust region if needed
+            )
+    print(f"getting embeddings")
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    print(f"Creating vector store")
+    vector_store = PineconeVectorStore.from_documents(split_docs,embeddings,index_name=index_name)
+    print(f"retrieving info")
+    result = retrieve_info(vector_store)
+    print(result)
+    print(f'Completed')
+    
+  except Exception as e:
+    print(f"Exception occured in {__name__} while running the helper function: {e}")
 
 if __name__ == "__main__":
   website_url = "https://www.tmeworldwide.com/"
