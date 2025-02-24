@@ -69,85 +69,6 @@ class LeadData:
     color_scheme: Optional[str] = None
     font_style: Optional[str] = None
 
-def process_single_lead(self, lead_record: Dict):
-    """Process a single lead and update its processed status"""
-    try:
-        # Extract lead data with validation
-        fields = lead_record.get('fields', {})
-
-        # Check for required fields before processing
-        required_fields = ['recipient_first_name', 'recipient_last_name', 'recipient_role',
-                           'recipient_company', 'recipient_email']
-
-        missing_fields = [field for field in required_fields
-                          if not fields.get(field)]
-
-        if missing_fields:
-            error_msg = f"Missing required fields: {', '.join(missing_fields)}"
-            self.logger.error(error_msg)
-
-            # Update record to mark as processed with error
-            error_fields = {
-                'processed': 'true',
-                'processed_date': datetime.now(timezone.utc).isoformat(),
-                'instantly_status': 'Error',
-                'error_message': error_msg
-            }
-
-            self.retry_handler.retry_operation(
-                self.airtable.update_record,
-                'outreach_berkleys',
-                lead_record['id'],
-                error_fields
-            )
-            return
-
-        # Create LeadData object with validated fields
-        lead = LeadData(
-            unique_id=lead_record['id'],
-            recipient_first_name=fields.get('recipient_first_name', ''),
-            recipient_last_name=fields.get('recipient_last_name', ''),
-            recipient_role=fields.get('recipient_role', ''),
-            recipient_company=fields.get('recipient_company', ''),
-            recipient_email=fields.get('recipient_email', ''),
-            recipient_bio=fields.get('recipient_bio'),
-            employment_summary=fields.get('employment_summary'),
-            associated_client_id=fields.get('associated_client_id'),
-            outreach_table=fields.get('outreach_table'),
-            sender_name=fields.get('sender_name'),
-            sender_title=fields.get('sender_title'),
-            sender_company=fields.get('sender_company'),
-            sender_email=fields.get('sender_email'),
-            sender_company_website=fields.get('sender_company_website'),
-            key_benefits=fields.get('key_benefits'),
-            unique_features=fields.get('unique_features'),
-            impact_metrics=fields.get('impact_metrics'),
-            cta_options=fields.get('cta_options'),
-            color_scheme=fields.get('color_scheme'),
-            font_style=fields.get('font_style')
-        )
-
-        # Rest of your processing code...
-
-    except Exception as e:
-        self.logger.error(f"Error processing lead: {str(e)}")
-        # Update record with error status
-        error_fields = {
-            'processed': 'true',
-            'processed_date': datetime.now(timezone.utc).isoformat(),
-            'instantly_status': 'Error',
-            'error_message': str(e)
-        }
-        try:
-            self.retry_handler.retry_operation(
-                self.airtable.update_record,
-                'outreach_berkleys',
-                lead_record['id'],
-                error_fields
-            )
-        except Exception as update_error:
-            self.logger.error(f"Failed to update error status: {str(update_error)}")
-
 class RetryHandler:
     """Handles retrying operations with exponential backoff"""
 
@@ -192,8 +113,8 @@ class AirtableManager:
         url = f"https://api.airtable.com/v0/{self.base_id}/{table_name}"
 
         params = {
-            'maxRecords': 15,  # Matching Make.com scenario limit
-            'sort[0][field]': 'created_date',
+            'maxRecords': 10,
+            'sort[0][field]': 'created_time',
             'sort[0][direction]': 'desc'
         }
 
@@ -214,7 +135,7 @@ class AirtableManager:
     def get_client_details(self, client_id: str) -> Optional[Dict]:
         """Gets client details from the client_info table"""
         self.logger.step(f"Getting client details for {client_id}")
-        url = f"https://api.airtable.com/v0/{self.base_id}/client_info"
+        url = f"https://api.airtable.com/v0/{self.base_id}/client_info_demo"
 
         params = {
             'filterByFormula': f"{{client_id}} = '{client_id}'",
@@ -292,6 +213,27 @@ class AirtableManager:
         except Exception as e:
             self.logger.error(f"Error creating record: {e}")
             return None
+    def get_client_outreach_tables(self) -> List[Dict]:
+        """Gets all client records with their outreach table names"""
+        self.logger.step("Fetching client outreach tables")
+        url = f"https://api.airtable.com/v0/{self.base_id}/client_info_demo"
+
+        try:
+            response = requests.get(url, headers=self.headers)
+            response.raise_for_status()
+            records = response.json().get('records', [])
+
+            # Filter out records without outreach table names
+            valid_records = [
+                record for record in records
+                if record.get('fields', {}).get('outreach_table')
+            ]
+
+            self.logger.success(f"Found {len(valid_records)} client outreach tables")
+            return valid_records
+        except Exception as e:
+            self.logger.error(f"Error getting client outreach tables: {e}")
+            return []
         
 class PerplexityEnricher:
     def __init__(self, api_key: str):
@@ -454,9 +396,12 @@ class InstantlyManager:
 
     def add_to_campaign(self, campaign_id: str, lead: 'LeadData', email_content: Dict[str, str]) -> bool:
         """Adds a lead to an email campaign"""
+        if not campaign_id:
+            self.logger.error("No campaign ID provided")
+            return False
+
         url = f"{self.base_url}/leads"
 
-        # Prepare payload exactly as per working example
         payload = {
             "campaign": campaign_id,
             "email": lead.recipient_email,
@@ -466,32 +411,22 @@ class InstantlyManager:
             "first_name": lead.recipient_first_name,
             "company_name": lead.recipient_company,
             "payload": {
-                "firstName": lead.recipient_first_name,
-                "lastName": lead.recipient_last_name,
-                "companyName": lead.recipient_company,
-                "website": lead.sender_company_website or "",
-                "personalization": f"Hi {{first_name}}, I noticed your work at {{company_name}}",
-                "email": lead.recipient_email,
-                "campaign": campaign_id,
-                "Subject": email_content.get('Subject', ''),
-                "EmailBody": email_content.get('Email_Body', ''),
-                "FollowUp": email_content.get('Follow_up', '')
+                "Subject": "Email Subject Testing",
+                "EmailBody": str(email_content.get('Email_Body', '')),
+                "FollowUp": str(email_content.get('Follow_up', ''))
             },
-            "skip_if_in_workspace": True,
-            "skip_if_in_campaign": True,
-            "verify_leads_on_import": True
+            "skip_if_in_workspace": False,
+            "skip_if_in_campaign": False,
+            "verify_leads_on_import": False
         }
 
         try:
             self.logger.debug(f"Sending payload to {url}: {json.dumps(payload, indent=2)}")
-
             response = requests.post(url, headers=self.headers, json=payload)
-
             self.logger.debug(f"Response status code: {response.status_code}")
             self.logger.debug(f"Response text: {response.text}")
 
             if response.status_code == 200:
-                response_data = response.json()
                 self.logger.success("Successfully added lead to campaign")
                 return True
             else:
@@ -507,6 +442,8 @@ class InstantlyManager:
         except Exception as e:
             self.logger.error(f"Error adding lead to campaign: {str(e)}")
             return False
+
+
 class LeadProcessor:
     def __init__(self, api_keys: Dict[str, str]):
         self.logger = DebugLogger("LeadProcessor")
@@ -530,27 +467,52 @@ class LeadProcessor:
         self.instantly = InstantlyManager(instantly_key)
         self.logger.success("All components initialized")
 
-    def get_unprocessed_leads(self) -> List[Dict]:
-        """Gets leads that haven't been processed yet"""
-        self.logger.step("Fetching unprocessed leads")
+    def get_unprocessed_leads_for_table(self, table_name: str) -> List[Dict]:
+        """Gets leads that haven't been processed yet from a specific table"""
+        self.logger.step(f"Fetching unprocessed leads from {table_name}")
         try:
-            # Get new leads with retry, adding filter for unprocessed leads
             leads = self.retry_handler.retry_operation(
                 self.airtable.get_new_leads,
-                'outreach_berkleys',
-                filter_formula="{processed} = ''"  # Filter for empty processed column
+                table_name,
+                filter_formula="{processed} = ''"
             )
-            self.logger.success(f"Found {len(leads)} unprocessed leads")
+            self.logger.success(f"Found {len(leads)} unprocessed leads in {table_name}")
             return leads
         except Exception as e:
-            self.logger.error(f"Error getting unprocessed leads: {str(e)}")
+            self.logger.error(f"Error getting unprocessed leads from {table_name}: {str(e)}")
             return []
 
-    def process_single_lead(self, lead_record: Dict):
+    def update_lead_with_error(self, record_id: str, error_message: str, table_name: str):
+        """Helper method to update a lead record with error status"""
+        error_fields = {
+            'processed': 'true',
+            'processed_date': datetime.now(timezone.utc).isoformat(),
+            'instantly_status': 'Error',
+            'error_message': error_message
+        }
+        try:
+            self.retry_handler.retry_operation(
+                self.airtable.update_record,
+                table_name,
+                record_id,
+                error_fields
+            )
+        except Exception as update_error:
+            self.logger.error(f"Failed to update error status: {str(update_error)}")
+
+    def process_single_lead(self, lead_record: Dict, table_name: str):
         """Process a single lead and update its processed status"""
         try:
             # Extract lead data with validation
             fields = lead_record.get('fields', {})
+
+            # Check for associated_client_id first
+            associated_client_id = fields.get('associated_client_id')
+            if not associated_client_id:
+                error_msg = "Missing associated_client_id in lead record"
+                self.logger.error(error_msg)
+                self.update_lead_with_error(lead_record['id'], error_msg, table_name)
+                return
 
             # Check for required fields before processing
             required_fields = ['recipient_first_name', 'recipient_last_name', 'recipient_role',
@@ -562,21 +524,7 @@ class LeadProcessor:
             if missing_fields:
                 error_msg = f"Missing required fields: {', '.join(missing_fields)}"
                 self.logger.error(error_msg)
-
-                # Update record to mark as processed with error
-                error_fields = {
-                    'processed': 'true',
-                    'processed_date': datetime.now(timezone.utc).isoformat(),
-                    'instantly_status': 'Error',
-                    'error_message': error_msg
-                }
-
-                self.retry_handler.retry_operation(
-                    self.airtable.update_record,
-                    'outreach_berkleys',
-                    lead_record['id'],
-                    error_fields
-                )
+                self.update_lead_with_error(lead_record['id'], error_msg, table_name)
                 return
 
             # Create LeadData object with validated fields
@@ -589,19 +537,13 @@ class LeadProcessor:
                 recipient_email=fields.get('recipient_email', ''),
                 recipient_bio=fields.get('recipient_bio'),
                 employment_summary=fields.get('employment_summary'),
-                associated_client_id=fields.get('associated_client_id'),
+                associated_client_id=associated_client_id,
                 outreach_table=fields.get('outreach_table'),
                 sender_name=fields.get('sender_name'),
                 sender_title=fields.get('sender_title'),
                 sender_company=fields.get('sender_company'),
                 sender_email=fields.get('sender_email'),
-                sender_company_website=fields.get('sender_company_website'),
-                key_benefits=fields.get('key_benefits'),
-                unique_features=fields.get('unique_features'),
-                impact_metrics=fields.get('impact_metrics'),
-                cta_options=fields.get('cta_options'),
-                color_scheme=fields.get('color_scheme'),
-                font_style=fields.get('font_style')
+                sender_company_website=fields.get('sender_company_website')
             )
 
             # Step 1: Get client data with retry
@@ -613,7 +555,15 @@ class LeadProcessor:
             if not client_data:
                 error_msg = f"No client data found for {lead.associated_client_id}"
                 self.logger.warning(error_msg)
-                self.update_lead_with_error(lead_record['id'], error_msg)
+                self.update_lead_with_error(lead_record['id'], error_msg, table_name)
+                return
+
+            # Get campaign ID from client data
+            campaign_id = client_data['fields'].get('instantly_campaign_id')
+            if not campaign_id:
+                error_msg = "No Instantly campaign ID found in client data"
+                self.logger.error(error_msg)
+                self.update_lead_with_error(lead_record['id'], error_msg, table_name)
                 return
 
             # Step 2: Enrich lead data with retry
@@ -633,13 +583,13 @@ class LeadProcessor:
             if not email_content:
                 error_msg = "Failed to generate email content"
                 self.logger.error(error_msg)
-                self.update_lead_with_error(lead_record['id'], error_msg)
+                self.update_lead_with_error(lead_record['id'], error_msg, table_name)
                 return
 
-            # Step 4: Try to add to Instantly campaign
+            # Step 4: Try to add to Instantly campaign with dynamic campaign ID
             campaign_success = self.retry_handler.retry_operation(
                 self.instantly.add_to_campaign,
-                "22795e87-2a6f-49be-b007-6f7f21840b05",
+                campaign_id,
                 lead,
                 email_content
             )
@@ -647,7 +597,7 @@ class LeadProcessor:
             # Step 5: Update the record with results
             update_fields = {
                 'subject': email_content.get('Subject', ''),
-                'email': email_content.get('Email_Body', ''),  # Changed from email_body to email
+                'email': email_content.get('Email_Body', ''),
                 'follow_up': email_content.get('Follow_up', ''),
                 'processed': 'true',
                 'processed_date': datetime.now(timezone.utc).isoformat(),
@@ -657,7 +607,7 @@ class LeadProcessor:
 
             update_success = self.retry_handler.retry_operation(
                 self.airtable.update_record,
-                'outreach_berkleys',
+                table_name,
                 lead_record['id'],
                 update_fields
             )
@@ -669,45 +619,43 @@ class LeadProcessor:
 
         except Exception as e:
             self.logger.error(f"Error processing lead: {str(e)}")
-            self.update_lead_with_error(lead_record['id'], str(e))
-
-    def update_lead_with_error(self, record_id: str, error_message: str):
-        """Helper method to update a lead record with error status"""
-        error_fields = {
-            'processed': 'true',
-            'processed_date': datetime.now(timezone.utc).isoformat(),
-            'instantly_status': 'Error',
-            'error_message': error_message
-        }
-        try:
-            self.retry_handler.retry_operation(
-                self.airtable.update_record,
-                'outreach_berkleys',
-                record_id,
-                error_fields
-            )
-        except Exception as update_error:
-            self.logger.error(f"Failed to update error status: {str(update_error)}")
+            self.update_lead_with_error(lead_record['id'], str(e), table_name)
 
     def process_leads(self):
-        """Process all unprocessed leads"""
-        self.logger.step("Starting lead processing")
+        """Process all unprocessed leads from all client outreach tables"""
+        self.logger.step("Starting lead processing for all client tables")
 
         try:
-            # Get only unprocessed leads
-            leads = self.get_unprocessed_leads()
+            # Get all client records with outreach tables
+            client_records = self.retry_handler.retry_operation(
+                self.airtable.get_client_outreach_tables
+            )
 
-            for lead in leads:
-                try:
-                    self.process_single_lead(lead)
-                except Exception as e:
-                    self.logger.error(f"Error processing lead {lead.get('id', 'unknown')}: {e}")
+            total_processed = 0
+            for client in client_records:
+                table_name = client['fields'].get('outreach_table')
+                if not table_name:
                     continue
 
-            self.logger.success(f"Completed processing {len(leads)} leads")
+                self.logger.step(f"Processing leads for table: {table_name}")
+                leads = self.get_unprocessed_leads_for_table(table_name)
+
+                for lead in leads:
+                    try:
+                        self.process_single_lead(lead, table_name)
+                        total_processed += 1
+                    except Exception as e:
+                        self.logger.error(
+                            f"Error processing lead {lead.get('id', 'unknown')} in table {table_name}: {e}")
+                        continue
+
+            self.logger.success(f"Completed processing {total_processed} leads across all tables")
 
         except Exception as e:
             self.logger.error(f"Fatal error in lead processing: {e}")
+
+
+
 def main():
     logger = DebugLogger("Main")
 
