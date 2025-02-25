@@ -3,11 +3,6 @@
 # Package imports
 import os
 from flask import Flask, render_template, request, jsonify
-import json
-from pyairtable import Table,Api
-import requests
-import ast
-import openai
 from urllib.parse import unquote
 import time
 
@@ -19,7 +14,7 @@ from db.db_utils import fetch_client_details,export_to_airtable,unique_key_check
 from error_logger import execute_error_block
 from lead_magnet.lead_magnet_pdf_generation import generate_lead_magnet_pdf
 from pipelines.data_sync import trigger_pipeline
-from pipelines.lead_website_analysis import chroma_db_testing
+from pipelines.lead_website_analysis import chroma_db_testing,web_analysis
 from pipelines.login_email_confirmation import login_email_sender
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
 
@@ -70,6 +65,16 @@ def initialize_data_sanitization():
         return response
     except Exception as e:
         execute_error_block(f"Error occured while initializing data sanitization module {e}")
+
+@app.route("/web_analysis", methods=["GET"])
+def analyze_website():
+    try:
+        client_id = request.args.get('client_id', type=str)
+        website_url = request.args.get('website_url', type=str)
+        apollo_tags = web_analysis(website_url,client_id)
+        return {"apollo_tags":apollo_tags}
+    except Exception as e:
+        execute_error_block(f"Error occured while initializing analyzing website module {e}")
 
 @app.route("/generate_lead_magnet", methods=["GET"])
 def generate_lead_magnet():
@@ -203,8 +208,6 @@ def scheduled_data_sync():
     try:
         status = trigger_pipeline()
         return {"Status":"Successful"}
-        # response=fetch_and_update_data(client_id)
-        # return {"Status":"Testing sanitization successful"}
     except Exception as e:
         print(f"Exception occured during scheduled data sync: {e}")
         execute_error_block(f"Exception occured during scheduled data sync: {e}")

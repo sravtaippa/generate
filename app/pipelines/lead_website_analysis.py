@@ -1,39 +1,19 @@
 import os
 import openai
-from langchain.indexes import VectorstoreIndexCreator
-from langchain_community.utilities import ApifyWrapper
-from langchain_core.document_loaders.base import Document
-from langchain_openai import OpenAI
-from langchain_openai.embeddings import OpenAIEmbeddings
-from langchain.indexes.vectorstore import VectorstoreIndexCreator
-# from langchain.llms import OpenAI
-from transformers import GPT2TokenizerFast  # For token counting
-from langchain_community.vectorstores import Chroma
 from error_logger import execute_error_block
 from datetime import datetime, timezone
-# import datetime
-import time
 import json
-
-######## New imports ###################
-import os
-import pinecone
-# from langchain.vectorstores import Pinecone as PineconeVectorStore
-from langchain.embeddings.openai import OpenAIEmbeddings
+from langchain_community.embeddings import OpenAIEmbeddings
 from apify_client import ApifyClient
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-# from langchain.vectorstores import Pinecone
 from langchain_pinecone import PineconeVectorStore
 from pinecone import Pinecone, ServerlessSpec
 from langchain_openai import ChatOpenAI
 from langchain.chains import RetrievalQA
-##########################################
 
-# Set up your Apify API token and OpenAI API key
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 APIFY_API_TOKEN = os.getenv("APIFY_API_TOKEN")
-apify = ApifyWrapper()
 
 def get_client_value_proposition(tokenizer,index):
   try:
@@ -249,137 +229,6 @@ def get_icp(tokenizer,index):
 
 def get_apollo_tags(icp_information):
   try:
-    prompt = f"""
-        From the information gathered regarding the Ideal Customer Profile of the company: {icp_information}, segregate the details into different sections:
-        1. job_titles
-        2. person_seniorities
-        3. person_locations
-        4. employee_range
-
-        Pick job_titles from the following options which are relevant to the given Ideal Customer Profile (select minimum 5 at least):
-        job_titles = [
-            ceo,
-            coo,
-            cto,
-            cmo,
-            cio,
-            cfo,
-            e-commerce specialist,
-            vp of sales,
-            marketing manager,
-            marketing coordinator,
-            digital marketing manager,
-            director of marketing,
-            director of sales,
-            business development managers,
-            sales associate,
-            vp of marketing,
-            vp of engineering,
-            director of product management,
-            director of operations,
-            director of hr,
-            director of engineering,
-            sales manager,
-            product manager,
-            operations manager,
-            branding manager,
-            hr manager,
-            it manager,
-            customer success manager,
-            data scientist,
-            product designer,
-            marketing specialist,
-            sales representative,
-            business analyst,
-            customer support specialist,
-            marketing assistant,
-            sales associate,
-            hr coordinator,
-            business development managers,
-            administrative assistant,
-            freelancer,
-            contractor,
-            growth hacker,
-            scrum master,
-            social media strategist,
-            content creator,
-            real estate developer,
-            luxury property investor,
-            international investor,
-            business owner,
-        ]
-
-        Pick person_seniorities that fall under these categories which are relevant to the given Ideal Customer Profile :
-        person_seniorities = [
-            owner,
-            founder,
-            c_suite,
-            partner,
-            vp,
-            head,
-            director,
-            manager,
-            senior,
-        ]
-
-        Pick person_locations that fall under these categories which are relevant to the given Ideal Customer Profile (minimum 1 required):
-        person_locations = [
-            Dubai,
-            UAE,
-            United Arab Emirates,
-            Abu dhabi,
-            Sharjah,
-            Ajman,
-            Riyadh,
-            Manama,
-            Bahrain,
-            Muscat,
-            Kuwait,
-            Jordan,
-            Lebanon,
-            Quatar,
-            Oman,
-            Saudi Arabia,
-            Australia,
-            France,
-            South Africa,
-            India,
-            China,
-            United States,
-            Russia,
-            Germany,
-            Italy,
-            Canada,
-            United Kingdom
-        ]
-
-        Pick employee range based on the estimated number of organization employees, based on the relevance of the industry of Ideal Customer Profile:
-        employee_range = [
-            '1,100',
-            '1,500',
-            '500,10000',
-            '50,1000',
-            '1,1000',
-            '1,50',
-            '11,50',
-            '51,200',
-            '201,500',
-            '501,1000',
-            '1000,5000',
-            '5001,10000',
-        ]
-
-        Return only a **STRICT** JSON object in the following format:
-        {{
-          "job_titles": [job_title1, job_title2, job_title3],
-          "person_seniorities": [person_seniority1, person_seniority2, person_seniority3],
-          "person_locations": [person_location1, person_location2, person_location3],
-          "employee_range": [employee_range1, employee_range2, employee_range3]
-        }}
-
-        Do not include any explanations, text, or additional information outside the JSON object.
-        """
-
     updated_json_prompt = f"""
         From the information gathered regarding the Ideal Customer Profile of the company: {icp_information}, segregate the details into different sections:
         1. job_titles
@@ -633,7 +482,6 @@ def chroma_db_testing():
         print(f"Error occured while testing chromadb")
         return False
     
-
 def scrape_website(website_url):
   try: 
     print("Started Website Scraping using Apify...")
@@ -656,11 +504,74 @@ def scrape_website(website_url):
     return documents
   
   except Exception as e:
-    print(f"Exception occured while scraping the website: {e}")
+    execute_error_block(f"Exception occured while scraping the website: {e}")
 
 def retrieve_info(vector_store):
   try:
-    query = "Tell me about this company?"
+    icp_prompt = """
+    Retrieve and extract the **Ideal Customer Profile (ICP)** based on the retrieved website content stored in the vector database.  
+    Focus **strictly** on explicitly stated data—**NO assumptions allowed**.  
+
+    If explicit details are not available, infer closely related values based on industry context. The goal is to extract relevant data even if it's not directly mentioned.
+
+    ### **🔍 Objective**
+    Analyze the company's website to determine its **Ideal Customer Profile (ICP)** by identifying:  
+    1️⃣ **Key job titles** relevant to decision-making roles.  
+    2️⃣ **Seniority levels** of those decision-makers.  
+    3️⃣ **Geographic focus** (countries where they operate or serve customers).  
+    4️⃣ **Company size** ranges based on employee count.  
+
+    This ICP will be used to refine **high-value prospect targeting** via **Apollo.io** for outreach campaigns.  
+
+    ---
+
+    ### **🚨 STRICT Extraction Rules**
+    ✔ **Primary Source:** Use only website content—no assumptions.  
+    ✔ **Use structured fields** for output.  
+    ✔ **Strictly exclude irrelevant profiles.**  
+    ✔ If explicit data is unavailable, infer the information based on the context (such as industry, service offerings, etc.).
+
+    ---
+
+    ### **📌 ICP Attributes to Extract**  
+
+    #### **1️⃣ Job Titles (Minimum 5 - STRICT, No Invalid Responses)**  
+    🔹 **Extract at least 5 relevant job titles.**  
+    🔹 If fewer than 5 exist, infer closely related titles from context.  
+    🔹 If no exact match is found, derive **general industry-relevant titles**.  
+
+    #### **2️⃣ Seniority Levels (Minimum 4 - Unique Values Required)**  
+    🔹 Extract at least **4 unique seniority levels**.  
+    🔹 Avoid duplication (e.g., `["Senior", "Senior", "Senior", "Senior"]` is invalid).  
+    🔹 If limited seniority data exists, **infer additional relevant seniority levels**.  
+
+    #### **3️⃣ Geographic Targeting (Minimum 1 Country, More If Available)**  
+    🔹 Extract **at least 1 country**, but include more if mentioned.  
+    🔹 Ensure extracted values are **countries, not cities** (e.g., `"United Arab Emirates"`, NOT `"Dubai"`).  
+    🔹 If customer locations are unclear, use the company’s own location **plus nearby regions**.  
+
+    #### **4️⃣ Ideal Company Size (Minimum 3 Ranges)**  
+    🔹 Extract at least **3 distinct company size ranges** (e.g., `'1-10'`, `'11-50'`, `'51-200'`).  
+
+    ---
+
+    ### **🚀 JSON Output Format (Strictly Follow This Format)**
+    **STRICT JSON OUTPUT REQUIREMENT**  
+        - The output **must be a valid JSON object**.  
+        - **No explanations, no additional text, no extra formatting.**  
+
+        **Expected JSON Output Format**:
+        {{
+          "job_titles": [job_title1, job_title2, job_title3],
+          "person_seniorities": [person_seniority1, person_seniority2, person_seniority3],
+          "person_locations": [person_location1, person_location2, person_location3],
+          "employee_range": [employee_range1, employee_range2, employee_range3]
+        }}
+
+        **Do not return anything other than the JSON object.**
+    """
+
+    query = icp_prompt
     llm = ChatOpenAI(
         model = "gpt-4o",
         temperature = 0
@@ -672,17 +583,19 @@ def retrieve_info(vector_store):
     )
     output = qa.invoke(query)
     return output['result']
-  except Exception as e:
-    print(f"Exception occured while retrieving info from the vector db: {e}")
 
-def web_analysis(website_url,index_name,client_id):
+  except Exception as e:
+    execute_error_block(f"Exception occured while retrieving info from the vector db: {e}")
+
+
+def web_analysis(website_url,client_id):
   try:
     pinecone_api_key = os.getenv("PINECONE_API_KEY")
     pinecone_env = os.getenv("PINECONE_ENVIORONMENT")
+    index_name = client_id
     documents = scrape_website(website_url)
     text_splitter = RecursiveCharacterTextSplitter()
     split_docs = text_splitter.split_documents(documents)
-    # pc = Pinecone(index_name)
     client = Pinecone(api_key=pinecone_api_key, environment=pinecone_env)
     indexes = client.list_indexes().names()
     if index_name not in indexes:
@@ -698,12 +611,25 @@ def web_analysis(website_url,index_name,client_id):
     print(f"Creating vector store")
     vector_store = PineconeVectorStore.from_documents(split_docs,embeddings,index_name=index_name)
     print(f"retrieving info")
-    result = retrieve_info(vector_store)
-    print(result)
-    print(f'Completed')
-    
+    icp_tags = retrieve_info(vector_store)
+    print(f"Successfully retrieved icp_tags : {icp_tags}")
+    retries = 7
+    while retries > 0:
+      apollo_tags = get_apollo_tags(icp_tags)
+      try:
+        apollo_tags = json.loads(apollo_tags)
+        print(f"The apollo tags are now in JSON format")
+        break
+      except ValueError:
+        retries -= 1
+        print(f"Retrying the JSON tags creation...")
+        if retries ==0:
+          execute_error_block(f"Error occured during Apollo tag creation. {e}")
+    print(f"Successfuly generated Apollo tags")
+    return apollo_tags
+  
   except Exception as e:
-    print(f"Exception occured in {__name__} while running the helper function: {e}")
+    execute_error_block(f"Exception occured in {__name__} while running the helper function: {e}")
 
 if __name__ == "__main__":
   website_url = "https://www.tmeworldwide.com/"
