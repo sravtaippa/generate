@@ -9,7 +9,7 @@ import time
 from pipelines.data_sanitization import fetch_and_update_data, update_email_opens
 from pipelines.data_extractor import people_enrichment,test_run_pipeline,run_demo_pipeline
 from db.table_creation import create_client_tables
-from pipelines.icp_generation import generate_icp
+from pipelines.icp_generation import generate_icp,generate_apollo_url
 from db.db_utils import fetch_client_details,export_to_airtable,unique_key_check_airtable,parse_people_info,add_client_tables_info,add_apollo_webhook_info
 from error_logger import execute_error_block
 from lead_magnet.lead_magnet_pdf_generation import generate_lead_magnet_pdf
@@ -27,10 +27,9 @@ app = Flask(__name__)
 def testing_connection():
     try:
         print('------------Started Testing --------------')
-        job_titles = request.args.get('job_titles', default='', type=str)
-        print((job_titles))
-        return {'Status':'Success'}
-    except:
+        icp_url = generate_apollo_url(client_id = "cl_berkleys_homes",page_number=1,records_required=2,organization="creativemediahouse.ae")
+        return {'icp_url':icp_url}
+    except Exception as e:
         execute_error_block(f"Error occured while testing. {e}")
 
 @app.route('/apollo_webhook', methods=['POST'])
@@ -173,7 +172,7 @@ def client_onboarding_test():
         add_client_tables_info(client_id,src_table,cur_table,outreach_table)
         print(f"------ Added client tables info to the airtable for client_id : {client_id} -------------")
         status = generate_icp(client_id,website_url)
-        print(f"------ Successfully generated ICP and Client value proposition for the client: {client_id} -------------")
+        print(f"------ Successfully generated ICP and stored client details in Vector database: {client_id} -------------")
         print("\n\n--------Started Data Sync ---------\n\n")
         trigger_pipeline()
         print("\n\n--------Completed Data Sync ---------\n\n")

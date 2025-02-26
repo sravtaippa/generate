@@ -6,7 +6,6 @@ from langchain_community.embeddings import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
 from langchain_openai import ChatOpenAI
 
-
 def qualify_lead(persona_details,client_value_proposition,index_name = "webanalysis"):
     try:
         title = persona_details['title']
