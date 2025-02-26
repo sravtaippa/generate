@@ -1,12 +1,13 @@
 import openai
+import ast
 import time
 import json
 import os
 import json
 import requests
+from error_logger import execute_error_block
 from db.db_utils import unique_key_check_airtable,export_to_airtable,update_client_info,fetch_client_column
-from pipelines.lead_website_analysis import analyze_website
-
+from pipelines.lead_website_analysis import web_analysis
 from config import APOLLO_HEADERS
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -32,50 +33,32 @@ def lowercase_keys(json_data, keys_to_lowercase):
             json_data[key] = [value.lower() for value in json_data[key] if isinstance(value, str)]
     return json_data
 
-def generate_icp(client_id,website_url):
+def generate_apollo_url(client_id,page_number=1,records_required=2,organization="creativemediahouse.ae"):
     try:
-        print(f"\n\n--------Generating ICP --------\n\n")
-        openai.api_key = OPENAI_API_KEY
-        explicit_icp_criteria = fetch_client_column(CLIENT_INFO_TABLE_NAME,client_id,"explicit_icp_criteria")
-        print(f"explicit_icp_criteria : {explicit_icp_criteria}")
-        icp_description, icp_apollo_tags, value_proposition_details = analyze_website(website_url,explicit_icp_criteria)
-        print(f"\n\n----ICP Description retrieved: {icp_description}------\n\n")
-        print(f"\n\n----ICP Apollo Tags retrieved: {icp_apollo_tags}------\n\n")
-        print(f"\n\n----Client Value Proposition retrieved: {value_proposition_details}------\n\n")
-        parsed_json = json.loads(icp_apollo_tags)
-        print(parsed_json)
-        keys_to_lowercase = ["job_titles", "person_seniorities", "person_locations"]
-        # Convert values to lowercase
-        icp_json = lowercase_keys(parsed_json, keys_to_lowercase)
-        print(f"Updated json: {icp_json}")
-        print(f"Completed creating ICP json")
-        results_per_page=100
-        person_titles = icp_json.get('job_titles') 
-        person_seniorities = icp_json.get('person_seniorities')
-        person_locations = icp_json.get('person_locations')
-        email_status = ['verified']
-        organization_num_employees_ranges = icp_json.get('employee_range')
+        icp_job_details = ast.literal_eval(fetch_client_column("client_config",client_id,"icp_job_details"))
+        icp_job_seniorities = ast.literal_eval(fetch_client_column("client_config",client_id,"icp_job_seniorities"))
+        icp_employee_range = ast.literal_eval(fetch_client_column("client_config",client_id,"icp_employee_range"))
+        icp_locations = ast.literal_eval(fetch_client_column("client_config",client_id,"icp_locations"))
         print(f"\n\n--------Creating query params--------\n\n")
+        email_status = ['verified']
         query_params = [
-                    construct_query_param("person_titles", person_titles),
-                    construct_query_param("person_seniorities", person_seniorities),
-                    construct_query_param("person_locations", person_locations),
-                    construct_query_param("organization_locations", person_locations),
+                    construct_query_param("person_titles", icp_job_details),
+                    construct_query_param("person_seniorities", icp_job_seniorities),
+                    construct_query_param("person_locations", icp_employee_range),
+                    construct_query_param("organization_locations", icp_locations),
                     construct_query_param("contact_email_status", email_status),
-                    construct_query_param_range("organization_num_employees_ranges", organization_num_employees_ranges),
+                    construct_query_param_range("organization_num_employees_ranges", icp_employee_range),
         ]
+        query_params.append(f"q_organization_domains={organization}")
         query_params_test = query_params.copy()
-        query_params_test.append("page=1")
-        query_params.append("page={page_number}")
-        query_params.append("per_page={records_required}")
-        query_params_test.append(f"per_page={results_per_page}")
+        query_params.append(f"page={page_number}")
+        query_params_test.append(f"page=1")
+        query_params.append(f"per_page={records_required}")
+        query_params_test.append(f"per_page=100")
         base_url = "https://api.apollo.io/api/v1/mixed_people/search"
         url_test = f"{base_url}?{'&'.join(query_params_test)}"
         dynamic_url = f"{base_url}?{'&'.join(query_params)}"
-        headers = APOLLO_HEADERS
-        print(f"Updating the value proposition details for the client")
-        update_client_info(CLIENT_INFO_TABLE_NAME,client_id,value_proposition_details)
-        print(f"Successfully updated value proposition details for the client")
+        headers = APOLLO_HEADERS    
         print(f"\n\nRunning the people search API test")
         print(f"\n\n------------Apollo Url for testing : {url_test}------------------------")
         response = requests.post(url_test, headers=headers)
@@ -83,25 +66,47 @@ def generate_icp(client_id,website_url):
             print(f"\n------------Completed Persona Data Mining------------")
             data = response.json()
             print(f"No of profiles collected : {len(data['people'])}")
-            record_exists = unique_key_check_airtable('client_id',client_id,CLIENT_CONFIG_TABLE_NAME)
-            if record_exists:
-                print(f'Record with the following id: {client_id} already exists for client config table. Skipping the entry...')
-                return True
-            config_data = {
-                "client_id":client_id,
-                "icp_url":dynamic_url,
-                "icp_description":icp_description,
-                "icp_job_details":str(person_titles),
-                "icp_job_seniorities":str(person_seniorities),
-                "icp_employee_range":str(organization_num_employees_ranges),
-                "icp_locations":str(person_locations),
-                "page_number":'1',
-                "qualify_leads":'no',
-                "records_required":'2',
-                "is_active":"yes",
-            }
-            export_to_airtable(config_data, CLIENT_CONFIG_TABLE_NAME)
         return dynamic_url
+    except Exception as e:
+        execute_error_block(f"Error occured while generating the apollo url: {e}")
+
+def generate_icp(client_id,website_url):
+    try:
+        print(f"\n\n--------Generating ICP --------\n\n")
+        openai.api_key = OPENAI_API_KEY
+        icp_apollo_tags = web_analysis(website_url,client_id)
+        print(f"\n\n----ICP Apollo Tags retrieved: {icp_apollo_tags}------\n\n")
+        parsed_json = json.loads(icp_apollo_tags)
+        print(parsed_json)
+        keys_to_lowercase = ["job_titles", "person_seniorities", "person_locations"]
+        icp_json = lowercase_keys(parsed_json, keys_to_lowercase)
+        print(f"Updated json: {icp_json}")
+        print(f"Completed creating ICP json")
+        person_titles = icp_json.get('job_titles') 
+        person_seniorities = icp_json.get('person_seniorities')
+        person_locations = icp_json.get('person_locations')
+        organization_domains=[]
+        organization_num_employees_ranges = icp_json.get('employee_range')
+        record_exists = unique_key_check_airtable('client_id',client_id,CLIENT_CONFIG_TABLE_NAME)
+        if record_exists:
+            print(f'Record with the following id: {client_id} already exists for client config table. Skipping the entry...')
+            return True
+        icp_url = generate_apollo_url()
+        config_data = {
+            "client_id":client_id,
+            "icp_url":icp_url,
+            "icp_job_details":str(person_titles),
+            "icp_job_seniorities":str(person_seniorities),
+            "icp_employee_range":str(organization_num_employees_ranges),
+            "icp_locations":str(person_locations),
+            "page_number":'1',
+            "qualify_leads":'no',
+            "records_required":'2',
+            "organization_domains":organization_domains,
+            "is_active":"yes",
+        }
+        export_to_airtable(config_data, CLIENT_CONFIG_TABLE_NAME)
+        return
     
     except Exception as e:
         print(f"Error occured at {__name__} while generating icp: {e}")

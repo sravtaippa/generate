@@ -489,7 +489,7 @@ def scrape_website(website_url):
     apify_client = ApifyClient(apify_api_key)
     result = apify_client.actor("apify/website-content-crawler").call(
     run_input={"startUrls": [{"url": website_url}], "maxCrawlPages": 20},
-    timeout_secs=130
+    timeout_secs=400
     )
     # How to get the items stored inside the Apify result
     dataset_id = result["defaultDatasetId"]
@@ -587,7 +587,6 @@ def retrieve_info(vector_store):
   except Exception as e:
     execute_error_block(f"Exception occured while retrieving info from the vector db: {e}")
 
-
 def web_analysis(website_url,client_id):
   try:
     pinecone_api_key = os.getenv("PINECONE_API_KEY")
@@ -610,6 +609,8 @@ def web_analysis(website_url,client_id):
     embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
     print(f"Creating vector store")
     vector_store = PineconeVectorStore.from_documents(split_docs,embeddings,index_name=index_name)
+    print('Created vector store')
+    return
     print(f"retrieving info")
     icp_tags = retrieve_info(vector_store)
     print(f"Successfully retrieved icp_tags : {icp_tags}")

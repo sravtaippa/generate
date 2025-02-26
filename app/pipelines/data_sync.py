@@ -1,14 +1,15 @@
 import requests
 import openai
 import os
+import ast
 from datetime import datetime
-
 from pipelines.data_sanitization import fetch_and_update_data
-from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable,retrieve_client_tables,fetch_client_outreach_mappings,get_clients_config,fetch_page_config,update_client_config,phone_number_updation
+from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable,retrieve_client_tables,fetch_client_outreach_mappings,get_clients_config,fetch_page_config,update_client_config,phone_number_updation,fetch_client_column
 from pipelines.lead_qualifier import qualify_lead
 from error_logger import execute_error_block
 from pipelines.data_extractor import people_search_v2
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
+from pipelines.icp_generation import generate_apollo_url
 # from lead_magnet.industry_insights import get_cold_email_kpis
  
 CLIENT_DETAILS_TABLE_NAME = os.getenv("CLIENT_DETAILS_TABLE_NAME")
@@ -29,19 +30,25 @@ def trigger_pipeline():
                     print(f"Skipping data sync since the entry is not active")
                     print(f"\n-------------------- Data Sync Skipped for Client : {client_id}------------------------\n")
                     continue
-                print(f"Active status of the client: {active_status}")
                 print(client_details.get('icp_url'))
                 print(f"Formatting the dynamic url for Apollo search for client {client_id}")
-                icp_url = client_details.get('icp_url').format(page_number=last_page,records_required=records_required)
-                print(f" Apollo Search Url for the client {client_id}: {icp_url}")
-                print(f"Starting People Search for the client {client_id}")
-                profiles_enriched,ingested_apollo_ids = people_search_v2(icp_url,client_id,qualify_leads)
-                raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
-                response=fetch_and_update_data(client_id)
-                print(response)
-                print(f"\n------------ Data populated for the outreach table for the client_id: {client_id}\n")
-                updated_status = update_client_config(CLIENT_CONFIG_TABLE_NAME,client_id,profiles_enriched)
-                print(f"\n-------------------- Data Sync completed for Client : {client_id}------------------------\n") 
+                include_organization = ast.literal_eval(fetch_client_column("client_config",client_id,"include_organization"))
+                if include_organization.upper()=="YES":
+                    organization_domains = ast.literal_eval(fetch_client_column("client_config",client_id,"organization_domains"))     
+                    for organization in organization_domains:
+                        print(f"=============== Started data refresh for organization url :{organization} ===============")
+                        icp_url = generate_apollo_url(client_id,last_page,records_required,organization)
+                        # icp_url = client_details.get('icp_url').format(page_number=last_page,records_required=records_required)
+                        print(f" Apollo Search Url for the client {client_id}: {icp_url}")
+                        print(f"Starting People Search for the client {client_id}")
+                        profiles_enriched,ingested_apollo_ids = people_search_v2(icp_url,client_id,qualify_leads)
+                        raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
+                        response=fetch_and_update_data(client_id)
+                        print(response)
+                        print(f"\n------------ Data populated for the outreach table for the client_id: {client_id}\n")
+                        updated_status = update_client_config(CLIENT_CONFIG_TABLE_NAME,client_id,profiles_enriched)
+                        print(f"\n-------------------- Data Sync completed for Client : {client_id}------------------------\n") 
+            
             except Exception as e:
                 print(f"Error occured during data sync for client.{e}")
         print("\n================= Scheduled Pipeline Execution Completed ==========================================\n")
