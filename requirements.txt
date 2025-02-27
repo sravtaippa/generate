@@ -20,3 +20,5 @@ langchain
 langchain-chroma
 transformers
 chromadb
+pinecone
+langchain_pinecone
