@@ -2,6 +2,7 @@ import os
 import openai
 from error_logger import execute_error_block
 from datetime import datetime, timezone
+from db.db_utils import update_client_vector,fetch_client_column
 import json
 from langchain_community.embeddings import OpenAIEmbeddings
 from apify_client import ApifyClient
@@ -14,6 +15,9 @@ from langchain.chains import RetrievalQA
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 APIFY_API_TOKEN = os.getenv("APIFY_API_TOKEN")
+
+CLIENT_DETAILS_TABLE_NAME = os.getenv("CLIENT_DETAILS_TABLE_NAME")
+CLIENT_CONFIG_TABLE_NAME = os.getenv("CLIENT_CONFIG_TABLE_NAME")
 
 def get_client_value_proposition(tokenizer,index):
   try:
@@ -349,19 +353,21 @@ def get_apollo_tags(icp_information):
             "5001,10000"
         ]
 
-        **STRICT JSON OUTPUT REQUIREMENT**  
-        - The output **must be a valid JSON object**.  
-        - **No explanations, no additional text, no extra formatting.**  
+        ### 🚀 Expected Response Format (Return JSON String)  
+        - Return **ONLY** a JSON string. No explanations, no additional text, no extra formatting.  
+        - **The output must be directly usable as a string literal in Python.**  
 
-        **Expected JSON Output Format**:
-        {{
-          "job_titles": [job_title1, job_title2, job_title3],
-          "person_seniorities": [person_seniority1, person_seniority2, person_seniority3],
-          "person_locations": [person_location1, person_location2, person_location3],
-          "employee_range": [employee_range1, employee_range2, employee_range3]
-        }}
+        **Example Output Format:**  
 
-        **Do not return anything other than the JSON object.**
+        {{"job_titles": ["Marketing Manager", "Head of Growth", "Digital Strategist"],
+        "person_seniorities": ["Mid-Level", "Senior", "Director", "VP"],
+        "person_locations": ["United States", "Canada", "UK"],
+        "employee_range": ["11-50", "51-200", "201-500"]}}
+
+        **If no relevant data is found, return:**  
+
+        {{"job_titles": [], "person_seniorities": [], "person_locations": [], "employee_range": []}}  
+    
     """
 
     client = openai.OpenAI(api_key=OPENAI_API_KEY)
@@ -488,8 +494,8 @@ def scrape_website(website_url):
     apify_api_key = os.getenv("APIFY_API_TOKEN")
     apify_client = ApifyClient(apify_api_key)
     result = apify_client.actor("apify/website-content-crawler").call(
-    run_input={"startUrls": [{"url": website_url}], "maxCrawlPages": 20},
-    timeout_secs=400
+    run_input={"startUrls": [{"url": website_url}], "maxCrawlPages": 50},
+    timeout_secs=600
     )
     # How to get the items stored inside the Apify result
     dataset_id = result["defaultDatasetId"]
@@ -509,68 +515,59 @@ def scrape_website(website_url):
 def retrieve_info(vector_store):
   try:
     icp_prompt = """
-    Retrieve and extract the **Ideal Customer Profile (ICP)** based on the retrieved website content stored in the vector database.  
-    Focus **strictly** on explicitly stated data—**NO assumptions allowed**.  
+        Retrieve and extract the Ideal Customer Profile (ICP) based on the retrieved website content stored in the vector database.
 
-    If explicit details are not available, infer closely related values based on industry context. The goal is to extract relevant data even if it's not directly mentioned.
+        - **Strictly use explicitly stated data—NO assumptions allowed.**  
+        - If explicit details are unavailable, infer closely related values based on **industry context** to extract the most relevant data.  
+        - This ICP will be used to refine **high-value prospect targeting** via **Apollo.io** for outreach campaigns.  
 
-    ### **🔍 Objective**
-    Analyze the company's website to determine its **Ideal Customer Profile (ICP)** by identifying:  
-    1️⃣ **Key job titles** relevant to decision-making roles.  
-    2️⃣ **Seniority levels** of those decision-makers.  
-    3️⃣ **Geographic focus** (countries where they operate or serve customers).  
-    4️⃣ **Company size** ranges based on employee count.  
+        ---  
 
-    This ICP will be used to refine **high-value prospect targeting** via **Apollo.io** for outreach campaigns.  
+        ### 🚨 STRICT Extraction Rules  
+        ✔ **Primary Source:** Use only website content—no assumptions.  
+        ✔ **Use structured fields** for output.  
+        ✔ **Strictly exclude irrelevant profiles.**  
+        ✔ If explicit data is unavailable, infer the information based on **industry context** (e.g., service offerings, company details, etc.).  
 
-    ---
+        ---  
 
-    ### **🚨 STRICT Extraction Rules**
-    ✔ **Primary Source:** Use only website content—no assumptions.  
-    ✔ **Use structured fields** for output.  
-    ✔ **Strictly exclude irrelevant profiles.**  
-    ✔ If explicit data is unavailable, infer the information based on the context (such as industry, service offerings, etc.).
+        ### 📌 ICP Attributes to Extract  
 
-    ---
+        #### 1️⃣ Job Titles (Minimum 5 - STRICT, No Invalid Responses)  
+        - Extract **at least 5 relevant job titles**.  
+        - If fewer than 5 exist, infer closely related titles from context.  
+        - If no exact match is found, derive **general industry-relevant titles**.  
 
-    ### **📌 ICP Attributes to Extract**  
+        #### 2️⃣ Seniority Levels (Minimum 4 - Unique Values Required)  
+        - Extract **at least 4 unique seniority levels**.  
+        - Avoid duplication.  
+        - If limited seniority data exists, **infer additional relevant seniority levels**.  
 
-    #### **1️⃣ Job Titles (Minimum 5 - STRICT, No Invalid Responses)**  
-    🔹 **Extract at least 5 relevant job titles.**  
-    🔹 If fewer than 5 exist, infer closely related titles from context.  
-    🔹 If no exact match is found, derive **general industry-relevant titles**.  
+        #### 3️⃣ Geographic Targeting (Minimum 1 Country, More If Available)  
+        - Extract **at least 1 country**, but include more if mentioned.  
+        - Ensure extracted values are **countries, not cities**.  
+        - If customer locations are unclear, use the company’s own location **plus nearby regions**.  
 
-    #### **2️⃣ Seniority Levels (Minimum 4 - Unique Values Required)**  
-    🔹 Extract at least **4 unique seniority levels**.  
-    🔹 Avoid duplication (e.g., `["Senior", "Senior", "Senior", "Senior"]` is invalid).  
-    🔹 If limited seniority data exists, **infer additional relevant seniority levels**.  
+        #### 4️⃣ Ideal Company Size (Minimum 3 Ranges)  
+        - Extract at least **3 distinct company size ranges**.  
 
-    #### **3️⃣ Geographic Targeting (Minimum 1 Country, More If Available)**  
-    🔹 Extract **at least 1 country**, but include more if mentioned.  
-    🔹 Ensure extracted values are **countries, not cities** (e.g., `"United Arab Emirates"`, NOT `"Dubai"`).  
-    🔹 If customer locations are unclear, use the company’s own location **plus nearby regions**.  
+        ---  
 
-    #### **4️⃣ Ideal Company Size (Minimum 3 Ranges)**  
-    🔹 Extract at least **3 distinct company size ranges** (e.g., `'1-10'`, `'11-50'`, `'51-200'`).  
+        ### 🚀 Expected Response Format (Return JSON String)  
+        - Return **ONLY** a JSON string. No explanations, no additional text, no extra formatting.  
+        - **The output must be directly usable as a string literal in Python.**  
 
-    ---
+        **Example Output Format: **STRICTLY JSON** **  
+        Example format:
+        {{"job_titles": ["Marketing Manager", "Head of Growth", "Digital Strategist"],
+        "person_seniorities": ["Mid-Level", "Senior", "Director", "VP"],
+        "person_locations": ["United States", "Canada", "UK"],
+        "employee_range": ["11-50", "51-200", "201-500"]}}
 
-    ### **🚀 JSON Output Format (Strictly Follow This Format)**
-    **STRICT JSON OUTPUT REQUIREMENT**  
-        - The output **must be a valid JSON object**.  
-        - **No explanations, no additional text, no extra formatting.**  
-
-        **Expected JSON Output Format**:
-        {{
-          "job_titles": [job_title1, job_title2, job_title3],
-          "person_seniorities": [person_seniority1, person_seniority2, person_seniority3],
-          "person_locations": [person_location1, person_location2, person_location3],
-          "employee_range": [employee_range1, employee_range2, employee_range3]
-        }}
-
-        **Do not return anything other than the JSON object.**
+        **If no relevant data is found, return:**  
+        Example format:
+        {{"job_titles": [], "person_seniorities": [], "person_locations": [], "employee_range": []}}  
     """
-
     query = icp_prompt
     llm = ChatOpenAI(
         model = "gpt-4o",
@@ -589,6 +586,7 @@ def retrieve_info(vector_store):
 
 def web_analysis(website_url,client_id):
   try:
+    # icp_flag = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"icp_flag")
     pinecone_api_key = os.getenv("PINECONE_API_KEY")
     pinecone_env = os.getenv("PINECONE_ENVIORONMENT")
     index_name = client_id
@@ -596,36 +594,42 @@ def web_analysis(website_url,client_id):
     text_splitter = RecursiveCharacterTextSplitter()
     split_docs = text_splitter.split_documents(documents)
     client = Pinecone(api_key=pinecone_api_key, environment=pinecone_env)
+    index_name = index_name.replace("_", "-")
+    update_client_vector(CLIENT_CONFIG_TABLE_NAME,client_id,index_name)
     indexes = client.list_indexes().names()
-    if index_name not in indexes:
-            print(f"Not there, creating...")
-            client.create_index(
-                name=index_name,
-                dimension=1536,  # OpenAI embeddings use 1536 dimensions
-                metric="cosine",  # Similarity metric: cosine, euclidean, dotproduct
-                spec=ServerlessSpec(cloud="aws", region="us-east-1")  # Adjust region if needed
-            )
+    if index_name in indexes:
+      print(f"Deleting the existing index")
+      client.delete_index(index_name)
+    print(f"Creating index")
+    client.create_index(
+        name=index_name,
+        dimension=1536,  
+        metric="cosine",  
+        spec=ServerlessSpec(cloud="aws", region="us-east-1")
+    )
     print(f"getting embeddings")
     embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
     print(f"Creating vector store")
     vector_store = PineconeVectorStore.from_documents(split_docs,embeddings,index_name=index_name)
     print('Created vector store')
-    return
     print(f"retrieving info")
-    icp_tags = retrieve_info(vector_store)
-    print(f"Successfully retrieved icp_tags : {icp_tags}")
     retries = 7
-    while retries > 0:
-      apollo_tags = get_apollo_tags(icp_tags)
-      try:
-        apollo_tags = json.loads(apollo_tags)
-        print(f"The apollo tags are now in JSON format")
-        break
-      except ValueError:
-        retries -= 1
-        print(f"Retrying the JSON tags creation...")
-        if retries ==0:
-          execute_error_block(f"Error occured during Apollo tag creation. {e}")
+    icp_flag = "NO"
+    if str(icp_flag).upper() == "YES":
+      while retries > 0:
+        icp_tags = retrieve_info(vector_store)
+        try:
+          print(f"Apollo tags: {icp_tags}\n")
+          apollo_tags = json.loads(icp_tags)
+          print(f"The apollo tags are now in JSON format")
+          break
+        except ValueError:
+          retries -= 1
+          print(f"Retrying the JSON tags creation...")
+          if retries ==0:
+            execute_error_block(f"Error occured during Apollo tag creation, the string is not in proper JSON.")
+    else:
+        apollo_tags = {"job_titles": [], "person_seniorities": ["owner","founder","c_suite","partner","vp","head","director","manager","senior"], "person_locations": [], "employee_range": []}
     print(f"Successfuly generated Apollo tags")
     return apollo_tags
   

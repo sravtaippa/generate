@@ -45,13 +45,13 @@ def people_enrichment_linkedin(linkedin_url):
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} for the data enrichment layer. {e}")
 
-def people_search_v2(search_url,client_id,qualify_leads):
+def people_search_v2(search_url,client_id,qualify_leads,index_name):
   try:
-    print(f"\n============ Started Persona Data Mining for client : {client_id} ============")
+    print(f"\n---------- Started Persona Data Mining for client : {client_id} ----------")
     response = requests.post(search_url, headers=APOLLO_HEADERS)
     print(f"Execution status code: {response.status_code}")
     if response.status_code == 200:
-        print(f"\n============ Completed Persona Data Mining for client : {client_id} ============")
+        print(f"\n ---------- Completed Persona Data Mining for client : {client_id} ----------")
         data = response.json()
         print(f"No of profiles collected : {len(data['people'])}")
         profiles_found = len(data['people'])
@@ -60,18 +60,16 @@ def people_search_v2(search_url,client_id,qualify_leads):
         iteration=1
         if qualify_leads=='yes':
             client_value_proposition = fetch_client_column(CLIENT_INFO_TABLE_NAME,client_id,"client_value_proposition")
-        print(f"\n\n=====================Starting the People Search Iteration===================\n\n")
+        print(f"\n\n---------- Starting the People Search Iteration ----------\n\n")
+        ingested_apollo_ids = []
         for contact in data['people']:
-            print(f"\n------------------------People Search Iteration {iteration} for client_id {client_id}------------------------------\n")
-            print('Collecting the info')
+            print(f"\n---------- People Search Iteration {iteration} for client_id {client_id} ----------\n")
             iteration += 1
-            apollo_id = contact['id']
-            ingested_apollo_ids = []
+            apollo_id = contact['id']    
             unique_value = apollo_id
             persona_details=parse_people_info(contact)
             if qualify_leads=='yes':
-                qualification_status = qualify_lead(persona_details,client_value_proposition)
-               
+                qualification_status = qualify_lead(persona_details,client_value_proposition,index_name)
                 if not qualification_status:
                     print(f"\n------------Lead Disqualified------------")
                     print('Skipping the entry...')

@@ -6,7 +6,7 @@ from langchain_community.embeddings import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
 from langchain_openai import ChatOpenAI
 
-def qualify_lead(persona_details,client_value_proposition,index_name = "webanalysis"):
+def qualify_lead(persona_details,client_value_proposition,index_name):
     try:
         title = persona_details['title']
         headline = persona_details['headline']
@@ -22,7 +22,6 @@ def qualify_lead(persona_details,client_value_proposition,index_name = "webanaly
         lead_prompt = f"""
         Your task is to qualify a given person as a 'warm lead' based on the provided details. 
         The main intent is to filter out only those who have a **good probability** of responding to a **personalized cold email** 
-        or visiting the website linked in our email.
 
         ### Lead Qualification Criteria:
         A **warm lead** is defined as:
@@ -57,7 +56,6 @@ def qualify_lead(persona_details,client_value_proposition,index_name = "webanaly
         ❌ **No** – This person is not a warm lead because they work in an unrelated field, do not have decision-making power, or their role does not align with our value proposition.
         """
 
-        print('---starting chat completion---')
         
         qualification_prompt = f"""
         Your task is to qualify a given person as a 'warm lead' based on the company information available in the vector. 
@@ -106,8 +104,7 @@ def qualify_lead(persona_details,client_value_proposition,index_name = "webanaly
             retriever=retriever
         )
 
-        query = "What is the company about?"
-        query = lead_prompt
+        query = qualification_prompt
         output = qa.invoke(query)
         qualification_response = output['result']
         print('===============================================\n')
