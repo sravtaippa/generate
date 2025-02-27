@@ -25,32 +25,33 @@ def trigger_pipeline():
                 client_id = client_details.get('client_id')
                 qualify_leads = client_details.get('qualify_leads')
                 last_page,records_required,active_status = fetch_page_config(CLIENT_CONFIG_TABLE_NAME,client_id)
-                print(f"\n-------------------- Data Sync started for Client : {client_id} ------------------------\n") 
+                print(f"\n\n======================= Data Sync started for Client : {client_id} ======================= \n") 
                 if not active_status or active_status.upper() == 'NO':
                     print(f"Skipping data sync since the entry is not active")
                     print(f"\n-------------------- Data Sync Skipped for Client : {client_id}------------------------\n")
                     continue
-                print(client_details.get('icp_url'))
                 print(f"Formatting the dynamic url for Apollo search for client {client_id}")
-                include_organization = ast.literal_eval(fetch_client_column("client_config",client_id,"include_organization"))
+                include_organization = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"include_organization")
                 if include_organization.upper()=="YES":
-                    organization_domains = ast.literal_eval(fetch_client_column("client_config",client_id,"organization_domains"))     
-                    for organization in organization_domains:
-                        print(f"=============== Started data refresh for organization url :{organization} ===============")
-                        icp_url = generate_apollo_url(client_id,last_page,records_required,organization)
-                        # icp_url = client_details.get('icp_url').format(page_number=last_page,records_required=records_required)
-                        print(f" Apollo Search Url for the client {client_id}: {icp_url}")
-                        print(f"Starting People Search for the client {client_id}")
-                        profiles_enriched,ingested_apollo_ids = people_search_v2(icp_url,client_id,qualify_leads)
-                        raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
-                        response=fetch_and_update_data(client_id)
-                        print(response)
-                        print(f"\n------------ Data populated for the outreach table for the client_id: {client_id}\n")
-                        updated_status = update_client_config(CLIENT_CONFIG_TABLE_NAME,client_id,profiles_enriched)
-                        print(f"\n-------------------- Data Sync completed for Client : {client_id}------------------------\n") 
-            
+                    organization_domains = ast.literal_eval(fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"organization_domains"))     
+                    index_name = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"vector_index_name")
+                    for organization in organization_domains: 
+                        try:
+                            print(f"\n\n=============== Started Data Ingestion For Organization url :{organization} ===============\n\n")
+                            icp_url = generate_apollo_url(client_id,last_page,records_required,organization)
+                            print(f"Apollo Search Url for the client {client_id}: {icp_url}")
+                            profiles_enriched,ingested_apollo_ids = people_search_v2(icp_url,client_id,qualify_leads,index_name)
+                            raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
+                            # updated_status = update_client_config(CLIENT_CONFIG_TABLE_NAME,client_id,profiles_enriched)
+                            print(f"\n\n=============== Completed Data Ingestion For Organization url :{organization} ===============\n\n") 
+                        except Exception as e:
+                            print(f"Error occured while running data refresh for the organization: {organization}")
+                response = fetch_and_update_data(client_id)
+                print(f"\n------------ Data populated for the outreach table for the client_id: {client_id}\n")
+                print(f"\n\n======================= Data Sync Completed For Client : {client_id} ======================= \n") 
             except Exception as e:
                 print(f"Error occured during data sync for client.{e}")
+        
         print("\n================= Scheduled Pipeline Execution Completed ==========================================\n")
         return config_data
     except Exception as e:

@@ -142,7 +142,7 @@ def client_onboarding():
         add_client_tables_info(client_id,src_table,cur_table,outreach_table)
         print(f"------ Added client tables info to the airtable for client_id : {client_id} -------------")
         status = generate_icp(client_id,website_url)
-        print(f"------ Successfully generated ICP and Client value proposition for the client: {client_id} -------------")
+        print(f"------ Successfully generated ICP and stored client details in Vector database: {client_id} -------------")
         print(f"\n\n------------Sending Email to Client for credentials --------------------\n\n")
         login_email_sender(recipient_name,recipient_email,client_id,password)
         end_time = time.time()  # End timer

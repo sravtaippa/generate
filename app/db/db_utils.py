@@ -134,11 +134,10 @@ def export_to_airtable(data,raw_table):
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while exporting the data to Airtable. {e}")
 
-def unique_key_check_airtable(column_name,unique_value,raw_table):
+def unique_key_check_airtable(column_name,unique_value,table_name):
     try:
-        print('Running unique key check')
         api = Api(AIRTABLE_API_KEY)
-        airtable_obj = api.table(AIRTABLE_BASE_ID, raw_table)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
         records = airtable_obj.all()
         print(f"\nCompleted unique key check")
         return any(record['fields'].get(column_name) == unique_value for record in records) 
@@ -187,6 +186,20 @@ def update_client_info(client_info_table,client_id,company_value_proposition):
     except Exception as e:
         execute_error_block(f"Exception occured in {__name__} while updating company value proposition. {e}")
 
+def update_client_vector(client_config_table,client_id,index_name):
+    try:
+        api = Api(AIRTABLE_API_KEY)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, client_config_table)
+        data_records = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
+        if data_records:
+            record = data_records[0] 
+            record_id = record.get('id')
+            airtable_obj.update(record_id, {'vector_index_name': index_name})
+        else:
+            print(f"No record found for client_id {client_id}")
+    except Exception as e:
+        execute_error_block(f"Exception occured in {__name__} while updating vector index name. {e}")
+
 
 def add_apollo_webhook_info(data,apollo_table):
     try:
@@ -208,11 +221,9 @@ def fetch_client_column(client_info_table,client_id,column_name):
         print(f'Fetching {column_name} for client {client_id}')
         api = Api(AIRTABLE_API_KEY) 
         airtable_obj = api.table(AIRTABLE_BASE_ID, client_info_table)
-        print(f"\n Fetching latest page number from the table")
         record_details = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
-        print(f"Client id : `{client_id}`, len = {len(client_id)}")
-        print(record_details)
-        print(f"Matching record count present in the client info table for client_id {client_id} : {len(record_details)}")
+        # print(record_details)
+        print(f"Matching record count present in the client config table for client_id {client_id} : {len(record_details)}")
         records_count = len(record_details)
         if records_count <1:
             execute_error_block(f"No records found for the corresponding client_id {client_id} in the {client_info_table} table")
