@@ -6,56 +6,14 @@ from langchain_community.embeddings import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
 from langchain_openai import ChatOpenAI
 
-def qualify_lead(persona_details,client_value_proposition,index_name):
+def qualify_lead(lead_details,index_name):
     try:
-        title = persona_details['title']
-        headline = persona_details['headline']
-        country = persona_details['country']
-        city = persona_details['city']
-        departments = persona_details['departments']
-        subdepartments = persona_details['subdepartments']
-        functions = persona_details['functions']
-        employment_summary = persona_details['employment_summary']
+        title = lead_details['title']
+        seniority = lead_details['seniority']
+        headline = lead_details['headline']
+        employment_summary = lead_details['employment_summary']
 
-        print(f"Title: {title}, headline: {headline}, country: {country}, city: {city}, departments: {departments}, subdepartments: {subdepartments}, functions: {functions}, employment_summary: {employment_summary}")
-        
-        lead_prompt = f"""
-        Your task is to qualify a given person as a 'warm lead' based on the provided details. 
-        The main intent is to filter out only those who have a **good probability** of responding to a **personalized cold email** 
-
-        ### Lead Qualification Criteria:
-        A **warm lead** is defined as:
-        ✅ Someone who has the potential to show interest in our product or service.
-        ✅ Someone to whom we can send a high-performing personalized cold email.
-        ✅ Someone who has a **slight probability** of responding or visiting our website.
-
-        ### Person’s Details:
-        - **Title:** {title}
-        - **Headline:** {headline}
-        - **Country:** {country}
-        - **City:** {city}
-        - **Departments:** {departments}
-        - **Subdepartments:** {subdepartments}
-        - **Functions:** {functions}
-        - **Employment Summary:** {employment_summary}
-
-        ### Our Value Proposition:
-        {client_value_proposition}
-
-        ### Your Task:
-        1. **Analyze the relevance** of the person's role, industry, and background to our value proposition.
-        2. **Generalize based on available details** rather than overfitting to specific data points.
-        3. **Determine their likelihood** of being a warm lead by evaluating how well they align with our product/service.
-        4. **Final Decision:**
-          - Respond with **Yes** if the person is a warm lead and provide a brief justification.
-          - Respond with **No** if the person is unlikely to engage, along with a short explanation.
-
-        ### Response Format:
-        ✅ **Yes** – This person is a warm lead because they work in [relevant industry], hold a decision-making position, and have experience in [related functions]. They are likely to find our offering useful.
-
-        ❌ **No** – This person is not a warm lead because they work in an unrelated field, do not have decision-making power, or their role does not align with our value proposition.
-        """
-
+        print(f"Title: {title}, headline: {headline}, seniority: {seniority}, employment_summary: {employment_summary}")
         
         qualification_prompt = f"""
         Your task is to qualify a given person as a 'warm lead' based on the company information available in the vector. 
@@ -70,27 +28,23 @@ def qualify_lead(persona_details,client_value_proposition,index_name):
 
         ### Person’s Details:
         - **Title:** {title}
-        - **Headline:** {headline}
-        - **Country:** {country}
-        - **City:** {city}
-        - **Departments:** {departments}
-        - **Subdepartments:** {subdepartments}
-        - **Functions:** {functions}
+        - **Job Seniority:** {seniority}
+        - **LinkedIn Profile Headline:** {headline}
         - **Employment Summary:** {employment_summary}     
 
         ### Your Task:
-        1. **Analyze the relevance** of the person's role, industry, and background to our value proposition.
+        1. **Analyze the relevance** of the person's role, seniority, and background to our value proposition.
         2. **Generalize based on available details** rather than overfitting to specific data points.
         3. **Determine their likelihood** of being a warm lead by evaluating how well they align with our product/service.
         4. **Final Decision:**
           - Respond with **Yes** if the person is a warm lead and provide a brief justification.
           - Respond with **No** if the person is unlikely to engage, along with a short explanation.
 
-        ### Response Format:
+        """
+        """  ### Response Format:
         ✅ **Yes** – This person is a warm lead because they work in [relevant industry], hold a decision-making position, and have experience in [related functions]. They are likely to find our offering useful.
 
-        ❌ **No** – This person is not a warm lead because they work in an unrelated field, do not have decision-making power, or their role does not align with our value proposition.
-        """
+        ❌ **No** – This person is not a warm lead because they work in an unrelated field, do not have decision-making power, or their role does not align with our value proposition."""
 
         embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
         vector_store = PineconeVectorStore(index_name=index_name,embedding=embeddings)
@@ -112,12 +66,9 @@ def qualify_lead(persona_details,client_value_proposition,index_name):
         print('===============================================\n')
         qualification_status=qualification_response[:12]
         return True if 'YES' in qualification_status.upper() else False
-    except Exception as e:
-        
+    except Exception as e:  
         print(f"Error occured in {__name__} while qualifying the lead. {e}")
         return False
-
-
 
 
 def qualify_lead_v1(persona_details,solution_benefits,unique_features,solution_impact_examples,domain,buyer_criteria,buyer_examples):
