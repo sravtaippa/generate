@@ -66,18 +66,8 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
             print(f"\n---------- People Search Iteration {iteration} for client_id {client_id} ----------\n")
             iteration += 1
             apollo_id = contact['id']    
-            unique_value = apollo_id
-            persona_details=parse_people_info(contact)
-            if qualify_leads=='yes':
-                qualification_status = qualify_lead(persona_details,client_value_proposition,index_name)
-                if not qualification_status:
-                    print(f"\n------------Lead Disqualified------------")
-                    print('Skipping the entry...')
-                    continue
-                print(f"\n------------Lead Qualified------------")
-            else:
-                print(f"Skipping lead qualification...")
-            print(f"\n------------Data ingestion started for record id :{apollo_id}, for client_id :{client_id} ------------\n")
+            # persona_details=parse_people_info(contact)
+            print(f"------------Data ingestion started for record id :{apollo_id}, for client_id :{client_id} ------------")
             raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
             record_exists = unique_key_check_airtable('id',apollo_id,raw_table)   
             if record_exists:
@@ -136,6 +126,16 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
                     'organization_technology_names': str(data.get('organization').get('technology_names')) if data.get('organization') else '',
                     'created_time':str(timestamp),
                 }
+                if qualify_leads=='yes':
+                    qualification_status = qualify_lead(data_dict,index_name)
+                    if not qualification_status:
+                        print(f"\n------------Lead Disqualified------------")
+                        print('Skipping the entry...')
+                        continue
+                    print(f"\n------------Lead Qualified------------")
+                else:
+                    print(f"Skipping lead qualification...")
+                    continue
                 export_to_airtable(data_dict,raw_table)
                 ingested_apollo_ids.append(apollo_id)
                 selected_profiles+=1
