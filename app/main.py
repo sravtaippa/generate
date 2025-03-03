@@ -10,7 +10,7 @@ from pipelines.data_sanitization import fetch_and_update_data, update_email_open
 from pipelines.data_extractor import people_enrichment,test_run_pipeline,run_demo_pipeline
 from db.table_creation import create_client_tables
 from pipelines.icp_generation import generate_icp,generate_apollo_url
-from db.db_utils import fetch_client_details,export_to_airtable,unique_key_check_airtable,parse_people_info,add_client_tables_info,add_apollo_webhook_info,fetch_latest_created_time,fetch_record_count_after_time
+from db.db_utils import fetch_client_details,export_to_airtable,unique_key_check_airtable,parse_people_info,add_client_tables_info,add_apollo_webhook_info,fetch_latest_created_time,fetch_record_count_after_time,phone_number_updation
 from error_logger import execute_error_block
 from lead_magnet.lead_magnet_pdf_generation import generate_lead_magnet_pdf
 from pipelines.data_sync import trigger_pipeline
@@ -31,6 +31,18 @@ def testing_connection():
         return {'icp_url':icp_url}
     except Exception as e:
         execute_error_block(f"Error occured while testing. {e}")
+
+@app.route('/get_phone_numbers', methods=['GET'])
+def retrieve_phone_numbers():
+    try:
+        apollo_id = request.args.get('apollo_id', type=str)
+        cur_table_name = request.args.get('cur_table_name', type=str)
+        outreach_table_name = request.args.get('outreach_table_name', type=str)
+        print(f"apollo_id: {apollo_id}, cur_table_name: {cur_table_name}, outreach_table_name: {outreach_table_name}")
+        phone = phone_number_updation(apollo_id,cur_table_name,outreach_table_name)
+        return {"phone":phone}
+    except Exception as e:
+        execute_error_block(f"Error occured while fetching phone numbers. {e}")
 
 @app.route('/apollo_webhook', methods=['POST'])
 def apollo_webhook():

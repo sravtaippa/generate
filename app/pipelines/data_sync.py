@@ -33,7 +33,6 @@ def process_organization(organization, client_id, last_page, records_required, q
     except Exception as e:
         print(f"Error occurred while running data refresh for the organization: {organization} - {e}")
 
-
 def trigger_pipeline():
     try:
         config_data = get_clients_config(CLIENT_CONFIG_TABLE_NAME)

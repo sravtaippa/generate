@@ -71,13 +71,6 @@ def fetch_latest_created_time(table_name):
     except Exception as e:
         execute_error_block(f"Error occurred while fetching latest created time: {e}")
 
-    #     api = Api(AIRTABLE_API_KEY)
-    #     airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
-    #     latest_record = airtable_obj.all(sort=[("created_time", "desc")], max_records=1)
-    #     print("Latest Client Details:", latest_record[0] if latest_record else "No records found")
-    #     return latest_record[0]['fields']['created_time']
-    # except Exception as e:
-    #     execute_error_block(f"Error occured while fetching latest created time: {e}")
 
 def fetch_record_count_after_time(table_name, latest_created_time):
     try:
@@ -109,24 +102,6 @@ def fetch_record_count_after_time(table_name, latest_created_time):
         print(f"Total records added after {latest_created_time}: {record_count}")
         return record_count
     
-        # Initialize Airtable API
-        api = Api(AIRTABLE_API_KEY)
-        airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
-        latest_created_time = datetime.strptime(latest_created_time, "%Y-%m-%d %H:%M:%S.%f")
-        # Format the `latest_created_time` to ISO 8601 (Airtable's required format)
-        formatted_time = latest_created_time.isoformat()
-        print(f"Formatted time : {formatted_time}")
-        # Use a filter formula to get records created after `latest_created_time`
-        filter_formula = f"IS_AFTER(CREATED_TIME(), '{formatted_time}')"
-        
-        # Fetch all matching records
-        records = airtable_obj.all(formula=filter_formula)
-
-        # Count the number of records
-        record_count = len(records)
-
-        print(f"Total records added after {formatted_time}: {record_count}")
-        return record_count
     except Exception as e:
         execute_error_block(f"Error occurred while fetching record count: {e}")
 
