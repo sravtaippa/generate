@@ -1,5 +1,6 @@
 import os
 import time
+from datetime import datetime
 from pyairtable import Table,Api
 import openai
 from error_logger import execute_error_block
@@ -55,6 +56,81 @@ def fetch_client_outreach_mappings(client_id):
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while fetching client mappings. {e}")
 
+def fetch_latest_created_time(table_name):
+    try:
+        api = Api(AIRTABLE_API_KEY)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
+        latest_record = airtable_obj.all(sort=["-created_time"], max_records=1)
+        # print(latest_record)
+        if len(latest_record) <1:
+            latest_created_time = datetime.now()
+            # print(latest_created_time)
+        else:
+            latest_created_time = latest_record[0]['fields']['created_time']
+        return latest_created_time
+    except Exception as e:
+        execute_error_block(f"Error occurred while fetching latest created time: {e}")
+
+    #     api = Api(AIRTABLE_API_KEY)
+    #     airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
+    #     latest_record = airtable_obj.all(sort=[("created_time", "desc")], max_records=1)
+    #     print("Latest Client Details:", latest_record[0] if latest_record else "No records found")
+    #     return latest_record[0]['fields']['created_time']
+    # except Exception as e:
+    #     execute_error_block(f"Error occured while fetching latest created time: {e}")
+
+def fetch_record_count_after_time(table_name, latest_created_time):
+    try:
+        # Parse the string to datetime object
+        latest_created_time = datetime.strptime(latest_created_time, "%Y-%m-%d %H:%M:%S.%f")
+        
+        # Round down to the nearest minute
+        latest_created_time = latest_created_time.replace(second=0, microsecond=0)
+        
+        # Initialize Airtable API
+        api = Api(AIRTABLE_API_KEY)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
+
+        # Format the datetime object to ISO 8601
+        formatted_time = latest_created_time.isoformat()
+
+        # Use a filter formula to get records created on or after `latest_created_time`
+        filter_formula = f"IS_AFTER(CREATED_TIME(), '{formatted_time}')"
+        
+        # Fetch all matching records
+        records = airtable_obj.all(formula=filter_formula)
+
+        # Filter records manually to get more precise results
+        filtered_records = [record for record in records if datetime.fromisoformat(record['createdTime']) > latest_created_time]
+
+        # Count the number of records
+        record_count = len(filtered_records)
+
+        print(f"Total records added after {latest_created_time}: {record_count}")
+        return record_count
+    
+        # Initialize Airtable API
+        api = Api(AIRTABLE_API_KEY)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
+        latest_created_time = datetime.strptime(latest_created_time, "%Y-%m-%d %H:%M:%S.%f")
+        # Format the `latest_created_time` to ISO 8601 (Airtable's required format)
+        formatted_time = latest_created_time.isoformat()
+        print(f"Formatted time : {formatted_time}")
+        # Use a filter formula to get records created after `latest_created_time`
+        filter_formula = f"IS_AFTER(CREATED_TIME(), '{formatted_time}')"
+        
+        # Fetch all matching records
+        records = airtable_obj.all(formula=filter_formula)
+
+        # Count the number of records
+        record_count = len(records)
+
+        print(f"Total records added after {formatted_time}: {record_count}")
+        return record_count
+    except Exception as e:
+        execute_error_block(f"Error occurred while fetching record count: {e}")
+
+
 def fetch_client_details(client_id):
     try:
         print(f"\nFetching Client Details")
@@ -85,17 +161,17 @@ def get_clients_config(client_config_table):
 
 def update_client_config(client_config_table,client_id,profiles_enriched):
     try:
-        print('Updating latest page number')
+        print('Updating data sync status')
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, client_config_table)
-        print(f"\nFetching latest page number from the table")
         print(f"Client id = '{client_id}'")
         data_records = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
         if data_records:
             record = data_records[0] 
             record_id = record.get('id')
-            page_number = record.get('fields').get('page_number', 0)
-            new_page_number = int(page_number) + 1  # Example: Increment page number
+            page_number = int(record.get('fields').get('page_number', 0))
+            new_page_number = page_number
+            # new_page_number = page_number + 1
             airtable_obj.update(record_id, {'page_number': str(new_page_number),'records_fetched':str(profiles_enriched)})
             print(f"Updated page_number to {new_page_number} for client_id {client_id}")
         else:

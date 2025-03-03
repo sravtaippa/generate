@@ -1,18 +1,19 @@
 import openai
 from error_logger import execute_error_block
+from db.db_utils import export_to_airtable
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
 from langchain_pinecone import PineconeVectorStore
 from langchain_community.embeddings import OpenAIEmbeddings
 from langchain.chains import RetrievalQA
 from langchain_openai import ChatOpenAI
 
-def qualify_lead(lead_details,index_name):
+def qualify_lead(apollo_id,lead_details,index_name):
     try:
         title = lead_details['title']
         seniority = lead_details['seniority']
         headline = lead_details['headline']
         employment_summary = lead_details['employment_summary']
-
+        
         print(f"Title: {title}, headline: {headline}, seniority: {seniority}, employment_summary: {employment_summary}")
         
         qualification_prompt = f"""
@@ -65,7 +66,13 @@ def qualify_lead(lead_details,index_name):
         print(f"Qualification status : {qualification_response}")
         print('===============================================\n')
         qualification_status=qualification_response[:12]
-        return True if 'YES' in qualification_status.upper() else False
+        if 'YES' in qualification_status.upper():
+            status = True
+        else:
+            status = False
+        data = {"apollo_id":apollo_id, "title": title, "headline": headline, "seniority": seniority, "employment_summary": employment_summary,"qualification_response":qualification_response,"qualification_status":str(status)}
+        export_to_airtable(data,"lead_qualification_status")
+        return status
     except Exception as e:  
         print(f"Error occured in {__name__} while qualifying the lead. {e}")
         return False
