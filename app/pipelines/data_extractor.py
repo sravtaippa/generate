@@ -127,7 +127,7 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
                     'created_time':str(timestamp),
                 }
                 if qualify_leads=='yes':
-                    qualification_status = qualify_lead(data_dict,index_name)
+                    qualification_status = qualify_lead(apollo_id,data_dict,index_name)
                     if not qualification_status:
                         print(f"\n------------Lead Disqualified------------")
                         print('Skipping the entry...')

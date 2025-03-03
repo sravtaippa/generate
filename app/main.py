@@ -10,7 +10,7 @@ from pipelines.data_sanitization import fetch_and_update_data, update_email_open
 from pipelines.data_extractor import people_enrichment,test_run_pipeline,run_demo_pipeline
 from db.table_creation import create_client_tables
 from pipelines.icp_generation import generate_icp,generate_apollo_url
-from db.db_utils import fetch_client_details,export_to_airtable,unique_key_check_airtable,parse_people_info,add_client_tables_info,add_apollo_webhook_info
+from db.db_utils import fetch_client_details,export_to_airtable,unique_key_check_airtable,parse_people_info,add_client_tables_info,add_apollo_webhook_info,fetch_latest_created_time,fetch_record_count_after_time
 from error_logger import execute_error_block
 from lead_magnet.lead_magnet_pdf_generation import generate_lead_magnet_pdf
 from pipelines.data_sync import trigger_pipeline
@@ -205,7 +205,11 @@ def demo_test():
 @app.route("/scheduled_data_sync", methods=["GET"])
 def scheduled_data_sync():
     try:
+        start_time = time.time()  # Start timer
         status = trigger_pipeline()
+        end_time = time.time()  # End timer
+        elapsed_minutes = (end_time - start_time) / 60  # Convert seconds to minutes
+        print(f"~~~~~~~~~ Execution Time: {elapsed_minutes:.2f} minutes ~~~~~~~~~~~~")
         return {"Status":"Successful"}
     except Exception as e:
         print(f"Exception occured during scheduled data sync: {e}")

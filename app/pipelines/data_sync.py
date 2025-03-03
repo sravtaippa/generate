@@ -2,6 +2,8 @@ import requests
 import openai
 import os
 import ast
+import concurrent.futures
+
 from datetime import datetime
 from pipelines.data_sanitization import fetch_and_update_data
 from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable,retrieve_client_tables,fetch_client_outreach_mappings,get_clients_config,fetch_page_config,update_client_config,phone_number_updation,fetch_client_column
@@ -11,9 +13,26 @@ from pipelines.data_extractor import people_search_v2
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
 from pipelines.icp_generation import generate_apollo_url
 # from lead_magnet.industry_insights import get_cold_email_kpis
+
  
 CLIENT_DETAILS_TABLE_NAME = os.getenv("CLIENT_DETAILS_TABLE_NAME")
 CLIENT_CONFIG_TABLE_NAME = os.getenv("CLIENT_CONFIG_TABLE_NAME")
+
+def process_organization(organization, client_id, last_page, records_required, qualify_leads, index_name):
+    """Function to process each organization"""
+    try:
+        print(f"\n\n=============== Started Data Ingestion For Organization url : {organization} ===============\n\n")
+
+        icp_url = generate_apollo_url(client_id, last_page, records_required, organization)
+        print(f"Apollo Search Url for the client {client_id}: {icp_url}")
+
+        people_search_v2(icp_url, client_id, qualify_leads, index_name)  # Keeping it as a normal function
+        # response = fetch_and_update_data(client_id)
+        print(f"\n\n=============== Completed Data Ingestion For Organization url : {organization} ===============\n\n")
+
+    except Exception as e:
+        print(f"Error occurred while running data refresh for the organization: {organization} - {e}")
+
 
 def trigger_pipeline():
     try:
@@ -35,18 +54,17 @@ def trigger_pipeline():
                 if include_organization.upper()=="YES":
                     organization_domains = ast.literal_eval(fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"organization_domains"))     
                     index_name = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"vector_index_name")
-                    for organization in organization_domains: 
-                        try:
-                            print(f"\n\n=============== Started Data Ingestion For Organization url :{organization} ===============\n\n")
-                            icp_url = generate_apollo_url(client_id,last_page,records_required,organization)
-                            print(f"Apollo Search Url for the client {client_id}: {icp_url}")
-                            profiles_enriched,ingested_apollo_ids = people_search_v2(icp_url,client_id,qualify_leads,index_name)
-                            raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
-                            # updated_status = update_client_config(CLIENT_CONFIG_TABLE_NAME,client_id,profiles_enriched)
-                            print(f"\n\n=============== Completed Data Ingestion For Organization url :{organization} ===============\n\n") 
-                        except Exception as e:
-                            print(f"Error occured while running data refresh for the organization: {organization}")
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        futures = [
+                            executor.submit(process_organization, org, client_id, last_page, records_required, qualify_leads, index_name)
+                            for org in organization_domains
+                        ]
+                        # Wait for all tasks to complete
+                    concurrent.futures.wait(futures)
+                  
                 response = fetch_and_update_data(client_id)
+                profiles_enriched = 2
+                updated_status = update_client_config(CLIENT_CONFIG_TABLE_NAME,client_id,profiles_enriched)
                 print(f"\n------------ Data populated for the outreach table for the client_id: {client_id}\n")
                 print(f"\n\n======================= Data Sync Completed For Client : {client_id} ======================= \n") 
             except Exception as e:
