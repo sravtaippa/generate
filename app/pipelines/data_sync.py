@@ -26,6 +26,7 @@ def process_organization(organization, client_id, last_page, records_required, q
 
         people_search_v2(icp_url, client_id, qualify_leads, index_name)  # Keeping it as a normal function
         # response = fetch_and_update_data(client_id)
+        # response = fetch_and_update_data(client_id)
         print(f"\n\n=============== Completed Data Ingestion For Organization url : {organization} ===============\n\n")
 
     except Exception as e:
@@ -59,8 +60,8 @@ def trigger_pipeline():
                         # Wait for all tasks to complete
                     concurrent.futures.wait(futures)
                   
-                response = fetch_and_update_data(client_id)
                 profiles_enriched = 2
+                response = fetch_and_update_data(client_id)
                 updated_status = update_client_config(CLIENT_CONFIG_TABLE_NAME,client_id,profiles_enriched)
                 print(f"\n------------ Data populated for the outreach table for the client_id: {client_id}\n")
                 print(f"\n\n======================= Data Sync Completed For Client : {client_id} ======================= \n") 
