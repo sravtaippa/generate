@@ -48,6 +48,7 @@ def people_enrichment_linkedin(linkedin_url):
 def people_search_v2(search_url,client_id,qualify_leads,index_name):
   try:
     print(f"\n---------- Started Persona Data Mining for client : {client_id} ----------")
+    print(f"Search url: {search_url}")
     response = requests.post(search_url, headers=APOLLO_HEADERS)
     print(f"Execution status code: {response.status_code}")
     if response.status_code == 200:

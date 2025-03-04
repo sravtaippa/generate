@@ -74,7 +74,7 @@ def generate_icp(client_id,website_url):
     try:
         print(f"\n\n--------Generating ICP --------\n\n")
         openai.api_key = OPENAI_API_KEY
-        icp_apollo_tags = web_analysis(website_url,client_id)
+        vector_index_name,icp_apollo_tags = web_analysis(website_url,client_id)
         print(f"\n\n----ICP Apollo Tags retrieved: {icp_apollo_tags}------\n\n")
         keys_to_lowercase = ["job_titles", "person_seniorities", "person_locations"]
         icp_json = lowercase_keys(icp_apollo_tags, keys_to_lowercase)
@@ -103,7 +103,10 @@ def generate_icp(client_id,website_url):
             "qualify_leads":'no',
             "records_required":'2',
             "organization_domains":str(organization_domains),
+            "include_organization":'YES',
+            "icp_flag":'NO',
             "is_active":"yes",
+            "vector_index_name":"guideline",
         }
         export_to_airtable(config_data, CLIENT_CONFIG_TABLE_NAME)
         return icp_json

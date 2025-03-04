@@ -631,7 +631,7 @@ def web_analysis(website_url,client_id):
     else:
         apollo_tags = {"job_titles": [], "person_seniorities": ["owner","founder","c_suite","partner","vp","head","director","manager","senior"], "person_locations": [], "employee_range": []}
     print(f"Successfuly generated Apollo tags")
-    return apollo_tags
+    return index_name,apollo_tags
   
   except Exception as e:
     execute_error_block(f"Exception occured in {__name__} while running the helper function: {e}")
