@@ -83,9 +83,7 @@ def generate_icp(client_id,website_url):
         person_titles = icp_json.get('job_titles') 
         person_seniorities = icp_json.get('person_seniorities')
         person_locations = icp_json.get('person_locations')
-        organization_domains="""
-        ["creativemediahouse.ae","squaremarketing.ae","mrcreativesocial.com","themedialinks.com","prism-me.com","eds.ae","alkhaleejiah.com","ubn.ae","creategroup.me","srmg.com","traccs.net"]
-        """
+        organization_domains="""["creativemediahouse.ae","squaremarketing.ae","mrcreativesocial.com","themedialinks.com","prism-me.com","eds.ae","alkhaleejiah.com","ubn.ae","creategroup.me","srmg.com","traccs.net"]"""
         organization_num_employees_ranges = icp_json.get('employee_range')
         print(f"Config table name: {CLIENT_CONFIG_TABLE_NAME}")
         record_exists = unique_key_check_airtable('client_id',client_id,CLIENT_CONFIG_TABLE_NAME)
