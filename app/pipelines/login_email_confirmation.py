@@ -53,7 +53,7 @@ def send_email(receiver_email: str, subject: str, body: str) -> str:
 
 def login_email_sender(recipient_name,recipient_email,user_id,password):
     try:
-        login_page = "https://taippa.com/login-page/"
+        login_page = "https://taippa.com/login/"
         subject = "Your Campaign is Live – Access Your Account Now"
         body = f"""
 Dear {recipient_name},

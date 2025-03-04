@@ -46,23 +46,23 @@ try:
 except Exception as e:
     print(f"Error initializing Airtable: {e}")
 
-def fetch_max_created_time(airtable_instance):
-    """
-    Fetch the maximum created_time from profiles_cleaned.
-    """
-    records = airtable_instance.get_all()
+# def fetch_max_created_time(airtable_instance):
+#     """
+#     Fetch the maximum created_time from profiles_cleaned.
+#     """
+#     records = airtable_instance.get_all()
     
-    created_times = [pd.to_datetime(record['created_time']) for record in records if 'created_time' in record]
-    return max(created_times) if created_times else None
+#     created_times = [pd.to_datetime(record['created_time']) for record in records if 'created_time' in record]
+#     return max(created_times) if created_times else None
 
-def filter_new_records(df, max_created_time):
-    """
-    Filters rows with created_time greater than the max_created_time.
-    """
-    if max_created_time is not None:
-        df['created_time'] = pd.to_datetime(df['created_time'], errors='coerce')
-        df = df[df['created_time'] > max_created_time]
-    return df
+# def filter_new_records(df, max_created_time):
+#     """
+#     Filters rows with created_time greater than the max_created_time.
+#     """
+#     if max_created_time is not None:
+#         df['created_time'] = pd.to_datetime(df['created_time'], errors='coerce')
+#         df = df[df['created_time'] > max_created_time]
+#     return df
 
 def send_to_airtable_if_new(df, airtable_instance, unique_field, desired_fields=None, field_mapping=None, default_values=None, icp_to_outreach=None, icp_df=None):
     """
@@ -149,8 +149,6 @@ def expand_emails(df):
     result_df = pd.DataFrame(rows)
     return result_df.reset_index(drop=True)  # Reset the index to avoid duplicates
 
-
-  
 def clean_urls(url, unique_id, column_name):
     if pd.isna(url) or not str(url).strip() or url.lower() in ["unknown", "n/a"]:
         return f"https://unknown-{ column_name}-{unique_id}.com"
@@ -240,9 +238,9 @@ def fetch_and_update_data(client_id):
                 .apply(lambda x: re.sub(r'\+.*?@', '@', x))
             )
 
-        if 'created_time' in df.columns:
-            max_created_time = fetch_max_created_time(cleaned_table)
-            df = filter_new_records(df, max_created_time)
+        # if 'created_time' in df.columns:
+        #     max_created_time = fetch_max_created_time(cleaned_table)
+        #     df = filter_new_records(df, max_created_time)
 
         df['unique_id'] = df['id'].fillna("Unknown") + "_" + df['email'].fillna("Unknown")
         # df['created_time'] = str(datetime.now())
