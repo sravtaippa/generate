@@ -1,5 +1,3 @@
-import requests
-import openai
 import os
 import ast
 import concurrent.futures
