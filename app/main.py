@@ -18,7 +18,7 @@ from pipelines.lead_website_analysis import chroma_db_testing,web_analysis
 from pipelines.login_email_confirmation import login_email_sender
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
 
-print(f"\n=============== Generate : Pipeline started  ===============")
+print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
