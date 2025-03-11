@@ -329,7 +329,7 @@ def update_phone_numbers(apollo_id,table_name,col_name,col_value):
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
         print(f"Apollo id = '{apollo_id}'")
-        data_records = airtable_obj.all(formula=f"{{id}} = '{apollo_id}'")
+        data_records = airtable_obj.all(formula=f"{{apollo_id}} = '{apollo_id}'")
         if data_records:
             record = data_records[0] 
             record_id = record.get('id')
