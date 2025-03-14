@@ -1,8 +1,10 @@
 import os
 import time
 from datetime import datetime
+import datetime as dt
 from pyairtable import Table,Api
 import openai
+import requests
 from error_logger import execute_error_block
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS,PERPLEXITY_API_KEY
 
@@ -10,6 +12,38 @@ from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TAB
 CLIENT_DETAILS_TABLE_NAME = os.getenv("CLIENT_DETAILS_TABLE_NAME")
 CLIENT_CONFIG_TABLE_NAME = os.getenv("CLIENT_CONFIG_TABLE_NAME")
 CLIENT_INFO_TABLE_NAME = os.getenv("CLIENT_INFO_TABLE_NAME")
+
+def retrieve_record(table_name,primary_key_col,primary_key_value):
+    try:
+        api = Api(AIRTABLE_API_KEY) 
+        airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
+        record_details = airtable_obj.all(formula=f"{{apollo_id}} = '{primary_key_value}'")
+        records_count = len(record_details)
+        if records_count <1:
+            execute_error_block(f"No records found for the corresponding {primary_key_col} {primary_key_value} in {table_name}")
+        record = record_details[0]
+        return record
+        
+    except Exception as e:
+        execute_error_block(f"Error occured in {__name__} while fetching record from table {table_name}. {e}")
+
+def retrieve_column_value(table_name,primary_key_col,primary_key_value,column_name):
+    try:
+        print(f'Fetching {column_name} for {primary_key_col} -> {primary_key_value}')
+        api = Api(AIRTABLE_API_KEY) 
+        airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
+        record_details = airtable_obj.all(formula=f"{{campaign_id}} = '{primary_key_value}'")
+        print(f"Matching record count present in {table_name} for column_name {column_name} : {len(record_details)}")
+        records_count = len(record_details)
+        if records_count <1:
+            execute_error_block(f"No records found for the corresponding {primary_key_col} {primary_key_value} in {table_name}")
+        record_details = record_details[0]
+        column_value = record_details.get('fields').get(column_name,"Not available")
+        print(column_value)
+        return column_value
+    except Exception as e:
+        execute_error_block(f"Error occured in {__name__} while fetching client specific column details. {e}")
+
 
 def retrieve_client_tables(client_id):
     try:
@@ -75,6 +109,7 @@ def fetch_latest_created_time(table_name):
 def fetch_record_count_after_time(table_name, latest_created_time):
     try:
         # Parse the string to datetime object
+        
         latest_created_time = datetime.strptime(latest_created_time, "%Y-%m-%d %H:%M:%S.%f")
         
         # Round down to the nearest minute

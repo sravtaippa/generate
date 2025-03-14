@@ -52,6 +52,7 @@ def trigger_pipeline():
                 if include_organization.upper()=="YES":
                     organization_domains = ast.literal_eval(fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"organization_domains"))     
                     index_name = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"vector_index_name")
+                    # organization_domains = ["creativemediahouse.ae"]
                     with concurrent.futures.ThreadPoolExecutor() as executor:
                         futures = [
                             executor.submit(process_organization, org, client_id, last_page, records_required, qualify_leads, index_name)
@@ -62,7 +63,8 @@ def trigger_pipeline():
                   
                 profiles_enriched = 2
                 response = fetch_and_update_data(client_id)
-                updated_status = update_client_config(CLIENT_CONFIG_TABLE_NAME,client_id,profiles_enriched)
+                print(f"Completed data cleaning and outreach")
+                # updated_status = update_client_config(CLIENT_CONFIG_TABLE_NAME,client_id,profiles_enriched)
                 print(f"\n------------ Data populated for the outreach table for the client_id: {client_id}\n")
                 print(f"\n\n======================= Data Sync Completed For Client : {client_id} ======================= \n") 
             except Exception as e:

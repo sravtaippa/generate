@@ -18,7 +18,7 @@ langchain_openai
 langchain_core
 langchain
 langchain-chroma
-transformers
-chromadb
+transformerss
 pinecone
 langchain_pinecone
+airtable-python-wrapper

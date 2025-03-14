@@ -16,6 +16,7 @@ from lead_magnet.lead_magnet_pdf_generation import generate_lead_magnet_pdf
 from pipelines.data_sync import trigger_pipeline
 from pipelines.lead_website_analysis import chroma_db_testing,web_analysis
 from pipelines.login_email_confirmation import login_email_sender
+from outreach.add_leads import add_lead_to_campaign
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
 
 print(f"\n =============== Generate : Pipeline started  ===============")
@@ -23,6 +24,66 @@ print(f"\n =============== Generate : Pipeline started  ===============")
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
 app = Flask(__name__)
+
+@app.route('/linkedin_outreach',methods=['GET'])
+def linkedin_outreach():
+    try:
+        # test url : 127.0.0.1:5000/linkedin_outreach?apollo_id=54a75889746869730aeb332c&campaign_id=316135&outreach_table_name=outreach_guideline
+        apollo_id = request.args.get('apollo_id', type=str)
+        campaign_id = request.args.get('campaign_id', type=str)
+        outreach_table_name = request.args.get('outreach_table_name', type=str)
+        print(f"apollo_id: {apollo_id}, campaign_id: {campaign_id}, outreach_table_name: {outreach_table_name}")
+        status = add_lead_to_campaign(apollo_id,campaign_id,outreach_table_name)
+        return {"Status":str(status)} 
+
+    except Exception as e:
+        return {"Status":f"Oops something wrong happened!: {e}"}
+        # execute_error_block(f"Error occured while client onboarding : {e}")
+
+@app.route('/fetch_records', methods=['GET'])
+def fetch_records():
+    try:
+        # Get `inputed_created_time` from query parameters
+        inputed_created_time = request.args.get("inputed_created_time")
+        
+        if not inputed_created_time:
+            return jsonify({"error": "Missing inputed_created_time parameter"}), 400
+        
+        try:
+            # Ensure the input datetime is correctly formatted
+            datetime.datetime.strptime(inputed_created_time, "%Y-%m-%d %H:%M:%S.%f")
+        except ValueError:
+            return jsonify({"error": "Invalid datetime format. Use YYYY-MM-DD HH:MM:SS.ssssss"}), 400
+
+        # Convert input time to Airtable's required ISO 8601 format
+        inputed_created_time_iso = datetime.datetime.strptime(inputed_created_time, "%Y-%m-%d %H:%M:%S.%f").isoformat()
+
+        # Correct filter formula to compare with `created_time` field
+        filter_formula = f"{{created_time}} > '{inputed_created_time_iso}'"
+
+        params = {
+            "filterByFormula": filter_formula,
+            "fields[]": ["apollo_id", "recipient_first_name", "created_time"]
+        }
+
+        response = requests.get(AIRTABLE_URL, headers=HEADERS, params=params)
+        
+        if response.status_code != 200:
+            return jsonify({"error": "Failed to fetch data", "details": response.text}), 500
+
+        data = response.json()
+        records = [
+            {
+                "apollo_id": str(record["fields"].get("apollo_id", "")),  # Ensure long text is handled properly
+                "recipient_first_name": str(record["fields"].get("recipient_first_name", "")),  # Convert to string
+                "created_time": record["fields"].get("created_time", "")
+            }
+            for record in data.get("records", [])
+        ]
+
+        return jsonify({"records": records})
+    except Exception as e:
+        execute_error_block(f"Error occurred while fetching latest records from the outreach table for LinkedIn: {e}")
 
 @app.route("/testing_connection", methods=["GET"])
 def testing_connection():
@@ -114,7 +175,6 @@ def update_email_opens_clicked():
 def test_chroma():
     try:
         status = chroma_db_testing()
-
         return {"Status":status}
     except Exception as e:
         print(f"Error occured while testing chroma db sqlite version")

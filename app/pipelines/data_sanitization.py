@@ -75,7 +75,7 @@ def send_to_airtable_if_new(df, airtable_instance, unique_field, desired_fields=
             if desired_fields:
                 record_data = {field: record_data[field] for field in desired_fields if field in record_data}
 
-            unique_id_value = f"{record_data.get('id', '')}_{record_data.get('email', '')}"
+            unique_id_value = f"{record_data.get('apollo_id', '')}_{record_data.get('email', '')}"
             record_data["unique_id"] = unique_id_value
 
             if icp_to_outreach and icp_df is not None:
@@ -242,9 +242,9 @@ def fetch_and_update_data(client_id):
         #     max_created_time = fetch_max_created_time(cleaned_table)
         #     df = filter_new_records(df, max_created_time)
 
-        df['unique_id'] = df['id'].fillna("Unknown") + "_" + df['email'].fillna("Unknown")
+        df['unique_id'] = df['apollo_id'].fillna("Unknown") + "_" + df['email'].fillna("Unknown")
         # df['created_time'] = str(datetime.now())
-        df = df.drop_duplicates(subset=['id', 'email'])
+        df = df.drop_duplicates(subset=['apollo_id', 'email'])
         filtered_df = df[df['email'] != "Unknown"]
 
 
@@ -301,7 +301,7 @@ def fetch_and_update_data(client_id):
                 "organization_website",
                 "organization_short_description",
                 "unique_id",
-                "id",
+                "apollo_id",
                 "associated_client_id",
                 "employment_summary",
                 "created_time"
@@ -368,7 +368,7 @@ def update_email_opens():
             # Search for the record in the metrics table
             metrics_record = airtable_metrics.search('campaign_id', campaign_id)
             if metrics_record:
-                record_id = metrics_record[0]['id']
+                record_id = metrics_record[0]['apollo_id']
                 update_data = {}
 
                 # Update the opened count
@@ -420,7 +420,7 @@ def clean_dataframe(df):
 def match_and_return_records(lead_magnet_df, new3_df):
     """
     Compare the recipient_email from new3_df with the email from lead_magnet_df.
-    Return matched records with id, recipient_role, and email.
+    Return matched records with apollo_id, recipient_role, and email.
     """
     matched_records = []
     for _, new3_row in new3_df.iterrows():
@@ -429,7 +429,7 @@ def match_and_return_records(lead_magnet_df, new3_df):
         if not matching_row.empty:
             # Append matched records
             matched_records.append({
-                'id': new3_row.get('id'),
+                'apollo_id': new3_row.get('apollo_id'),
                 'recipient_role': new3_row.get('recipient_role'),
                 'email': recipient_email
             })
@@ -440,7 +440,7 @@ def match_and_return_records(lead_magnet_df, new3_df):
 
 def filter_unique_records(records):
     """
-    Filter duplicate records by email, prioritizing those with valid 'id' and 'recipient_role'.
+    Filter duplicate records by email, prioritizing those with valid 'apollo_id' and 'recipient_role'.
     """
     grouped = {}
     for record in records:
@@ -452,8 +452,8 @@ def filter_unique_records(records):
             grouped[email] = record
         else:
             # Prioritize the record with valid fields
-            if not grouped[email].get('id') and record.get('id'):
-                grouped[email]['id'] = record['id']
+            if not grouped[email].get('apollo_id') and record.get('apollo_id'):
+                grouped[email]['apollo_id'] = record['apollo_id']
             if not grouped[email].get('recipient_role') and record.get('recipient_role'):
                 grouped[email]['recipient_role'] = record['recipient_role']
 
@@ -475,7 +475,7 @@ def send_to_airtable(airtable_instance, records):
             continue
 
         # Get the record ID of the first match
-        record_id = existing_records[0]['id']
+        record_id = existing_records[0]['apollo_id']
 
         # Update the corresponding record with the new data
         update_data = {key: value for key, value in record.items() if key != 'email'}

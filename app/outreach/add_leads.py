@@ -1,0 +1,56 @@
+import requests
+from urllib.parse import urlencode
+from db.db_utils import retrieve_record
+
+def add_lead_to_campaign(apollo_id,campaign_id,outreach_table_name):
+    try:
+        primary_key_col = "apollo_id"
+        primary_key_value = apollo_id
+        record = retrieve_record(outreach_table_name,primary_key_col,primary_key_value)
+        profileUrl = record.get('fields').get("linkedin_profile_url","Not available")
+        email = record.get('fields').get("recipient_email","Not available")
+        first_name = record.get('fields').get("recipient_first_name","Not available")
+        last_name = record.get('fields').get("recipient_last_name","Not available")
+        message1 = record.get('fields').get("linkedin_message","Not available")
+        message2 = record.get('fields').get("linkedin_message_2","Not available")
+        subject1 = record.get('fields').get("linkedin_subject","Not available")
+        print(f"Profile URL: {profileUrl}")
+        print(f"Email: {email}")
+        print(f"First Name: {first_name}")
+        print(f"Last Name: {last_name}")
+        print(f"Message 1: {message1}")
+        print(f"Message 2: {message2}")
+        print(f"Subject 1: {subject1}")
+
+        profile_details = {
+        "apollo_id":apollo_id,
+        "profileUrl": profileUrl,
+        "email":email,
+        "first_name": first_name,
+        "last_name": last_name,
+        "message1": message1,
+        "message2": message2,
+        "subject1": subject1,
+        "subject2": ""
+        }
+        add_lead_leadsin(campaign_id,profile_details)
+        print("Successfully added the lead to the campaign")
+        return True
+    except Exception as e:
+        print(f"Error occured while retrieving leads from the outreach table. Error: {e}")
+        return False
+
+def add_lead_leadsin(campaign_id,payload):
+  try:
+    url = f"https://api.multilead.io/api/open-api/v1/campaign/{campaign_id}/leads"
+
+    headers = {
+        'Authorization': '23927b94-3ff1-48f2-a726-1730414bc27e',
+        'Content-Type': 'application/x-www-form-urlencoded'
+    }
+
+    response = requests.post(url, headers=headers, data=urlencode(payload))
+    print(response.text)
+  except Exception as e:
+    print(f"Error occured while adding leads to the campaign for the lead: {payload} . Error: {e}")
+
