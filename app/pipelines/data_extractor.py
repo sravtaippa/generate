@@ -70,7 +70,7 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
             # persona_details=parse_people_info(contact)
             print(f"------------Data ingestion started for record id :{apollo_id}, for client_id :{client_id} ------------")
             raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
-            record_exists = unique_key_check_airtable('id',apollo_id,raw_table)   
+            record_exists = unique_key_check_airtable('apollo_id',apollo_id,raw_table)   
             if record_exists:
                 print(f'Record with the following id: {apollo_id} already exists. Skipping the entry...')
                 continue   
@@ -92,7 +92,7 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
                 employment_summary = response.choices[0].message.content
                 timestamp = datetime.now()
                 data_dict = {
-                    'id': data.get('id'),
+                    'apollo_id': data.get('id'),
                     'first_name': data.get('first_name'),
                     'last_name': data.get('last_name'),
                     'name': data.get('name'),
@@ -158,7 +158,7 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
 def test_run_pipeline(test_run_id,client_id):
     try:
         raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
-        record_exists = unique_key_check_airtable('id',test_run_id,raw_table)
+        record_exists = unique_key_check_airtable('apollo_id',test_run_id,raw_table)
         if record_exists:
             print(f'Record with the following id: {test_run_id} already exists. Skipping the entry...')
             return True
@@ -176,7 +176,7 @@ def test_run_pipeline(test_run_id,client_id):
                 )
             employment_summary = response['choices'][0]['message']['content']
             data_dict = {
-                    'id': data['id'],
+                    'apollo_id': data['id'],
                     'first_name': data['first_name'],
                     'last_name': data['last_name'],
                     'name': data['name'],
@@ -211,7 +211,7 @@ def test_run_pipeline(test_run_id,client_id):
                     'organization_technology_names': str(data['organization']['technology_names'])
             }
             data_dict = {
-                    'id': data.get('id'),
+                    'apollo_id': data.get('id'),
                     'first_name': data.get('first_name'),
                     'last_name': data.get('last_name'),
                     'name': data.get('name'),
@@ -285,7 +285,7 @@ def run_demo_pipeline(linkedin_url,client_id,outreach_table):
             employment_summary = response.choices[0].message.content
             unique_id = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             data_dict = {
-                    'id': unique_id,
+                    'apollo_id': unique_id,
                     'recipient_first_name': data.get('first_name'),
                     'recipient_last_name': data.get('last_name'),
                     'recipient_role': data.get('title'),
