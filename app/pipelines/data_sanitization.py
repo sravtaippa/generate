@@ -350,7 +350,7 @@ def update_email_opens():
             # Search for the record in the metrics table
             metrics_record = airtable_metrics.search('campaign_id', campaign_id)
             if metrics_record:
-                record_id = metrics_record[0]['apollo_id']
+                record_id = metrics_record[0]['id']
                 update_data = {}
 
                 # Update the opened count
