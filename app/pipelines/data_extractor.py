@@ -155,6 +155,33 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
   except Exception as e:
     execute_error_block(f"Error occured in {__name__} during data ingestion. {e}")
 
+def manual_data_insertion(records_list,qualify_leads,client_id,index_name):
+    try:
+        print(f"\n------------Started Manual Data Ingestion------------")
+        raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
+        for record in records_list:
+            record_exists = unique_key_check_airtable('apollo_id',record['apollo_id'],raw_table)
+            if record_exists:
+                print(f'Record with the following id: {record["apollo_id"]} already exists. Skipping the entry...')
+                continue
+            apollo_id = record['apollo_id']
+            if qualify_leads=='yes':
+                    qualification_status = qualify_lead(apollo_id,record,index_name)
+                    if not qualification_status:
+                        print(f"\n------------Lead Disqualified------------")
+                        print('Skipping the entry...')
+                        continue
+                    print(f"\n------------Lead Qualified------------")
+            else:
+                print(f"Skipping lead qualification...")
+            record.pop('id')
+            # print(record)
+            export_to_airtable(record,raw_table)
+            print(f"\n------------Data ingestion successful for record id :{record['apollo_id']}------------")
+        print(f"\n------------Completed Manual Data Ingestion------------")
+    except Exception as e:
+        execute_error_block(f"Error occured during manual data ingestion. {e}")
+
 def test_run_pipeline(test_run_id,client_id):
     try:
         raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
