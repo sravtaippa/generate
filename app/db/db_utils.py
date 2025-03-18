@@ -13,6 +13,24 @@ CLIENT_DETAILS_TABLE_NAME = os.getenv("CLIENT_DETAILS_TABLE_NAME")
 CLIENT_CONFIG_TABLE_NAME = os.getenv("CLIENT_CONFIG_TABLE_NAME")
 CLIENT_INFO_TABLE_NAME = os.getenv("CLIENT_INFO_TABLE_NAME")
 
+def update_record(table_name,record,primary_key_col):
+    try:
+        api = Api(AIRTABLE_API_KEY)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
+        record_id = record[primary_key_col]
+        data_records = airtable_obj.all(formula=f"{{{primary_key_col}}} = '{record_id}'")
+        if data_records:
+            record_to_update = data_records[0] 
+            record_id_to_update = record_to_update.get('id')            
+            airtable_obj.update(record_id_to_update, record)
+            return True
+        else:
+            print(f"No record found for record_id {record_id}")
+            return False
+            
+    except Exception as e:
+      execute_error_block(f"Error occured in {__name__} while updating the record in airtable. {e}")
+
 def retrieve_record(table_name,primary_key_col,primary_key_value):
     try:
         api = Api(AIRTABLE_API_KEY) 
@@ -32,8 +50,8 @@ def retrieve_column_value(table_name,primary_key_col,primary_key_value,column_na
         print(f'Fetching {column_name} for {primary_key_col} -> {primary_key_value}')
         api = Api(AIRTABLE_API_KEY) 
         airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
-        record_details = airtable_obj.all(formula=f"{{campaign_id}} = '{primary_key_value}'")
-        print(f"Matching record count present in {table_name} for column_name {column_name} : {len(record_details)}")
+        record_details = airtable_obj.all(formula=f"{{{primary_key_col}}} = '{primary_key_value}'")
+        # print(f"Matching record count present in {table_name} for column_name {column_name} : {len(record_details)}")
         records_count = len(record_details)
         if records_count <1:
             execute_error_block(f"No records found for the corresponding {primary_key_col} {primary_key_value} in {table_name}")
@@ -44,16 +62,27 @@ def retrieve_column_value(table_name,primary_key_col,primary_key_value,column_na
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while fetching client specific column details. {e}")
 
+def get_source_data(table_name):
+    try:
+        airtable = Table(AIRTABLE_API_KEY, AIRTABLE_BASE_ID, table_name)
+        # Fetch all records from src_guideline table
+        records = airtable.all()
+        # Convert records to list of dictionaries
+        guidelines_list = [{"id": rec["id"], **rec["fields"]} for rec in records]
+        print(f"Total records fetched from the source table {table_name}: {len(guidelines_list)}")
+        return guidelines_list
+
+    except Exception as e:
+        execute_error_block(f"Error occured in {__name__} while fetching source data from airtable. {e}")
+
 
 def retrieve_client_tables(client_id):
     try:
-        print('Retreiving tables')
+        # print('Retreiving tables')
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, CLIENT_INFO_TABLE_NAME)
         records = airtable_obj.all()
-        print(f"\nRan the client details fetch command")
         records_list = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
-        print(f"Filter formula {{client_id}} = '{client_id}'")
         if len(records_list) < 1:
             execute_error_block(f"The following client_id `{client_id}` is not present in the table {CLIENT_INFO_TABLE_NAME}")
         record_details = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")[0]
@@ -66,7 +95,6 @@ def retrieve_client_tables(client_id):
 
 def fetch_client_outreach_mappings(client_id):
     try:
-        print(f"\nFetching details for outreach mapping")
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, CLIENT_INFO_TABLE_NAME)
         record = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")[0].get('fields')
@@ -95,10 +123,8 @@ def fetch_latest_created_time(table_name):
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
         latest_record = airtable_obj.all(sort=["-created_time"], max_records=1)
-        # print(latest_record)
         if len(latest_record) <1:
             latest_created_time = datetime.now()
-            # print(latest_created_time)
         else:
             latest_created_time = latest_record[0]['fields']['created_time']
         return latest_created_time
@@ -143,7 +169,7 @@ def fetch_record_count_after_time(table_name, latest_created_time):
 
 def fetch_client_details(client_id):
     try:
-        print(f"\nFetching Client Details")
+        # print(f"\nFetching Client Details")
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, CLIENT_INFO_TABLE_NAME)
         record = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")[0]
@@ -153,28 +179,28 @@ def fetch_client_details(client_id):
         domain = record['fields']['domain']
         buyer_criteria = record['fields']['buyer_criteria']
         buyer_examples = record['fields']['buyer_examples']
-        print(f"\nSuccessfully fetched client details")
+        # print(f"\nSuccessfully fetched client details")
         return solution_benefits,unique_features,solution_impact_examples,domain,buyer_criteria,buyer_examples
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while fetching client details. {e}")
 
 def get_clients_config(client_config_table):
     try:
-        print('Fetching clients list from config table')
+        # print('Fetching clients list from config table')
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, client_config_table)
         config_data = airtable_obj.all()
-        print('Successfully fetched clients list from config table')
+        # print('Successfully fetched clients list from config table')
         return config_data
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while fetching client config details. {e}")
 
 def update_client_config(client_config_table,client_id,profiles_enriched):
     try:
-        print('Updating data sync status')
+        # print('Updating data sync status')
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, client_config_table)
-        print(f"Client id = '{client_id}'")
+        # print(f"Client id = '{client_id}'")
         data_records = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
         if data_records:
             record = data_records[0] 
@@ -183,7 +209,7 @@ def update_client_config(client_config_table,client_id,profiles_enriched):
             new_page_number = page_number
             # new_page_number = page_number + 1
             airtable_obj.update(record_id, {'page_number': str(new_page_number),'records_fetched':str(profiles_enriched)})
-            print(f"Updated page_number to {new_page_number} for client_id {client_id}")
+            # print(f"Updated page_number to {new_page_number} for client_id {client_id}")
         else:
             print(f"No record found for client_id {client_id}")
 
@@ -192,16 +218,16 @@ def update_client_config(client_config_table,client_id,profiles_enriched):
 
 def fetch_page_config(client_config_table,client_id):
     try:
-        print('Fetching latest page number')
+        # print('Fetching latest page number')
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, client_config_table)
-        print(f"\n Fetching latest page configuration from the table for the client: {client_id}")
+        # print(f"\n Fetching latest page configuration from the table for the client: {client_id}")
         data_count = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
         record_details = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")[0]
         page_number = record_details.get('fields').get('page_number')
         records_required = record_details.get('fields').get('records_required')
         active_status = record_details.get('fields').get('is_active')
-        print(f"Successfully fetched latest page configuration from the client config table for the client: {client_id}")
+        # print(f"Successfully fetched latest page configuration from the client config table for the client: {client_id}")
         return page_number,records_required,active_status
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while fetching latest page number. {e}")
@@ -209,7 +235,7 @@ def fetch_page_config(client_config_table,client_id):
 # function to export data to Airtable
 def export_to_airtable(data,raw_table):
     try:
-        print(f"\nExporting results to Airtable")
+        # print(f"\nExporting results to Airtable")
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, raw_table)
         response = airtable_obj.create(data)
@@ -220,19 +246,20 @@ def export_to_airtable(data,raw_table):
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while exporting the data to Airtable. {e}")
 
+
 def unique_key_check_airtable(column_name,unique_value,table_name):
     try:
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
         records = airtable_obj.all()
-        print(f"\nCompleted unique key check")
+        # print(f"\nCompleted unique key check")
         return any(record['fields'].get(column_name) == unique_value for record in records) 
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while performing unique value check in airtable. {e}")
 
 def parse_people_info(data):
     try:
-        print('----------Parsing the data input --------------]')
+        # print('----------Parsing the data input --------------]')
         employment_history = data['employment_history']
 
         client = openai.OpenAI(api_key=OPENAI_API_KEY)
@@ -261,7 +288,7 @@ def update_client_info(client_info_table,client_id,company_value_proposition):
     try:
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, client_info_table)
-        print(f"\nFetching latest page number from the table")
+        # print(f"\nFetching latest page number from the table")
         data_records = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
         if data_records:
             record = data_records[0] 
@@ -289,8 +316,8 @@ def update_client_vector(client_config_table,client_id,index_name):
 
 def add_apollo_webhook_info(data,apollo_table):
     try:
-        print(f"\nExporting results to Airtable")
-        print(f"Request data for airtable: {data}")
+        # print(f"\nExporting results to Airtable")
+        # print(f"Request data for airtable: {data}")
         api = Api(AIRTABLE_API_KEY)
         airtable_obj = api.table(AIRTABLE_BASE_ID, apollo_table)
         response = airtable_obj.create(data)
@@ -304,18 +331,18 @@ def add_apollo_webhook_info(data,apollo_table):
 
 def fetch_client_column(client_info_table,client_id,column_name):
     try:
-        print(f'Fetching {column_name} for client {client_id}')
+        # print(f'Fetching {column_name} for client {client_id}')
         api = Api(AIRTABLE_API_KEY) 
         airtable_obj = api.table(AIRTABLE_BASE_ID, client_info_table)
         record_details = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
         # print(record_details)
-        print(f"Matching record count present in the client config table for column_name {column_name} : {len(record_details)}")
+        # print(f"Matching record count present in the client config table for column_name {column_name} : {len(record_details)}")
         records_count = len(record_details)
         if records_count <1:
             execute_error_block(f"No records found for the corresponding client_id {client_id} in the {client_info_table} table")
         record_details = record_details[0]
         column_value = record_details.get('fields').get(column_name,"Not available")
-        print(column_value)
+        # print(column_value)
         return column_value
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} while fetching client specific column details. {e}")
@@ -327,7 +354,7 @@ def add_client_tables_info(client_id,source_table_name,curated_table_name,outrea
         data_records = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
         retries = 7
         while retries!= 0:
-            print(f"Checking data count in the client info table for client_id {client_id}...")
+            # print(f"Checking data count in the client info table for client_id {client_id}...")
             data_records = airtable_obj.all(formula=f"{{client_id}} = '{client_id}'")
             if data_records:
                 record = data_records[0] 

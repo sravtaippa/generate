@@ -13,10 +13,11 @@ from pipelines.icp_generation import generate_icp,generate_apollo_url
 from db.db_utils import fetch_client_details,export_to_airtable,unique_key_check_airtable,parse_people_info,add_client_tables_info,add_apollo_webhook_info,fetch_latest_created_time,fetch_record_count_after_time,phone_number_updation
 from error_logger import execute_error_block
 from lead_magnet.lead_magnet_pdf_generation import generate_lead_magnet_pdf
-from pipelines.data_sync import trigger_pipeline
+from pipelines.data_sync import trigger_pipeline_custom
 from pipelines.lead_website_analysis import chroma_db_testing,web_analysis
 from pipelines.login_email_confirmation import login_email_sender
 from outreach.add_leads import add_lead_to_campaign
+from outreach.campaign_metrics import update_linkedin_campaign_metrics
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
 
 print(f"\n =============== Generate : Pipeline started  ===============")
@@ -24,6 +25,17 @@ print(f"\n =============== Generate : Pipeline started  ===============")
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
 app = Flask(__name__)
+
+@app.route('/update_campaign_metrics',methods=['GET'])
+def update_campaign_metrics():
+    try:
+        # test url 127.0.0.1:5000/update_campaign_metrics?campaign_id=316135
+        campaign_id = request.args.get('campaign_id', type=str)
+        status = update_linkedin_campaign_metrics(campaign_id)
+        return {"Campaign Update Status":str(status)}
+    except Exception as e:
+        return {"Status":f"Oops something wrong happened!: {e}"}
+        # execute_error_block(f"Error occured while client onboarding : {e}")
 
 @app.route('/linkedin_outreach',methods=['GET'])
 def linkedin_outreach():
@@ -199,6 +211,7 @@ def fetch_inbox_details_full():
 @app.route("/client_onboarding", methods=["GET"])
 def client_onboarding():
     try:
+        # 127.0.0.1:5000/client_onboarding?client_id=upgrade&website_url=https://www.upgrade-now.com/b2b-sales-agency-en-2&recipient_email=sravzone@gmail.com&recipient_name=Srav&password=upgrade123
         start_time = time.time()  # Start timer
         print(f"\n\n------------- Client Onboarding Process Started for client_id-----------------\n\n")
         client_id = request.args.get('client_id', type=str)
@@ -275,11 +288,24 @@ def demo_test():
         return {"Status":f"Oops something wrong happened!: {e}"}
         # execute_error_block(f"Error occured while client onboarding : {e}")
 
+@app.route("/scheduled_data_sync_generic", methods=["GET"])
+def scheduled_data_sync_generic():
+    try:
+        start_time = time.time()  
+        status = trigger_pipeline_generic()
+        end_time = time.time()  
+        elapsed_minutes = (end_time - start_time) / 60
+        print(f"~~~~~~~~~ Execution Time: {elapsed_minutes:.2f} minutes ~~~~~~~~~~~~")
+        return {"Status":"Successful"}
+    except Exception as e:
+        print(f"Exception occured during scheduled data sync: {e}")
+        execute_error_block(f"Exception occured during scheduled data sync: {e}")
+
 @app.route("/scheduled_data_sync", methods=["GET"])
 def scheduled_data_sync():
     try:
         start_time = time.time()  # Start timer
-        status = trigger_pipeline()
+        status = trigger_pipeline_custom()
         end_time = time.time()  # End timer
         elapsed_minutes = (end_time - start_time) / 60  # Convert seconds to minutes
         print(f"~~~~~~~~~ Execution Time: {elapsed_minutes:.2f} minutes ~~~~~~~~~~~~")

@@ -14,10 +14,12 @@ def add_lead_to_campaign(apollo_id,campaign_id,outreach_table_name):
         message1 = record.get('fields').get("linkedin_message","Not available")
         message2 = record.get('fields').get("linkedin_message_2","Not available")
         subject1 = record.get('fields').get("linkedin_subject","Not available")
+        connection_message = record.get('fields').get("linkedin_connection_message","Not available")
         print(f"Profile URL: {profileUrl}")
         print(f"Email: {email}")
         print(f"First Name: {first_name}")
         print(f"Last Name: {last_name}")
+        print(f"Connection Message: {connection_message}")
         print(f"Message 1: {message1}")
         print(f"Message 2: {message2}")
         print(f"Subject 1: {subject1}")
@@ -28,10 +30,10 @@ def add_lead_to_campaign(apollo_id,campaign_id,outreach_table_name):
         "email":email,
         "first_name": first_name,
         "last_name": last_name,
+        "connection_message": connection_message,
         "message1": message1,
         "message2": message2,
         "subject1": subject1,
-        "subject2": ""
         }
         add_lead_leadsin(campaign_id,profile_details)
         print("Successfully added the lead to the campaign")

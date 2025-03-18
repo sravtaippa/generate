@@ -4,12 +4,12 @@ import concurrent.futures
 
 from datetime import datetime
 from pipelines.data_sanitization import fetch_and_update_data
-from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable,retrieve_client_tables,fetch_client_outreach_mappings,get_clients_config,fetch_page_config,update_client_config,phone_number_updation,fetch_client_column
-from pipelines.lead_qualifier import qualify_lead
+from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable,retrieve_client_tables,fetch_client_outreach_mappings,get_clients_config,fetch_page_config,update_client_config,phone_number_updation,fetch_client_column,get_source_data
 from error_logger import execute_error_block
-from pipelines.data_extractor import people_search_v2
+from pipelines.data_extractor import people_search_v2,manual_data_insertion
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
 from pipelines.icp_generation import generate_apollo_url
+
 # from lead_magnet.industry_insights import get_cold_email_kpis
 
  
@@ -19,20 +19,28 @@ CLIENT_CONFIG_TABLE_NAME = os.getenv("CLIENT_CONFIG_TABLE_NAME")
 def process_organization(organization, client_id, last_page, records_required, qualify_leads, index_name):
     """Function to process each organization"""
     try:
-        print(f"\n\n=============== Started Data Ingestion For Organization url : {organization} ===============\n\n")
+        print(f"\n\n=============== Started Data Ingestion For Organization: {organization} ===============\n\n")
 
         icp_url = generate_apollo_url(client_id, last_page, records_required, organization)
         print(f"Apollo Search Url for the client {client_id}: {icp_url}")
 
         people_search_v2(icp_url, client_id, qualify_leads, index_name)  # Keeping it as a normal function
-        # response = fetch_and_update_data(client_id)
-        # response = fetch_and_update_data(client_id)
-        print(f"\n\n=============== Completed Data Ingestion For Organization url : {organization} ===============\n\n")
+        response = fetch_and_update_data(client_id)
+        print(f"\n\n=============== Completed Data Ingestion For Organization: {organization} ===============\n\n")
 
     except Exception as e:
         print(f"Error occurred while running data refresh for the organization: {organization} - {e}")
 
-def trigger_pipeline():
+def manual_data_sync(qualify_leads,client_id,index_name):
+    try:
+        records_list = get_source_data("source_table")
+        manual_data_insertion(records_list,qualify_leads,client_id,index_name)
+        response = fetch_and_update_data(client_id)
+        print(f"Completed data cleaning and outreach")
+    except Exception as e:
+        print(f"Error occured while running data sync for client.{e}")
+
+def trigger_pipeline_custom():
     try:
         config_data = get_clients_config(CLIENT_CONFIG_TABLE_NAME)
         print("\n================= Scheduled Pipeline Execution Started ==========================================\n")
@@ -41,6 +49,10 @@ def trigger_pipeline():
                 client_details = client_config.get('fields')
                 client_id = client_details.get('client_id')
                 qualify_leads = client_details.get('qualify_leads')
+                index_name = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"vector_index_name")
+                if client_id == "guideline":
+                    manual_data_sync(qualify_leads,client_id,index_name)
+                continue
                 last_page,records_required,active_status = fetch_page_config(CLIENT_CONFIG_TABLE_NAME,client_id)
                 print(f"\n\n======================= Data Sync started for Client : {client_id} ======================= \n") 
                 if not active_status or active_status.upper() == 'NO':
@@ -51,8 +63,8 @@ def trigger_pipeline():
                 include_organization = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"include_organization")
                 if include_organization.upper()=="YES":
                     organization_domains = ast.literal_eval(fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"organization_domains"))     
-                    index_name = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"vector_index_name")
-                    # organization_domains = ["creativemediahouse.ae"]
+                    organization_domains = ["creativemediahouse.ae"]
+                    # index_name = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"vector_index_name")
                     with concurrent.futures.ThreadPoolExecutor() as executor:
                         futures = [
                             executor.submit(process_organization, org, client_id, last_page, records_required, qualify_leads, index_name)
@@ -60,7 +72,60 @@ def trigger_pipeline():
                         ]
                         # Wait for all tasks to complete
                     concurrent.futures.wait(futures)
-                  
+                profiles_enriched = 2
+                # response = fetch_and_update_data(client_id)
+                print(f"Completed data cleaning and outreach")
+                # updated_status = update_client_config(CLIENT_CONFIG_TABLE_NAME,client_id,profiles_enriched)
+                print(f"\n------------ Data populated for the outreach table for the client_id: {client_id}\n")
+                print(f"\n\n======================= Data Sync Completed For Client : {client_id} ======================= \n") 
+            except Exception as e:
+                print(f"Error occured during data sync for client.{e}")
+        
+        print("\n================= Scheduled Pipeline Execution Completed ==========================================\n")
+        return config_data
+    except Exception as e:
+        execute_error_block(f"Exception occured while triggering the pipeline run {e}")
+
+def process_client(client_details):
+    """Function to process each client"""
+    try:
+        client_id = client_details.get('client_id')
+        organization = ""
+        print(f"\n\n=============== Started Data Ingestion For client {client_id} ===============\n\n")
+        qualify_leads = client_details.get('qualify_leads')
+        last_page,records_required,active_status = fetch_page_config(CLIENT_CONFIG_TABLE_NAME,client_id)
+        index_name = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"vector_index_name")
+        print(f"\n\n======================= Data Sync started for Client : {client_id} ======================= \n") 
+        if not active_status or active_status.upper() == 'NO':
+            print(f"Skipping data sync since the entry is not active")
+            print(f"\n-------------------- Data Sync Skipped for Client : {client_id}------------------------\n")
+            return
+        icp_url = generate_apollo_url(client_id, last_page, records_required,organization)
+        print(f"Apollo Search Url for the client {client_id}: {icp_url}")
+        people_search_v2(icp_url, client_id, qualify_leads, index_name)  # Keeping it as a normal function
+        # response = fetch_and_update_data(client_id)
+        print(f"\n\n=============== Completed Data Ingestion For Organization url : {organization} ===============\n\n")
+
+    except Exception as e:
+        print(f"Error occurred while running data refresh for the organization: {organization} - {e}")
+
+def trigger_pipeline_generic():
+    try:
+        config_data = get_clients_config(CLIENT_CONFIG_TABLE_NAME)
+        print("\n================= Scheduled Pipeline Execution Started ==========================================\n")
+        for client_config in config_data:
+            try:
+                client_details = client_config.get('fields')
+                print(f"Formatting the dynamic url for Apollo search for client {client_id}")
+                include_organization = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"include_organization")
+                if include_organization.upper()=="YES":
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        futures = [
+                            executor.submit(process_client,client_config.get('fields'))
+                            for client_config in config_data
+                        ]
+                        # Wait for all tasks to complete
+                    concurrent.futures.wait(futures)
                 profiles_enriched = 2
                 response = fetch_and_update_data(client_id)
                 print(f"Completed data cleaning and outreach")

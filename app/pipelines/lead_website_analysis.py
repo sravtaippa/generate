@@ -515,58 +515,53 @@ def scrape_website(website_url):
 def retrieve_info(vector_store):
   try:
     icp_prompt = """
-        Retrieve and extract the Ideal Customer Profile (ICP) based on the retrieved website content stored in the vector database.
+      You are retrieving an **Ideal Customer Profile (ICP)** using stored website content from a **vector database**.  
 
-        - **Strictly use explicitly stated data—NO assumptions allowed.**  
-        - If explicit details are unavailable, infer closely related values based on **industry context** to extract the most relevant data.  
-        - This ICP will be used to refine **high-value prospect targeting** via **Apollo.io** for outreach campaigns.  
+      Analyze the extracted website content to determine the Ideal Customer Profile (ICP) for the company. Your task is to think critically and make informed decisions based on the company’s business context, offerings, and target audience.
 
-        ---  
+      ### Instructions:
+      - Use only explicit website content for primary extraction.
+      - Make intelligent inferences where data is missing, ensuring logical consistency.
+      - Identify patterns, key phrases, and industry context to construct a meaningful ICP.
+      - Strictly return structured JSON String output based on the extracted attributes.
 
-        ### 🚨 STRICT Extraction Rules  
-        ✔ **Primary Source:** Use only website content—no assumptions.  
-        ✔ **Use structured fields** for output.  
-        ✔ **Strictly exclude irrelevant profiles.**  
-        ✔ If explicit data is unavailable, infer the information based on **industry context** (e.g., service offerings, company details, etc.).  
+      ---  
 
-        ---  
+      ### **ICP Attributes to Extract:**  
 
-        ### 📌 ICP Attributes to Extract  
+      1️⃣ **Job Titles** *(Min: 5 Relevant Titles, No Invalid Responses)*  
+      - Extract key decision-making roles that would be the most relevant customers for this business.
+      - If fewer than 5 are explicitly stated, infer logically based on the industry.  
 
-        #### 1️⃣ Job Titles (Minimum 5 - STRICT, No Invalid Responses)  
-        - Extract **at least 5 relevant job titles**.  
-        - If fewer than 5 exist, infer closely related titles from context.  
-        - If no exact match is found, derive **general industry-relevant titles**.  
+      2️⃣ **Seniority Levels** *(Min: 4 Unique Levels, No Duplicates)*
+      - Identify the typical seniority of decision-makers.
+      - Avoid redundancy and ensure seniority is industry-appropriate.  
+      - Extract **at least 4 unique seniority levels**.  
 
-        #### 2️⃣ Seniority Levels (Minimum 4 - Unique Values Required)  
-        - Extract **at least 4 unique seniority levels**.  
-        - Avoid duplication.  
-        - If limited seniority data exists, **infer additional relevant seniority levels**.  
+      3️⃣ **Geographic Targeting** *(Min: 1 Country, More If Available)*  
+      - Identify the company’s target locations.
+      - Extract countries explicitly mentioned or derive based on the company's own presence.
+      - Do NOT use cities; always extract countries or regions.
 
-        #### 3️⃣ Geographic Targeting (Minimum 1 Country, More If Available)  
-        - Extract **at least 1 country**, but include more if mentioned.  
-        - Ensure extracted values are **countries, not cities**.  
-        - If customer locations are unclear, use the company’s own location **plus nearby regions**.  
+      4️⃣ **Ideal Company Size** *(Min: 3 Size Ranges)*  
+      - Identify the ideal company size that would benefit most from this business’s offerings.
+      - If not explicitly mentioned, derive from context (e.g., if it serves enterprises, extract relevant company size ranges).
 
-        #### 4️⃣ Ideal Company Size (Minimum 3 Ranges)  
-        - Extract at least **3 distinct company size ranges**.  
+      ---  
 
-        ---  
+      ### **Output Format -  JSON Text Only (No Explanations, No Extra Text)**  
 
-        ### 🚀 Expected Response Format (Return JSON String)  
-        - Return **ONLY** a JSON string. No explanations, no additional text, no extra formatting.  
-        - **The output must be directly usable as a string literal in Python.**  
+      If data exists:  
+      "{
+        "job_titles": [job_title_1, job_title_2, job_title_3],
+        "person_seniorities": [person_seniority_1, person_seniority_2, person_seniority_3, person_seniority_4],
+        "person_locations": [person_location_1, person_location_2],
+        "employee_range": [employee_range_1, employee_range_2, employee_range_3]
+      }"
 
-        **Example Output Format: **STRICTLY JSON** **  
-        Example format:
-        {{"job_titles": ["Marketing Manager", "Head of Growth", "Digital Strategist"],
-        "person_seniorities": ["Mid-Level", "Senior", "Director", "VP"],
-        "person_locations": ["United States", "Canada", "UK"],
-        "employee_range": ["11-50", "51-200", "201-500"]}}
-
-        **If no relevant data is found, return:**  
-        Example format:
-        {{"job_titles": [], "person_seniorities": [], "person_locations": [], "employee_range": []}}  
+      If **no relevant data**, return:  
+      "{"job_titles": [], "person_seniorities": [], "person_locations": [], "employee_range": []}"
+      The output sure be pure JSON text without "json" before it
     """
     query = icp_prompt
     llm = ChatOpenAI(
@@ -584,7 +579,7 @@ def retrieve_info(vector_store):
   except Exception as e:
     execute_error_block(f"Exception occured while retrieving info from the vector db: {e}")
 
-def web_analysis(website_url,client_id):
+def web_analysis(website_url,config_type,client_id):
   try:
     # icp_flag = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"icp_flag")
     pinecone_api_key = os.getenv("PINECONE_API_KEY")
@@ -614,27 +609,29 @@ def web_analysis(website_url,client_id):
     print('Created vector store')
     print(f"retrieving info")
     retries = 7
-    icp_flag = "NO"
-    if str(icp_flag).upper() == "YES":
-      while retries > 0:
-        icp_tags = retrieve_info(vector_store)
-        try:
-          print(f"Apollo tags: {icp_tags}\n")
-          apollo_tags = json.loads(icp_tags)
-          print(f"The apollo tags are now in JSON format")
-          break
-        except ValueError:
-          retries -= 1
-          print(f"Retrying the JSON tags creation...")
-          if retries ==0:
-            execute_error_block(f"Error occured during Apollo tag creation, the string is not in proper JSON.")
+    print(f"Config type: {config_type}")
+    if str(config_type).upper() != "CUSTOM":
+      apollo_tags = {"job_titles": [], "person_seniorities": ["owner","founder","c_suite","partner","vp","head","director","manager","senior"], "person_locations": [], "employee_range": []}
+      # while retries > 0:
+      #   icp_tags = retrieve_info(vector_store)
+      #   try:
+      #     print(f"Apollo tags: {icp_tags}\n")
+      #     apollo_tags = json.loads(icp_tags)
+      #     print(f"The apollo tags are now in JSON format")
+      #     break
+      #   except ValueError:
+      #     retries -= 1
+      #     print(f"Retrying the JSON tags creation...")
+      #     if retries ==0:
+      #       execute_error_block(f"Error occured during Apollo tag creation, the string is not in proper JSON.")
     else:
         apollo_tags = {"job_titles": [], "person_seniorities": ["owner","founder","c_suite","partner","vp","head","director","manager","senior"], "person_locations": [], "employee_range": []}
+    print(f"Apollo tags: {apollo_tags}")
     print(f"Successfuly generated Apollo tags")
     return index_name,apollo_tags
   
   except Exception as e:
-    execute_error_block(f"Exception occured in {__name__} while running the helper function: {e}")
+    execute_error_block(f"Exception occured in {__name__} while running the web analysis function: {e}")
 
 if __name__ == "__main__":
   website_url = "https://www.tmeworldwide.com/"
