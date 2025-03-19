@@ -1,6 +1,5 @@
 from flask import Flask, jsonify
 import requests
-import os
 import logging
 import re
 
@@ -8,8 +7,8 @@ import re
 logging.basicConfig(level=logging.INFO)
 
 # ✅ Airtable Credentials
-AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY", "patELEdV0LAx6Aba3.393bf0e41eb59b4b80de15b94a3d122eab50035c7c34189b53ec561de590dff3")
-AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID", "app5s8zl7DsUaDmtx")
+AIRTABLE_API_KEY = "patELEdV0LAx6Aba3.393bf0e41eb59b4b80de15b94a3d122eab50035c7c34189b53ec561de590dff3"
+AIRTABLE_BASE_ID = "app5s8zl7DsUaDmtx"
 
 # ✅ Table Names
 WHATSAPP_TABLE = "whatsapp_table"
@@ -26,7 +25,37 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-# ✅ Combined function to fetch, process, and update WhatsApp messages
+def record_exists(phone, message):
+    """Check if a record with the same phone and message already exists in dashboard_inbox."""
+    if not phone or not message:
+        return False  # Ignore empty values
+
+    # ✅ Normalize phone number (remove "+", trim spaces)
+    normalized_phone = phone.strip().lstrip("+")  
+
+    # ✅ Log the exact values being checked
+    logging.info(f"🔍 Checking duplicates for Phone={normalized_phone}, Message={message}")
+
+    # ✅ Properly format filterByFormula (must use double quotes)
+    filter_formula = f"AND(phone_number=\"{normalized_phone}\", reply_message_1=\"{message}\")"
+    query_url = f"{DASHBOARD_INBOX_URL}?filterByFormula={filter_formula}"
+
+    # ✅ Log query URL for debugging
+    logging.info(f"🛠️ Airtable Query: {query_url}")
+
+    response = requests.get(query_url, headers=HEADERS)
+
+    if response.status_code == 200:
+        records = response.json().get("records", [])
+        
+        # ✅ Log the response to check if existing records are found
+        logging.info(f"✅ Found {len(records)} valid existing records for deduplication.")
+
+        return len(records) > 0  # True if a matching record is found
+    else:
+        logging.error(f"❌ Failed to check for duplicates: {response.text}")
+        return False  # Assume no duplicate found if API fails
+
 def process_whatsapp_data():
     """Fetch WhatsApp messages, match phone_number to email, split last_message, and save to dashboard_inbox."""
     try:
@@ -34,7 +63,7 @@ def process_whatsapp_data():
         outreach_response = requests.get(OUTREACH_URL, headers=HEADERS)
         outreach_response.raise_for_status()
         outreach_records = outreach_response.json().get("records", [])
-        
+
         phone_email_map = {
             record["fields"].get("recipient_phone", "").strip(): record["fields"].get("recipient_email", "").strip()
             for record in outreach_records if "recipient_phone" in record["fields"]
@@ -71,6 +100,11 @@ def process_whatsapp_data():
 
             # ✅ Find recipient email using phone number
             recipient_email = phone_email_map.get(phone_number, "").strip() or "N/A"
+
+            # ✅ Check for duplicates before saving
+            if record_exists(phone_number, reply_message_1):
+                logging.info(f"❌ Duplicate found, skipping: Phone={phone_number}, Message={reply_message_1}")
+                continue  # Skip duplicate entries
 
             # ✅ Prepare data for Airtable update
             save_data = {
