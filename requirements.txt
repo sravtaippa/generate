@@ -18,7 +18,11 @@ langchain_openai
 langchain_core
 langchain
 langchain-chroma
-transformerss
+transformers
 pinecone
 langchain_pinecone
 airtable-python-wrapper
+unstructured
+tiktoken
+pypdf
+python-dotenv
