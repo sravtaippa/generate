@@ -19,12 +19,17 @@ from pipelines.login_email_confirmation import login_email_sender
 from outreach.add_leads import add_lead_to_campaign
 from outreach.campaign_metrics import update_linkedin_campaign_metrics
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
+from dashboard.dashboard_updation import process_whatsapp_data
 
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
 app = Flask(__name__)
+
+@app.route("/segregate_whatsapp_info", methods=["GET"])
+def segregate_whatsapp_info():
+    return process_whatsapp_data()
 
 @app.route('/update_campaign_metrics',methods=['GET'])
 def update_campaign_metrics():
