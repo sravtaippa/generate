@@ -622,7 +622,7 @@ def fetch_inbox_details():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-        
+
 
 @app.route('/post-data', methods=['GET'])
 def post_data():
