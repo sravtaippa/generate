@@ -26,7 +26,12 @@ def get_record_id(client_id):
 
 def update_client_onboarding():
     try:
-        data = request.json
+        # Support both JSON and form-data submissions
+        if request.is_json:
+            data = request.json
+        else:
+            data = request.form
+
         client_id = data.get("client_id")
         full_name = data.get("full_name")
         email = data.get("email")
@@ -52,6 +57,5 @@ def update_client_onboarding():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 if __name__ == "__main__":
     app.run(debug=True)
