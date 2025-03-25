@@ -28,50 +28,39 @@ def find_record_by_client_id(client_id):
 @app.route("/update_client_configuration_form", methods=["GET"])
 def update_client_configuration():
     try:
-        client_id = request.args.get("client_id")
-        icp_job_seniorities = request.args.get("icp_job_seniorities", "")
-        icp_job_details = request.args.get("icp_job_details", "")
-        icp_locations = request.args.get("icp_locations", "")
-        organization_domains = request.args.get("organization_domains", "")
+        data = request.get_json()
+
+        client_id = data.get("client_id")
+        
+        # Convert repeated fields into lists
+        icp_job_seniorities = data.get("icp-job-seniorities[]", [])  # Read as a list
+        icp_job_details = data.get("icp-job-details[]", [])
+        icp_locations = data.get("icp-locations[]", [])
+        organization_domains = data.get("organization-domains[]", [])
 
         if not client_id:
             return jsonify({"success": False, "message": "Missing required field: client_id"}), 400
 
-        def format_list_string(value):
-            """Converts a comma-separated string into a properly formatted list string."""
-            return str([s.strip() for s in value.split(",") if s.strip()])
-
-        # Convert fields to properly formatted list strings
-        icp_job_seniorities_str = format_list_string(icp_job_seniorities)
-        icp_job_details_str = format_list_string(icp_job_details)
-        icp_locations_str = format_list_string(icp_locations)
-        organization_domains_str = format_list_string(organization_domains)
-
-        # Find existing record ID
-        record_id = find_record_by_client_id(client_id)
-
+        # Convert lists to JSON strings before storing in Airtable
         airtable_data = {
             "records": [
                 {
                     "fields": {
                         "client_id": client_id,
-                        "icp_job_seniorities": icp_job_seniorities_str,
-                        "icp_job_details": icp_job_details_str,
-                        "icp_locations": icp_locations_str,
-                        "organization_domains": organization_domains_str
+                        "icp_job_seniorities": json.dumps(icp_job_seniorities, ensure_ascii=False),
+                        "icp_job_details": json.dumps(icp_job_details, ensure_ascii=False),
+                        "icp_locations": json.dumps(icp_locations, ensure_ascii=False),
+                        "organization_domains": json.dumps(organization_domains, ensure_ascii=False)
                     }
                 }
             ]
         }
 
-        if record_id:
-            airtable_data["records"][0]["id"] = record_id
-            response = requests.patch(AIRTABLE_URL, json=airtable_data, headers=HEADERS)
-        else:
-            response = requests.post(AIRTABLE_URL, json=airtable_data, headers=HEADERS)
+        # Send data to Airtable
+        response = requests.post(AIRTABLE_URL, json=airtable_data, headers=HEADERS)
 
         if response.status_code in [200, 201]:
-            return jsonify({"success": True, "message": "Data saved successfully", "response": response.json()}), response.status_code
+            return jsonify({"success": True, "message": "Data saved successfully", "response": response.json()}), 201
         else:
             return jsonify({"success": False, "message": "Failed to save data", "error": response.text}), response.status_code
 
