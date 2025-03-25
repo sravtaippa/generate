@@ -1,4 +1,4 @@
-import requests   
+import requests    
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
@@ -25,46 +25,49 @@ def find_record_by_client_id(client_id):
             return records[0]["id"]  # Return first matched record ID
     return None
 
+@app.route("/update_client_configuration_form", methods=["GET"])
 def update_client_configuration():
     try:
         client_id = request.args.get("client_id")
         icp_job_seniorities = request.args.get("icp_job_seniorities", "")
+        icp_job_details = request.args.get("icp_job_details", "")
+        icp_locations = request.args.get("icp_locations", "")
+        organization_domains = request.args.get("organization_domains", "")
 
         if not client_id:
             return jsonify({"success": False, "message": "Missing required field: client_id"}), 400
 
-        # Convert comma-separated values to a formatted string: "['Manager', 'Director', 'Executive']"
-        icp_job_seniorities_list = [s.strip() for s in icp_job_seniorities.split(",") if s.strip()]
-        icp_job_seniorities_str = str(icp_job_seniorities_list)  # Convert list to string format
+        def format_list_string(value):
+            """Converts a comma-separated string into a properly formatted list string."""
+            return str([s.strip() for s in value.split(",") if s.strip()])
+
+        # Convert fields to properly formatted list strings
+        icp_job_seniorities_str = format_list_string(icp_job_seniorities)
+        icp_job_details_str = format_list_string(icp_job_details)
+        icp_locations_str = format_list_string(icp_locations)
+        organization_domains_str = format_list_string(organization_domains)
 
         # Find existing record ID
         record_id = find_record_by_client_id(client_id)
 
-        if record_id:
-            # Update existing record
-            airtable_data = {
-                "records": [
-                    {
-                        "id": record_id,
-                        "fields": {
-                            "icp_job_seniorities": icp_job_seniorities_str  # Store as a formatted string
-                        }
+        airtable_data = {
+            "records": [
+                {
+                    "fields": {
+                        "client_id": client_id,
+                        "icp_job_seniorities": icp_job_seniorities_str,
+                        "icp_job_details": icp_job_details_str,
+                        "icp_locations": icp_locations_str,
+                        "organization_domains": organization_domains_str
                     }
-                ]
-            }
+                }
+            ]
+        }
+
+        if record_id:
+            airtable_data["records"][0]["id"] = record_id
             response = requests.patch(AIRTABLE_URL, json=airtable_data, headers=HEADERS)
         else:
-            # Create new record
-            airtable_data = {
-                "records": [
-                    {
-                        "fields": {
-                            "client_id": client_id,
-                            "icp_job_seniorities": icp_job_seniorities_str  # Store as a formatted string
-                        }
-                    }
-                ]
-            }
             response = requests.post(AIRTABLE_URL, json=airtable_data, headers=HEADERS)
 
         if response.status_code in [200, 201]:
