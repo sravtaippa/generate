@@ -35,6 +35,7 @@ def update_client_onboarding():
         phone = request.args.get("phone")
         company_name = request.args.get("company_name")
         company_website = request.args.get("company_website")
+        instantly_campaign_id = request.args.get("instantly_campaign_id")
 
         if not client_id or not full_name:
             return jsonify({"error": "Missing required fields"}), 400
@@ -51,7 +52,8 @@ def update_client_onboarding():
                 "location": location,
                 "phone": phone,
                 "company_name": company_name,
-                "company_website": company_website
+                "company_website": company_website,
+                "instantly_campaign_id": instantly_campaign_id
             }
         }
 
