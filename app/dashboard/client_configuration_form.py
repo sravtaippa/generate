@@ -17,40 +17,25 @@ HEADERS = {
 
 def update_client_configuration():
     try:
-        data = request.json  # Receiving form data
+        # Get URL parameters
+        client_id = request.args.get("client_id")  # Retrieve the 'client_id' from URL parameters
+        icp_job_seniorities = request.args.get("icp_job_seniorities")  # Retrieve 'icp_job_seniorities'
 
-        client_id = data.get("client_id")  # Correcting the field name
-        icp_job_seniorities = data.get("icp_job_seniorities", [])
+        if not client_id or not icp_job_seniorities:
+            return jsonify({"message": "Missing required parameters", "success": False}), 400
 
-        if not client_id:
-            return jsonify({"success": False, "message": "Missing required field: client_id"}), 400
+        # Process the data
+        icp_job_seniorities = icp_job_seniorities.split(",")  # If you want to process as a list
 
-        # Ensure icp_job_seniorities is a comma-separated string
-        if isinstance(icp_job_seniorities, list):
-            icp_job_seniorities = ", ".join(icp_job_seniorities)
-
-        # Prepare the Airtable payload
-        airtable_data = {
-            "records": [
-                {
-                    "fields": {
-                        "client_id": client_id,  # Matching Airtable field names
-                        "icp_job_seniorities": icp_job_seniorities  # Now a string
-                    }
-                }
-            ]
-        }
-
-        # Send to Airtable
-        response = requests.post(AIRTABLE_URL, json=airtable_data, headers=HEADERS)
-
-        if response.status_code in [200, 201]:
-            return jsonify({"success": True, "message": "Data saved successfully", "response": response.json()}), 201
-        else:
-            return jsonify({"success": False, "message": "Failed to save data", "error": response.text}), response.status_code
-
+        # Return success
+        return jsonify({
+            "client_id": client_id,
+            "icp_job_seniorities": icp_job_seniorities,
+            "success": True
+        }), 200
     except Exception as e:
-        return jsonify({"success": False, "message": "Internal Server Error", "error": str(e)}), 500
+        return jsonify({"message": f"Error: {str(e)}", "success": False}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)
