@@ -31,6 +31,10 @@ def update_client_onboarding():
         full_name = request.args.get("full_name")
         email = request.args.get("email")
         job_title = request.args.get("job_title")
+        location = request.args.get("location")
+        phone = request.args.get("phone")
+        company_name = request.args.get("company_name")
+        company_website = request.args.get("company_website")
 
         if not client_id or not full_name:
             return jsonify({"error": "Missing required fields"}), 400
@@ -43,7 +47,11 @@ def update_client_onboarding():
             "fields": {
                 "full_name": full_name,
                 "email": email,
-                "job_title": job_title
+                "job_title": job_title,
+                "location": location,
+                "phone": phone,
+                "company_name": company_name,
+                "company_website": company_website
             }
         }
 
