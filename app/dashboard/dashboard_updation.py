@@ -12,7 +12,7 @@ AIRTABLE_BASE_ID = "app5s8zl7DsUaDmtx"
 
 # ✅ Table Names
 WHATSAPP_TABLE = "whatsapp_table"
-OUTREACH_TABLE = "outreach_cl_guideline"
+OUTREACH_TABLE = "cur_guideline"
 DASHBOARD_INBOX_TABLE = "dashboard_inbox"
 
 # ✅ API URLs
@@ -57,16 +57,19 @@ def record_exists(phone, message):
         return False  # Assume no duplicate found if API fails
 
 def process_whatsapp_data():
-    """Fetch WhatsApp messages, match phone_number to email, split last_message, and save to dashboard_inbox."""
+    """Fetch WhatsApp messages, match phone_number to email and photo_url, split last_message, and save to dashboard_inbox."""
     try:
-        # ✅ Fetch outreach data (phone-to-email mapping)
+        # ✅ Fetch outreach data (phone-to-email and photo mapping)
         outreach_response = requests.get(OUTREACH_URL, headers=HEADERS)
         outreach_response.raise_for_status()
         outreach_records = outreach_response.json().get("records", [])
 
-        phone_email_map = {
-            record["fields"].get("recipient_phone", "").strip(): record["fields"].get("recipient_email", "").strip()
-            for record in outreach_records if "recipient_phone" in record["fields"]
+        phone_data_map = {
+            record["fields"].get("phone", "").strip(): {
+                "email": record["fields"].get("email", "").strip(),
+                "photo_url": record["fields"].get("photo_url", "").strip()  # ✅ Extract photo_url
+            }
+            for record in outreach_records if "phone" in record["fields"]
         }
         logging.info(f"Fetched {len(outreach_records)} outreach records.")
 
@@ -89,8 +92,8 @@ def process_whatsapp_data():
 
             phone_number = fields.get("phone_number", "").strip()
             last_message = fields.get("last_message", "").strip()
+            name = fields.get("Name", "N/A").strip()  # ✅ Extract Name
 
-            # ✅ Log available fields for debugging
             logging.info(f"Processing record {record_id}: {fields.keys()}")
 
             # ✅ Split last_message using regex
@@ -98,8 +101,10 @@ def process_whatsapp_data():
             reply_message_1 = matches[0][0].strip() if matches else "N/A"
             reply_message_2 = matches[0][1].strip() if matches else "N/A"
 
-            # ✅ Find recipient email using phone number
-            recipient_email = phone_email_map.get(phone_number, "").strip() or "N/A"
+            # ✅ Get email and photo_url from outreach table
+            contact_info = phone_data_map.get(phone_number, {})
+            email = contact_info.get("email", "N/A")
+            profile_picture_url = contact_info.get("photo_url", "")  # May be empty
 
             # ✅ Check for duplicates before saving
             if record_exists(phone_number, reply_message_1):
@@ -109,10 +114,12 @@ def process_whatsapp_data():
             # ✅ Prepare data for Airtable update
             save_data = {
                 "fields": {
-                    "email": recipient_email,
+                    "email": email,
+                    "name": name,  # ✅ Add Name Field
                     "phone_number": phone_number if phone_number else "N/A",
                     "reply_message_1": reply_message_1,
-                    "reply_message_2": reply_message_2
+                    "reply_message_2": reply_message_2,
+                    "profile_picture_url": profile_picture_url  # ✅ Add Profile Picture URL
                 }
             }
 
@@ -129,3 +136,5 @@ def process_whatsapp_data():
     except requests.exceptions.RequestException as e:
         logging.error(f"Airtable API error: {e}")
         return jsonify({"error": str(e)}), 500
+
+

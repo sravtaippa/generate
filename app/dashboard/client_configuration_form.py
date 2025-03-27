@@ -28,15 +28,14 @@ def find_record_by_client_id(client_id):
 @app.route("/update_client_configuration_form", methods=["GET"])
 def update_client_configuration():
     try:
-        data = request.get_json()
+        # Read form data instead of JSON
+        client_id = request.form.get("client-id")  # Match the field name in CF7
 
-        client_id = data.get("client_id")
-        
-        # Convert repeated fields into lists
-        icp_job_seniorities = data.get("icp-job-seniorities[]", [])  # Read as a list
-        icp_job_details = data.get("icp-job-details[]", [])
-        icp_locations = data.get("icp-locations[]", [])
-        organization_domains = data.get("organization-domains[]", [])
+        # Get repeated fields as lists
+        icp_job_seniorities = request.form.getlist("icp-job-seniorities[]")
+        icp_job_details = request.form.getlist("icp-job-details[]")
+        icp_locations = request.form.getlist("icp-locations[]")
+        organization_domains = request.form.getlist("organization-domains[]")
 
         if not client_id:
             return jsonify({"success": False, "message": "Missing required field: client_id"}), 400
