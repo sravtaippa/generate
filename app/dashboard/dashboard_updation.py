@@ -115,11 +115,11 @@ def process_whatsapp_data():
             save_data = {
                 "fields": {
                     "email": email,
-                    "name": name,  # ✅ Add Name Field
+                    "name": name,  
                     "phone_number": phone_number if phone_number else "N/A",
                     "reply_message_1": reply_message_1,
                     "reply_message_2": reply_message_2,
-                    "profile_picture_url": profile_picture_url  # ✅ Add Profile Picture URL
+                    "profile_picture_url": profile_picture_url  
                 }
             }
 
