@@ -2,7 +2,7 @@ import requests
 import json
 from datetime import datetime, timezone
 import pytz
-from db.db_utils import update_record,export_to_airtable
+from db.db_utils import update_record,export_to_airtable,retrieve_column_value
 from error_logger import execute_error_block
 
 def update_linkedin_campaign_metrics(campaign_id):
@@ -10,6 +10,7 @@ def update_linkedin_campaign_metrics(campaign_id):
     # Define the timezone
     ny_tz = pytz.timezone("America/New_York")
 
+    campaign_name = retrieve_column_value(table_name="linkedin_campaigns",primary_key_col="campaign_id",primary_key_value=campaign_id,column_name="campaign_name")
     today = datetime.now()
     year, month, day = today.year, today.month, today.day
     print(year, month, day)
@@ -22,7 +23,6 @@ def update_linkedin_campaign_metrics(campaign_id):
     end_date = datetime.now(pytz.utc).astimezone(ny_tz)  # Current time in New York
     end_timestamp = int(end_date.timestamp())
 
-    campaign_id = "316135"
 
     print("From (start):", start_timestamp)
     print("To (end):", end_timestamp)
@@ -41,7 +41,7 @@ def update_linkedin_campaign_metrics(campaign_id):
     # # 3 INVITATION_SENT,4 MESSAGE_SENT ,5 INMAIL_SENT ,6 INVITATION_ACCEPTED,7 MESSAGE_REPLY,8 INVITATION_ACCEPTED_RATE,9 MESSAGE_REPLY_RATE
 
     campaign_info = {}
-    campaign_info['campaign_id'] = campaign_id
+    campaign_info['campaign_id'] = campaign_name
     for metric in campaign_metrics.keys():
       if metric == '3':
         campaign_info["invitations_sent"] = (campaign_metrics[metric])
@@ -63,7 +63,7 @@ def update_linkedin_campaign_metrics(campaign_id):
       record = {}
       date = campaign_info["invitations_sent"][index]['date']
       record["metrics_date"] = str(date)
-      record["linkedin_campaign_id"] = str(campaign_id)
+      record["linkedin_campaign_name"] = str(campaign_name)
       record["invitations_sent"]= str(campaign_info["invitations_sent"][index]['value'])
       record["messages_sent"]= str(campaign_info["messages_sent"][index]['value'])
       record["inmails_sent"]= str(campaign_info["inmails_sent"][index]['value'])

@@ -36,6 +36,41 @@ def update_client_configuration_form():
 def update_client_onboarding_form():
     return  update_client_onboarding()
 
+@app.route("/add_leads_linkedin", methods=["GET"])
+def add_leads_linkedin():
+    try:
+        # test url : 127.0.0.1:5000/linkedin_outreach?apollo_id=54a75889746869730aeb332c&campaign_id=316135&outreach_table_name=outreach_guideline
+        linkedin_profile_url = request.args.get('linkedin_profile_url', type=str)
+        apollo_id = request.args.get('apollo_id', type=str)
+        cur_table_name = request.args.get('cur_table_name', type=str)
+        photo_url = request.args.get('photo_url', type=str)
+        campaign_id = request.args.get('campaign_id', type=str)
+        recipient_full_name = request.args.get('recipient_full_name', type=str)
+        recipient_email = request.args.get('recipient_email', type=str)
+        recipient_company = request.args.get('recipient_company', type=str)
+        linkedin_message = request.args.get('linkedin_message', type=str)
+        linkedin_message2 = request.args.get('linkedin_message2', type=str)
+        linkedin_subject = request.args.get('linkedin_subject', type=str)
+        linkedin_connection_message = request.args.get('linkedin_connection_message', type=str)
+        linkedin_leads_table_name = "linkedin_leads"
+        data = {
+            "thread_id":"NA",
+            "apollo_id":apollo_id,
+            "campaign_id":campaign_id,
+            "full_name":recipient_full_name,
+            "email":recipient_email,
+            "linkedin_profile_url":linkedin_profile_url,
+            "company":recipient_company,
+            "message":linkedin_message,
+            "message_2":linkedin_message2,
+            "linkedin_subject":linkedin_subject,
+            "linkedin_connection_message":linkedin_connection_message
+        }
+        export_to_airtable(data,linkedin_leads_table_name)
+        return {"Status":"Successfully added the lead to the leads table"} 
+
+    except Exception as e:
+        return {"Status":f"Oops something wrong happened!: {e}"}
 
 @app.route("/segregate_whatsapp_info", methods=["GET"])
 def segregate_whatsapp_info():
@@ -116,8 +151,8 @@ def fetch_records():
 def testing_connection():
     try:
         print('------------Started Testing --------------')
-        icp_url = generate_apollo_url(client_id = "cl_berkleys_homes",page_number=1,records_required=2,organization="creativemediahouse.ae")
-        return {'icp_url':icp_url}
+        # icp_url = generate_apollo_url(client_id = "cl_berkleys_homes",page_number=1,records_required=2,organization="creativemediahouse.ae")
+        return {'Status':"Hello World"}
     except Exception as e:
         execute_error_block(f"Error occured while testing. {e}")
 

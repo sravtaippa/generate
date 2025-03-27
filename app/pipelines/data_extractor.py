@@ -67,7 +67,6 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
             print(f"\n---------- People Search Iteration {iteration} for client_id {client_id} ----------\n")
             iteration += 1
             apollo_id = contact['id']    
-            # persona_details=parse_people_info(contact)
             print(f"------------Data ingestion started for record id :{apollo_id}, for client_id :{client_id} ------------")
             raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
             record_exists = unique_key_check_airtable('apollo_id',apollo_id,raw_table)   
@@ -136,7 +135,7 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
                     print(f"\n------------Lead Qualified------------")
                 else:
                     print(f"Skipping lead qualification...")
-                    continue
+                    # continue
                 export_to_airtable(data_dict,raw_table)
                 ingested_apollo_ids.append(apollo_id)
                 selected_profiles+=1

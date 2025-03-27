@@ -1,7 +1,5 @@
 import openai
 import ast
-import time
-import json
 import os
 import json
 import requests
@@ -39,7 +37,10 @@ def generate_apollo_url(client_id,page_number=1,records_required=2,organization=
         icp_job_seniorities = ast.literal_eval(fetch_client_column("client_config",client_id,"icp_job_seniorities"))
         icp_employee_range = ast.literal_eval(fetch_client_column("client_config",client_id,"icp_employee_range"))
         icp_locations = ast.literal_eval(fetch_client_column("client_config",client_id,"icp_locations"))
+        organization_domains = ast.literal_eval(fetch_client_column("client_config",client_id,"organization_domains"))
+        organization_last_index= int(fetch_client_column("client_config",client_id,"organization_last_index"))
         email_status = ['verified']
+        organization_domains = organization_domains[organization_last_index:organization_last_index+15]
         print('Creating query params')
         query_params = [
                     construct_query_param("person_titles", icp_job_details),
@@ -47,11 +48,13 @@ def generate_apollo_url(client_id,page_number=1,records_required=2,organization=
                     construct_query_param("person_locations", icp_employee_range),
                     construct_query_param("organization_locations", icp_locations),
                     construct_query_param("contact_email_status", email_status),
+                    construct_query_param("q_organization_domains_list", organization_domains),
                     construct_query_param_range("organization_num_employees_ranges", icp_employee_range),
         ]
-        if organization!= "":
-            query_params.append(f"q_organization_domains={organization}")
+        # if organization!= "":
+        #     query_params.append(f"q_organization_domains={organization}")
         query_params_test = query_params.copy()
+        query_params.append(f"include_similar_titles=false")
         query_params.append(f"page={page_number}")
         query_params_test.append(f"page=1")
         query_params.append(f"per_page={records_required}")
@@ -60,8 +63,8 @@ def generate_apollo_url(client_id,page_number=1,records_required=2,organization=
         url_test = f"{base_url}?{'&'.join(query_params_test)}"
         dynamic_url = f"{base_url}?{'&'.join(query_params)}"
         headers = APOLLO_HEADERS    
-        # print(f"Running the people search API test")
-        # print(f"Apollo Url for testing : {url_test}")
+        print(f"Running the people search API test")
+        print(f"Apollo Url for testing : {url_test}")
         # response = requests.post(url_test, headers=headers)
         # if response.status_code == 200:
         #     print(f"Completed Apollo url check")
@@ -102,7 +105,7 @@ def generate_icp(client_id,website_url):
             "icp_locations":str(person_locations),
             "page_number":'1',
             "qualify_leads":'yes',
-            "records_required":'2',
+            "records_required":'10',
             "organization_domains":str(organization_domains),
             "include_organization":'yes' if str(config_type).upper() == 'CUSTOM' else 'no',
             "icp_flag":'no' if str(config_type).upper() == 'CUSTOM' else 'yes',
