@@ -13,6 +13,21 @@ CLIENT_DETAILS_TABLE_NAME = os.getenv("CLIENT_DETAILS_TABLE_NAME")
 CLIENT_CONFIG_TABLE_NAME = os.getenv("CLIENT_CONFIG_TABLE_NAME")
 CLIENT_INFO_TABLE_NAME = os.getenv("CLIENT_INFO_TABLE_NAME")
 
+def update_column_value(table_name,column_name,column_value,primary_key_col,primary_key_value):
+    try:
+        api = Api(AIRTABLE_API_KEY)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
+        data_records = airtable_obj.all(formula=f"{{{primary_key_col}}} = '{primary_key_value}'")
+        if data_records:
+            record = data_records[0] 
+            record_id = record.get('id')
+            airtable_obj.update(record_id, {column_name: str(column_value)})
+        else:
+            print(f"No record found for {primary_key_col} '{primary_key_value}'")
+    except Exception as e:
+      execute_error_block(f"Error occured in {__name__} while updating the column in airtable. {e}")
+
+
 def update_record(table_name,record,primary_key_col):
     try:
         api = Api(AIRTABLE_API_KEY)
