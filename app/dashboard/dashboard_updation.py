@@ -3,6 +3,7 @@ import requests
 import logging
 import re
 from datetime import datetime
+import pytz
 
 # ✅ Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -26,24 +27,46 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
+LOCAL_TZ = pytz.timezone("Asia/Dubai")  # Adjust based on your region
+
+def format_created_time(iso_time):
+    """Convert Airtable 'Created' time from UTC to local time in MM/DD/YYYY HH:MM format."""
+    if not iso_time:
+        return "N/A"
+
+    try:
+        # Convert from UTC to local time
+        dt_utc = datetime.fromisoformat(iso_time.replace("Z", "+00:00")).astimezone(pytz.utc)  # Parse as UTC
+        dt_local = dt_utc.astimezone(LOCAL_TZ)  # Convert to local time
+
+        return dt_local.strftime("%m/%d/%Y %I:%M %p")  # Convert to MM/DD/YYYY HH:MM AM/PM
+    except ValueError:
+        logging.error(f"❌ Invalid created time format: {iso_time}")
+        return "N/A"
+
 def format_reply_time(reply_time):
     """Convert long text reply_time to MM/DD/YYYY HH:MM format."""
     if not reply_time or reply_time == "N/A":
         return "N/A"
     
-    # Try extracting date and time from the long text using regex
-    date_match = re.search(r'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})', reply_time)  # Looking for ISO datetime
-
-    if date_match:
+    # Extract datetime from text
+    match = re.search(r'(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})', reply_time)  
+    if match:
         try:
-            dt = datetime.fromisoformat(date_match.group(1))  # Extract date part
-            return dt.strftime("%m/%d/%Y %H:%M")  # Convert to MM/DD/YYYY HH:MM format
+            # Convert to datetime object in UTC
+            dt_utc = datetime.fromisoformat(match.group(1)).replace(tzinfo=pytz.utc)
+            
+            # Convert to local time
+            dt_local = dt_utc.astimezone(LOCAL_TZ)
+            
+            return dt_local.strftime("%m/%d/%Y %I:%M %p")  # MM/DD/YYYY HH:MM AM/PM format
         except ValueError:
             logging.error(f"❌ Invalid date format in reply_time: {reply_time}")
             return "N/A"
-    else:
-        logging.error(f"❌ No valid date found in reply_time: {reply_time}")
-        return "N/A"
+    
+    logging.error(f"❌ No valid date found in reply_time: {reply_time}")
+    return "N/A"
+
 
 def record_exists(phone, message):
     """Check if a record with the same phone and message already exists in dashboard_inbox."""
@@ -104,6 +127,7 @@ def process_whatsapp_data():
             name = fields.get("Name", "N/A").strip()
             whatsapp_sentiment = fields.get("whatsapp_sentiment", "N/A").strip() 
             reply_time_raw = fields.get("reply_time", "N/A").strip()  
+            created_time = format_created_time(fields.get("Created", ""))
 
             # ✅ Log raw reply_time for debugging
             logging.info(f"🔍 Raw reply_time: {reply_time_raw}")
@@ -138,7 +162,8 @@ def process_whatsapp_data():
                     "reply_message_1": reply_message_1,
                     "reply_message_2": reply_message_2,
                     "profile_picture_url": profile_picture_url,
-                    "reply_time": reply_time  # ✅ Include formatted reply_time
+                    "whatsapp_reply_time": reply_time,
+                    "whatsapp_sent_time": created_time
                 }
             }
 
