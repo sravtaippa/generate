@@ -573,7 +573,7 @@ def retrieve_info(vector_store):
         chain_type="stuff",
         retriever=vector_store.as_retriever()
     )
-    output = qa.invoke(query)
+    output = qa.invoke(query)    
     return output['result']
 
   except Exception as e:
