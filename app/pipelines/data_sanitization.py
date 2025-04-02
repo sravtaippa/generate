@@ -46,12 +46,42 @@ try:
 except Exception as e:
     print(f"Error initializing Airtable: {e}")
 
+def get_max_created_time(airtable_instance):
+    """
+    Fetches the maximum created_time from the given Airtable instance.
+    """
+    try:
+        records = airtable_instance.get_all(fields=["created_time"])
+        if not records:
+            return None  # Return None if no records exist
+        
+        max_time = max(
+            [datetime.strptime(record["fields"]["created_time"], "%Y-%m-%dT%H:%M:%S.%fZ") 
+             for record in records if "created_time" in record["fields"]]
+        )
+        return max_time
+    except Exception as e:
+        print(f"Error fetching max created_time: {e}")
+        return None
 
 
 def send_to_airtable_if_new(df, airtable_instance, unique_field, desired_fields=None, field_mapping=None, default_values=None, icp_to_outreach=None, icp_df=None):
     """
-    Send new records to Airtable after filtering and mapping fields.
+    Send only new records to Airtable by checking against the maximum existing created_time.
     """
+    max_created_time = get_max_created_time(airtable_instance)
+
+    # Convert created_time column in df to datetime for comparison
+    df["created_time"] = pd.to_datetime(df["created_time"], errors="coerce")
+
+    # Filter only records with created_time greater than the max in Airtable
+    if max_created_time:
+        df = df[df["created_time"] > max_created_time]
+    
+    if df.empty:
+        print("No new records to insert.")
+        return
+    
     for i, row in df.iterrows():
         try:
             record_data = row.dropna().to_dict()
@@ -94,6 +124,7 @@ def send_to_airtable_if_new(df, airtable_instance, unique_field, desired_fields=
 
         except Exception as e:
             print(f"Error processing record {i}: {e}")
+
 
 def clean_name(df, column_name):
     def standardize_capitalization(text):
