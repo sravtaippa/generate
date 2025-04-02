@@ -4,7 +4,7 @@ import os
 import json
 import requests
 from error_logger import execute_error_block
-from db.db_utils import unique_key_check_airtable,export_to_airtable,update_client_info,fetch_client_column,retrieve_column_value
+from db.db_utils import unique_key_check_airtable,export_to_airtable,update_client_info,fetch_client_column,retrieve_column_value,update_column_value
 from pipelines.lead_website_analysis import web_analysis
 from config import APOLLO_HEADERS
 
@@ -40,7 +40,17 @@ def generate_apollo_url(client_id,page_number=1,records_required=2,organization=
         organization_domains = ast.literal_eval(fetch_client_column("client_config",client_id,"organization_domains"))
         organization_last_index= int(fetch_client_column("client_config",client_id,"organization_last_index"))
         email_status = ['verified']
-        organization_domains = organization_domains[organization_last_index:organization_last_index+15]
+        organization_domains_new = organization_domains[organization_last_index:organization_last_index+15]
+        if len(organization_domains_new) == 0:
+            print(f"\n\n =========================== All the domains have been processed. Exiting the function. Resetting the organization last index =========================== ")
+            organization_last_index = 0
+            organization_domains_new = organization_domains[organization_last_index:organization_last_index+15]
+            update_column_value(
+                        table_name=CLIENT_CONFIG_TABLE_NAME,
+                        column_name="organization_last_index",
+                        column_value=organization_last_index,
+                        primary_key_col="client_id",
+                        primary_key_value=client_id)
         print('Creating query params')
         query_params = [
                     construct_query_param("person_titles", icp_job_details),
@@ -48,11 +58,10 @@ def generate_apollo_url(client_id,page_number=1,records_required=2,organization=
                     construct_query_param("person_locations", icp_employee_range),
                     construct_query_param("organization_locations", icp_locations),
                     construct_query_param("contact_email_status", email_status),
-                    construct_query_param("q_organization_domains_list", organization_domains),
+                    construct_query_param("q_organization_domains_list", organization_domains_new),
                     construct_query_param_range("organization_num_employees_ranges", icp_employee_range),
         ]
-        # if organization!= "":
-        #     query_params.append(f"q_organization_domains={organization}")
+        
         query_params_test = query_params.copy()
         query_params.append(f"include_similar_titles=false")
         query_params.append(f"page={page_number}")
@@ -65,11 +74,6 @@ def generate_apollo_url(client_id,page_number=1,records_required=2,organization=
         headers = APOLLO_HEADERS    
         print(f"Running the people search API test")
         print(f"Apollo Url for testing : {url_test}")
-        # response = requests.post(url_test, headers=headers)
-        # if response.status_code == 200:
-        #     print(f"Completed Apollo url check")
-        #     data = response.json()
-        #     print(f"No of profiles collected : {len(data['people'])}")
         return dynamic_url
     except Exception as e:
         execute_error_block(f"Error occured while generating the apollo url: {e}")
@@ -89,7 +93,6 @@ def generate_icp(client_id,website_url):
         person_seniorities = icp_json.get('person_seniorities')
         person_locations = icp_json.get('person_locations')
         organization_domains=""
-        # organization_domains="""["creativemediahouse.ae","squaremarketing.ae","mrcreativesocial.com","themedialinks.com","prism-me.com","eds.ae","alkhaleejiah.com","ubn.ae","creategroup.me","srmg.com","traccs.net"]"""
         organization_num_employees_ranges = icp_json.get('employee_range')
         print(f"Config table name: {CLIENT_CONFIG_TABLE_NAME}")
         record_exists = unique_key_check_airtable('client_id',client_id,CLIENT_CONFIG_TABLE_NAME)
@@ -105,9 +108,11 @@ def generate_icp(client_id,website_url):
             "icp_locations":str(person_locations),
             "page_number":'1',
             "qualify_leads":'yes',
+            "refresh_type":'custom',
             "records_required":'10',
             "organization_domains":str(organization_domains),
             "include_organization":'yes' if str(config_type).upper() == 'CUSTOM' else 'no',
+            "organization_last_index":'0',
             "icp_flag":'no' if str(config_type).upper() == 'CUSTOM' else 'yes',
             "is_active":"yes",
             "vector_index_name":vector_index_name,
