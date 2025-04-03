@@ -76,8 +76,8 @@ def generate_apollo_url(client_id,page_number=1,records_required=2,organization=
         url_test = f"{base_url}?{'&'.join(query_params_test)}"
         dynamic_url = f"{base_url}?{'&'.join(query_params)}"
         headers = APOLLO_HEADERS    
-        print(f"Running the people search API test")
-        print(f"Apollo Url for testing : {url_test}")
+        # print(f"Running the people search API test")
+        # print(f"Apollo Url for testing : {url_test}")
         return dynamic_url
     except Exception as e:
         execute_error_block(f"Error occured while generating the apollo url: {e}")

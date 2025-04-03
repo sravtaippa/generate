@@ -16,6 +16,59 @@ from pipelines.icp_generation import generate_apollo_url
 CLIENT_DETAILS_TABLE_NAME = os.getenv("CLIENT_DETAILS_TABLE_NAME")
 CLIENT_CONFIG_TABLE_NAME = os.getenv("CLIENT_CONFIG_TABLE_NAME")
 
+def trigger_custom_pipeline(client_id):
+    try:
+        config_data = get_clients_config(CLIENT_CONFIG_TABLE_NAME)
+        print(f"\n================= Scheduled Pipeline Execution Started for Client {client_id} ==========================================\n")
+        for client_config in config_data:
+            try:
+                client_details = client_config.get('fields')
+                retrieved_client_id = client_details.get('client_id')
+                if retrieved_client_id == client_id:
+                    qualify_leads = client_details.get('qualify_leads')
+                    index_name = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"vector_index_name")
+                    last_page,records_required,active_status = fetch_page_config(CLIENT_CONFIG_TABLE_NAME,client_id)
+                    print(f"\n\n======================= Scheduled Data Sync started for Client : {client_id} ======================= \n") 
+                    if not active_status or active_status.upper() == 'NO':
+                        print(f"Skipping data sync since the entry is not active")
+                        print(f"\n-------------------- Data Sync Skipped for Client : {client_id}------------------------\n")
+                        continue
+                    print(f"Formatting the dynamic url for Apollo search for client {client_id}")
+                    include_organization = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"include_organization")
+                    if include_organization.upper()=="YES":
+                        page_numbers = [1]
+                        organization_last_index= fetch_client_column("client_config",client_id,"organization_last_index")
+                        with concurrent.futures.ThreadPoolExecutor() as executor:
+                            futures = [
+                                executor.submit(process_organization, page_number, client_id, records_required, qualify_leads, index_name,organization_last_index)
+                                for page_number in page_numbers
+                            ]
+                            # Wait for all tasks to complete
+                        concurrent.futures.wait(futures)
+                        organization_last_index= fetch_client_column("client_config",client_id,"organization_last_index")
+                        organization_last_index_updated = str(int(organization_last_index)+15)
+                        update_column_value(
+                            table_name=CLIENT_CONFIG_TABLE_NAME,
+                            column_name="organization_last_index",
+                            column_value=organization_last_index_updated,
+                            primary_key_col="client_id",
+                            primary_key_value=client_id)
+                        print(f"Updated the organization last index to {organization_last_index_updated}")
+                    profiles_enriched = 2
+                    response = fetch_and_update_data(client_id)
+                    print(f"Completed data cleaning and outreach")
+                    # updated_status = update_client_config(CLIENT_CONFIG_TABLE_NAME,client_id,profiles_enriched)
+                    print(f"\n------------ Data populated for the outreach table for the client_id: {client_id}\n")
+                    print(f"\n\n======================= Data Sync Completed For Client : {client_id} ======================= \n") 
+
+            except Exception as e:
+                print(f"Error occured during data sync for client.{e}")
+        
+        print("\n================= Scheduled Pipeline Execution Completed ==========================================\n")
+        return config_data
+    except Exception as e:
+        execute_error_block(f"Exception occured while triggering the pipeline run {e}")
+
 def process_organization(page_number, client_id, records_required, qualify_leads, index_name,organization_last_index):
     """Function to process each organization"""
     try:
