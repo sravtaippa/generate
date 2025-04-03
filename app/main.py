@@ -196,7 +196,12 @@ def apollo_webhook():
 @app.route("/data_sanitization", methods=["GET"])
 def initialize_data_sanitization():
     try:
-        response = fetch_and_update_data()
+        client_id = request.args.get('client_id', type=str)
+        if client_id in ["",None]:
+            print(f"Invalid information passed. client_id : {client_id}")
+            return {"Status":f"Invalid information passed. client_id : {client_id}"}
+        print(f"Fetched parameters-> client_id : {client_id}")
+        response = fetch_and_update_data(client_id)
         return response
     except Exception as e:
         execute_error_block(f"Error occured while initializing data sanitization module {e}")
