@@ -43,7 +43,7 @@ def generate_apollo_url(client_id,page_number=1,records_required=2,organization=
         organization_domains_new = organization_domains[organization_last_index:organization_last_index+15]
         print(f"================== ICP Generation for client id: {client_id}==================")
         print(f"Organization last index: {organization_last_index}")
-        print(f"Organization domains: {organization_domains}")
+        print(f"Organization domains: {organization_domains_new}")
         print(f"=====================================================================")
         if len(organization_domains_new) == 0:
             print(f"\n\n =========================== All the domains have been processed. Exiting the function. Resetting the organization last index =========================== ")
