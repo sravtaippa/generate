@@ -13,7 +13,7 @@ from pipelines.icp_generation import generate_icp,generate_apollo_url
 from db.db_utils import fetch_client_details,export_to_airtable,unique_key_check_airtable,parse_people_info,add_client_tables_info,add_apollo_webhook_info,fetch_latest_created_time,fetch_record_count_after_time,phone_number_updation
 from error_logger import execute_error_block
 from lead_magnet.lead_magnet_pdf_generation import generate_lead_magnet_pdf
-from pipelines.data_sync import trigger_pipeline_custom
+from pipelines.data_sync import trigger_pipeline_custom,trigger_custom_pipeline
 from pipelines.lead_website_analysis import chroma_db_testing,web_analysis
 from pipelines.login_email_confirmation import login_email_sender
 from outreach.add_leads import add_lead_to_campaign
@@ -361,6 +361,23 @@ def scheduled_data_sync():
     try:
         start_time = time.time()  # Start timer
         status = trigger_pipeline_custom()
+        end_time = time.time()  # End timer
+        elapsed_minutes = (end_time - start_time) / 60  # Convert seconds to minutes
+        print(f"~~~~~~~~~ Execution Time: {elapsed_minutes:.2f} minutes ~~~~~~~~~~~~")
+        return {"Status":"Successful"}
+    except Exception as e:
+        print(f"Exception occured during scheduled data sync: {e}")
+        execute_error_block(f"Exception occured during scheduled data sync: {e}")
+
+@app.route("/scheduled_data_sync_custom", methods=["GET"])
+def scheduled_data_sync_custom():
+    try:
+        start_time = time.time()  # Start timer
+        client_id = request.args.get('client_id', type=str)
+        if client_id in ["",None]:
+            print(f"Invalid information passed. client_id : {client_id}")
+            return {"Status":f"Invalid information passed. client_id : {client_id}"}
+        status = trigger_custom_pipeline(client_id)
         end_time = time.time()  # End timer
         elapsed_minutes = (end_time - start_time) / 60  # Convert seconds to minutes
         print(f"~~~~~~~~~ Execution Time: {elapsed_minutes:.2f} minutes ~~~~~~~~~~~~")

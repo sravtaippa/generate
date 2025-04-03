@@ -59,8 +59,6 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
         enriched_profiles=0
         selected_profiles=0
         iteration=1
-        if qualify_leads=='yes':
-            client_value_proposition = fetch_client_column(CLIENT_INFO_TABLE_NAME,client_id,"client_value_proposition")
         print(f"\n\n---------- Starting the People Search Iteration ----------\n\n")
         ingested_apollo_ids = []
         for contact in data['people']:
