@@ -57,9 +57,6 @@ def trigger_pipeline_custom():
                 print(f"Formatting the dynamic url for Apollo search for client {client_id}")
                 include_organization = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"include_organization")
                 if include_organization.upper()=="YES":
-                    # organization_domains = ast.literal_eval(fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"organization_domains"))     
-                    # organization_domains = ["creativemediahouse.ae"]
-                    # # index_name = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"vector_index_name")
                     page_numbers = [1]
                     organization_last_index= fetch_client_column("client_config",client_id,"organization_last_index")
                     with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -69,6 +66,7 @@ def trigger_pipeline_custom():
                         ]
                         # Wait for all tasks to complete
                     concurrent.futures.wait(futures)
+                    organization_last_index= fetch_client_column("client_config",client_id,"organization_last_index")
                     organization_last_index_updated = str(int(organization_last_index)+15)
                     update_column_value(
                         table_name=CLIENT_CONFIG_TABLE_NAME,
@@ -76,7 +74,7 @@ def trigger_pipeline_custom():
                         column_value=organization_last_index_updated,
                         primary_key_col="client_id",
                         primary_key_value=client_id)
-                    print(f"Updated the organization last index to {organization_last_index}")
+                    print(f"Updated the organization last index to {organization_last_index_updated}")
                 profiles_enriched = 2
                 response = fetch_and_update_data(client_id)
                 print(f"Completed data cleaning and outreach")
