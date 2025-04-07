@@ -372,6 +372,7 @@ def scheduled_data_sync():
 @app.route("/scheduled_data_sync_custom", methods=["GET"])
 def scheduled_data_sync_custom():
     try:
+        # /scheduled_data_sync_custom?client_id=possible_event
         start_time = time.time()  # Start timer
         client_id = request.args.get('client_id', type=str)
         if client_id in ["",None]:
