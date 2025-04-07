@@ -6,7 +6,8 @@ from flask import Flask, render_template, request, jsonify
 from urllib.parse import unquote
 import time
 
-from pipelines.data_sanitization import fetch_and_update_data, update_email_opens
+# from pipelines.data_sanitization import fetch_and_update_data, update_email_opens, test_sanitize
+from pipelines.data_sanitization import update_email_opens, test_sanitize
 from pipelines.data_extractor import people_enrichment,test_run_pipeline,run_demo_pipeline
 from db.table_creation import create_client_tables
 from pipelines.icp_generation import generate_icp,generate_apollo_url
@@ -234,6 +235,14 @@ def generate_lead_magnet():
 def update_email_opens_clicked():
     try:
         response = update_email_opens()
+        return response
+    except Exception as e:
+        execute_error_block(f"Error occured while counting email opened and email clicked {e}")
+# test datasanitization
+@app.route("/test_sanitize_new", methods=["GET"])
+def test_sanitize_new():
+    try:
+        response = test_sanitize()
         return response
     except Exception as e:
         execute_error_block(f"Error occured while counting email opened and email clicked {e}")

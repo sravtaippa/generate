@@ -3,7 +3,8 @@ import ast
 import concurrent.futures
 
 from datetime import datetime
-from pipelines.data_sanitization import fetch_and_update_data
+# from pipelines.data_sanitization import fetch_and_update_data
+from pipelines.data_sanitization import sanitize_data
 from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable,retrieve_client_tables,fetch_client_outreach_mappings,get_clients_config,fetch_page_config,update_client_config,phone_number_updation,fetch_client_column,get_source_data,update_column_value,retrieve_record
 from error_logger import execute_error_block
 from pipelines.data_extractor import people_search_v2,manual_data_insertion
