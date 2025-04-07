@@ -49,54 +49,7 @@ except Exception as e:
 from datetime import datetime
 
 
-def sanitize_data(client_id,data_dict):
-    try:
-        print(f"Sanitizing data for client_id: {client_id}")
-        # Perform actions
-        return "Data sanitized successfully"
-    except Exception as e:
-        print(f"Error while sanitizing data for client_id {client_id}: {e}")
-        # Log the error or take necessary actions
-        return None
-
-def get_max_created_time(airtable_instance):
-    """
-    Fetches the maximum created_time from the given Airtable instance where created_time is stored as a text field.
-    """
-    try:
-        records = airtable_instance.get_all(fields=["created_time"])
-        if not records:
-            return None  # Return None if no records exist
-        
-        max_time = None
-        for record in records:
-            created_time_str = record["fields"].get("created_time")
-            if created_time_str:
-                try:
-                    created_time = datetime.strptime(created_time_str, "%Y-%m-%d %H:%M:%S.%f")
-                    if max_time is None or created_time > max_time:
-                        max_time = created_time
-                except ValueError:
-                    print(f"Skipping invalid created_time: {created_time_str}")
-        
-        return max_time
-    except Exception as e:
-        print(f"Error fetching max created_time: {e}")
-        return None
-
-
 def send_to_airtable_if_new(df, airtable_instance, unique_field, desired_fields=None, field_mapping=None, default_values=None, icp_to_outreach=None, icp_df=None):
-    """
-    Send new records to Airtable after filtering by created_time and mapping fields.
-    """
-    # Fetch max created_time from Airtable
-    max_created_time = get_max_created_time(airtable_instance)
-    
-    if max_created_time:
-        # Convert 'created_time' column in df to datetime for filtering
-        df["created_time"] = pd.to_datetime(df["created_time"], errors="coerce")
-        df = df[df["created_time"] > max_created_time]  # Only keep newer records
-    
     for i, row in df.iterrows():
         try:
             record_data = row.dropna().to_dict()
@@ -119,136 +72,40 @@ def send_to_airtable_if_new(df, airtable_instance, unique_field, desired_fields=
             if field_mapping:
                 record_data = {field_mapping.get(k, k): v for k, v in record_data.items()}
 
-            # Ensure created_time is updated to match the correct format
             record_data["created_time"] = str(datetime.now())
 
             if default_values:
                 for key, value in default_values.items():
                     record_data.setdefault(key, value)
 
-            # Check if the record already exists before inserting
             search_result = airtable_instance.search(unique_field, unique_id_value)
             if not search_result:
-                try:
-                    airtable_instance.insert(record_data)
-                    print(f"Record {i} inserted successfully into {airtable_instance}.")
-                except Exception as e:
-                    print(f"Failed to insert record {i}: {e}")
+                airtable_instance.insert(record_data)
+                print(f"Record {i} inserted successfully into {airtable_instance}.")
             else:
                 print(f"Record {i} already exists in {airtable_instance}. Skipping insertion.")
 
         except Exception as e:
             print(f"Error processing record {i}: {e}")
 
-
-
-def clean_name(df, column_name):
-    def standardize_capitalization(text):
-        if isinstance(text, str):
-            text = text.strip()  # Strip whitespace
-            return text.capitalize()  # Capitalizes the first letter and lowercases the rest
-        return text
-
-    # Apply the cleaning function to the specified column
-    df[column_name] = df[column_name].apply(standardize_capitalization)
-    return df
-
-
-def process_email(email):
-    """
-    Processes an email to strip out any alias (e.g., test.email+alias@gmail.com should become test.email@gmail.com).
-    """
-    email = email.lower()  # Convert to lowercase for consistency
-    email = re.sub(r'\+.*?@', '@', email)  # Remove any "+alias" before the '@' symbol
-    return email
-
-def expand_emails(df):
-    rows = []
-    for i, row in df.iterrows():
-        emails = row['email'].split(',') if row['email'] != "Unknown" else ["Unknown"]
-        for email in emails:
-            email = email.strip()  # Clean up individual emails
-            if email:  # Ignore empty email entries
-                new_row = row.copy()
-                new_row['email'] = email
-                rows.append(new_row)
-    
-    # If no rows were added, return an empty DataFrame with 'email' column
-    if not rows:
-        return pd.DataFrame(columns=['email'])
-    
-    result_df = pd.DataFrame(rows)
-    return result_df.reset_index(drop=True)  # Reset the index to avoid duplicates
-
-def clean_urls(url, unique_id, column_name):
-    if pd.isna(url) or not str(url).strip() or url.lower() in ["unknown", "n/a"]:
-        return f"https://unknown-{ column_name}-{unique_id}.com"
-    url = url.strip()
-    if not url.startswith(("http://", "https://")):
-        url = "https://" + url
-    return url
-
-def clean_phone_number(x):
-    if pd.isna(x) or not str(x).strip():
-        return "Unknown"
-    x = str(x).strip()
-    if x.lower() == "unknown":
-        return "Unknown"
-    if x.startswith("+"):
-        cleaned_number = '+' + ''.join(filter(str.isdigit, x))
-    else:
-        cleaned_number = ''.join(filter(str.isdigit, x))
-    return cleaned_number if cleaned_number else "Unknown"
-
-
-
 def fetch_client_details(df, airtable_instance, icp_field="associated_client_id", client_details_field="client_id"):
-    """
-    Fetch client details from Airtable based on matching associated_client_id in df and client_id in client_details.
-    """
-    client_details = []  # This will hold matched client details
-
+    client_details = []
     for _, row in df.iterrows():
         client_id = row.get(icp_field)
-        
         if client_id:
-            # Search for the client details in Airtable where client_id matches associated_client_id
             records = airtable_instance.search(client_details_field, client_id)
-            
             if records:
-                # Assuming we need the first match, append it to the client_details list
                 client_details.append(records[0]['fields'])
+    return pd.DataFrame(client_details)
 
-    # Convert client details list to DataFrame
-    client_details_df = pd.DataFrame(client_details)
-    # print(client_details_df)
-    
-    return client_details_df
-
-
-@app.route("/", methods=["GET"])
-def fetch_and_update_data(client_id):
+def sanitize_data(client_id, data_dict):
     try:
-        print(client_id)
-        raw_table_name,cleaned_table_name,outreach_table_name = retrieve_client_tables(client_id)
-        print(f"raw_table_name : {raw_table_name}")
-        print(f"cleaned_table_name : {cleaned_table_name}")
-        print(f"outreach_table_name : {outreach_table_name}")
-        
-        raw_table = Airtable(BASE_ID_NEW, raw_table_name, API_KEY_NEW)
+        raw_table_name, cleaned_table_name, outreach_table_name = retrieve_client_tables(client_id)
+
         cleaned_table = Airtable(BASE_ID_NEW, cleaned_table_name, API_KEY_NEW)
         outreach_table = Airtable(BASE_ID_NEW, outreach_table_name, API_KEY_NEW)
 
-        all_records = raw_table.get_all()
-        data = [record.get('fields', {}) for record in all_records]
-
-        if not data:
-            return jsonify({"message": "No data found in the old Airtable."})
-
-        df = pd.DataFrame(data)
-        df = df.dropna(how='all')
-
-        df.to_csv("berkleyshomes_apollo.csv", index=False)
+        df = pd.DataFrame([data_dict])
         df.replace([np.inf, -np.inf], np.nan, inplace=True)
         df = df.where(pd.notnull(df), None)
 
@@ -269,13 +126,9 @@ def fetch_and_update_data(client_id):
                 .apply(lambda x: re.sub(r'\+.*?@', '@', x))
             )
 
-        
-
         df['unique_id'] = df['apollo_id'].fillna("Unknown") + "_" + df['email'].fillna("Unknown")
-        # df['created_time'] = str(datetime.now())
         df = df.drop_duplicates(subset=['apollo_id', 'email'])
         filtered_df = df[df['email'] != "Unknown"]
-
 
         campaign_field_mapping = {
             "first_name": "recipient_first_name",
@@ -288,8 +141,6 @@ def fetch_and_update_data(client_id):
             "linkedin_url": "linkedin_profile_url",
         }
 
-        default_values_campaign = {}
-
         icp_df = fetch_client_details(df, airtable_new2, icp_field="associated_client_id", client_details_field="client_id")
 
         icp_to_outreach_mapping = {
@@ -298,10 +149,7 @@ def fetch_and_update_data(client_id):
             "sender_name": "full_name",
             "sender_title": "job_title",
             "sender_company_website": "company_website",
-            # "key_benefits": "solution_benefits",
-            # "impact_metrics": "solution_impact_examples",
-            # "unique_features": "unique_features",
-            "client_value_proposition" : "client_value_proposition",
+            "client_value_proposition": "client_value_proposition",
             "cta_options": "cta_options",
             "color_scheme": "color_scheme",
             "font_style": "font_style",
@@ -310,12 +158,10 @@ def fetch_and_update_data(client_id):
             "outreach_table": "outreach_table"
         }
 
-        # Cleaned Records
-        print('Cleaning started')
+        # Send to cleaned Airtable
         send_to_airtable_if_new(df, cleaned_table, unique_field='unique_id')
 
-        # Outreach Records
-        print('Outreach started')
+        # Send to outreach Airtable
         send_to_airtable_if_new(
             filtered_df,
             outreach_table,
@@ -337,16 +183,28 @@ def fetch_and_update_data(client_id):
             ],
             field_mapping=campaign_field_mapping,
             icp_to_outreach=icp_to_outreach_mapping,
-            default_values=default_values_campaign,
-            icp_df=icp_df,
+            icp_df=icp_df
         )
-        return jsonify({"message": "Data cleaned, updated, and old records processed successfully."})
+
+        return {"message": "Data cleaned and processed successfully."}
 
     except Exception as e:
-        print({"error": f"Error fetching, processing, or deleting data: {e}"})
-        return jsonify({"error": f"Error fetching, processing, or deleting data: {e}"}), 500
+        return {"error": f"Error in sanitizing data: {e}"}
 
-
+@app.route('/test_sanitize', methods=['POST'])
+def test_sanitize():
+    try:
+        data = request.get_json()
+        client_id = data.get("client_id")
+        data_dict = data.get("data_dict")
+        if not client_id or not data_dict:
+            return jsonify({"error": "Missing 'client_id' or 'data_dict' in request body"}), 400
+        
+        result = sanitize_data(client_id, data_dict)
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+ 
 @app.route('/update-email-opens', methods=['POST'])
 def update_email_opens():
     try:
