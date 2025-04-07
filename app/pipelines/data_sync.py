@@ -54,10 +54,11 @@ def trigger_custom_pipeline(client_id):
                             primary_key_col="client_id",
                             primary_key_value=client_id)
                         print(f"Updated the organization last index to {organization_last_index_updated}")
-                    profiles_enriched = 2
-                    response = fetch_and_update_data(client_id)
+                        profiles_enriched = 2
+                        print(f"Cleaning Started")
+                        response = fetch_and_update_data(client_id)
+                        print(f"Cleaning completed")
                     print(f"Completed data cleaning and outreach")
-                    # updated_status = update_client_config(CLIENT_CONFIG_TABLE_NAME,client_id,profiles_enriched)
                     print(f"\n------------ Data populated for the outreach table for the client_id: {client_id}\n")
                     print(f"\n\n======================= Data Sync Completed For Client : {client_id} ======================= \n") 
 
