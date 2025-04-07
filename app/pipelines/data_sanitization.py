@@ -48,6 +48,17 @@ except Exception as e:
 
 from datetime import datetime
 
+
+def sanitize_data(client_id,data_dict):
+    try:
+        print(f"Sanitizing data for client_id: {client_id}")
+        # Perform actions
+        return "Data sanitized successfully"
+    except Exception as e:
+        print(f"Error while sanitizing data for client_id {client_id}: {e}")
+        # Log the error or take necessary actions
+        return None
+
 def get_max_created_time(airtable_instance):
     """
     Fetches the maximum created_time from the given Airtable instance where created_time is stored as a text field.
