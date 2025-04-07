@@ -4,7 +4,7 @@ import concurrent.futures
 
 from datetime import datetime
 from pipelines.data_sanitization import fetch_and_update_data
-from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable,retrieve_client_tables,fetch_client_outreach_mappings,get_clients_config,fetch_page_config,update_client_config,phone_number_updation,fetch_client_column,get_source_data,update_column_value
+from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable,retrieve_client_tables,fetch_client_outreach_mappings,get_clients_config,fetch_page_config,update_client_config,phone_number_updation,fetch_client_column,get_source_data,update_column_value,retrieve_record
 from error_logger import execute_error_block
 from pipelines.data_extractor import people_search_v2,manual_data_insertion
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
@@ -18,55 +18,52 @@ CLIENT_CONFIG_TABLE_NAME = os.getenv("CLIENT_CONFIG_TABLE_NAME")
 
 def trigger_custom_pipeline(client_id):
     try:
-        config_data = get_clients_config(CLIENT_CONFIG_TABLE_NAME)
         print(f"\n================= Scheduled Pipeline Execution Started for Client {client_id} ==========================================\n")
-        for client_config in config_data:
-            try:
-                client_details = client_config.get('fields')
-                retrieved_client_id = client_details.get('client_id')
-                if retrieved_client_id == client_id:
-                    qualify_leads = client_details.get('qualify_leads')
-                    index_name = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"vector_index_name")
-                    last_page,records_required,active_status = fetch_page_config(CLIENT_CONFIG_TABLE_NAME,client_id)
-                    print(f"\n\n======================= Scheduled Data Sync started for Client : {client_id} ======================= \n") 
-                    if not active_status or active_status.upper() == 'NO':
-                        print(f"Skipping data sync since the entry is not active")
-                        print(f"\n-------------------- Data Sync Skipped for Client : {client_id}------------------------\n")
-                        continue
-                    print(f"Formatting the dynamic url for Apollo search for client {client_id}")
-                    include_organization = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"include_organization")
-                    if include_organization.upper()=="YES":
-                        page_numbers = [1]
-                        organization_last_index= fetch_client_column("client_config",client_id,"organization_last_index")
-                        with concurrent.futures.ThreadPoolExecutor() as executor:
-                            futures = [
-                                executor.submit(process_organization, page_number, client_id, records_required, qualify_leads, index_name,organization_last_index)
-                                for page_number in page_numbers
-                            ]
-                            # Wait for all tasks to complete
-                        concurrent.futures.wait(futures)
-                        organization_last_index= fetch_client_column("client_config",client_id,"organization_last_index")
-                        organization_last_index_updated = str(int(organization_last_index)+15)
-                        update_column_value(
-                            table_name=CLIENT_CONFIG_TABLE_NAME,
-                            column_name="organization_last_index",
-                            column_value=organization_last_index_updated,
-                            primary_key_col="client_id",
-                            primary_key_value=client_id)
-                        print(f"Updated the organization last index to {organization_last_index_updated}")
-                        profiles_enriched = 2
-                        print(f"Cleaning Started")
-                        response = fetch_and_update_data(client_id)
-                        print(f"Cleaning completed")
-                    print(f"Completed data cleaning and outreach")
-                    print(f"\n------------ Data populated for the outreach table for the client_id: {client_id}\n")
-                    print(f"\n\n======================= Data Sync Completed For Client : {client_id} ======================= \n") 
+        # retrieve_record
+        record = retrieve_record(CLIENT_CONFIG_TABLE_NAME,"client_id",client_id)
+        record_details = record['fields']
+        if record:
+            print(f"Client configuration exists for client id : {client_id}")
+        else:
+            print(f"Client configuration does not exist for client id : {client_id}")
+            return     
+        print(record_details)
+        qualify_leads = record_details.get('qualify_leads')
+        index_name = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"vector_index_name")
+        last_page,records_required,active_status = fetch_page_config(CLIENT_CONFIG_TABLE_NAME,client_id)
+        if not active_status or active_status.upper() == 'NO':
+            print(f"Skipping data sync since the entry is not active")
+            print(f"\n-------------------- Data Sync Skipped for Client : {client_id}------------------------\n")
+            return
+        print(f"Formatting the dynamic url for Apollo search for client {client_id}")
+        include_organization = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"include_organization")
+        if include_organization.upper()=="YES":
+            page_numbers = [1]
+            organization_last_index= fetch_client_column("client_config",client_id,"organization_last_index")
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                futures = [
+                    executor.submit(process_organization, page_number, client_id, records_required, qualify_leads, index_name,organization_last_index)
+                    for page_number in page_numbers
+                ]
+            concurrent.futures.wait(futures)
+            organization_last_index= fetch_client_column("client_config",client_id,"organization_last_index")
+            organization_last_index_updated = str(int(organization_last_index)+15)
+            update_column_value(
+                table_name=CLIENT_CONFIG_TABLE_NAME,
+                column_name="organization_last_index",
+                column_value=organization_last_index_updated,
+                primary_key_col="client_id",
+                primary_key_value=client_id)
+            print(f"Updated the organization last index to {organization_last_index_updated}")
+            profiles_enriched = 2
+            # print(f"Data Cleaning & Outreach Started")
+            # response = fetch_and_update_data(client_id)
+            # print(f"Data Cleaning & Outreach Completed")
+            print(f"\n------------ Data populated for the outreach table for the client_id: {client_id}\n")
+        else:
+            print(f"Organization domain flag not set")
+        print(f"\n\n======================= Data Sync Completed For Client : {client_id} ======================= \n") 
 
-            except Exception as e:
-                print(f"Error occured during data sync for client.{e}")
-        
-        print("\n================= Scheduled Pipeline Execution Completed ==========================================\n")
-        return config_data
     except Exception as e:
         execute_error_block(f"Exception occured while triggering the pipeline run {e}")
 

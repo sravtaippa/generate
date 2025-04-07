@@ -387,6 +387,16 @@ def scheduled_data_sync_custom():
         print(f"Exception occured during scheduled data sync: {e}")
         execute_error_block(f"Exception occured during scheduled data sync: {e}")
 
+@app.route("/run_pipeline_check", methods=["GET"])
+def run_pipeline_check():
+    try:
+        print(f"Testing pipeline run")
+        status = "True"
+        # print(f"~~~~~~~~~ Execution Time: {elapsed_minutes:.2f} minutes ~~~~~~~~~~~~")
+        return {"Status":"Test pipeline execution successful"}
+    except Exception as e:
+        return {"Status":f"Oops something wrong happened!: {e}"}
+
 if __name__ == '__main__':
   app.run(debug=True,use_reloader=False)
  

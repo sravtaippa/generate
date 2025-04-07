@@ -50,7 +50,7 @@ def retrieve_record(table_name,primary_key_col,primary_key_value):
     try:
         api = Api(AIRTABLE_API_KEY) 
         airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
-        record_details = airtable_obj.all(formula=f"{{apollo_id}} = '{primary_key_value}'")
+        record_details = airtable_obj.all(formula=f"{{{primary_key_col}}} = '{primary_key_value}'")
         records_count = len(record_details)
         if records_count <1:
             execute_error_block(f"No records found for the corresponding {primary_key_col} {primary_key_value} in {table_name}")

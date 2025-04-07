@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable,retrieve_client_tables,fetch_client_outreach_mappings,fetch_client_column
 from pipelines.lead_qualifier import qualify_lead
+from pipelines.data_sanitization import sanitize_data
 from error_logger import execute_error_block
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
 # from lead_magnet.industry_insights import get_cold_email_kpis
@@ -135,6 +136,9 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
                     print(f"Skipping lead qualification...")
                     # continue
                 export_to_airtable(data_dict,raw_table)
+                print(f"Data collected in source table")
+                response = sanitize_data(client_id,data_dict)
+                print(f"Data sanitized and uploaded to outreach table")
                 ingested_apollo_ids.append(apollo_id)
                 selected_profiles+=1
                 print(f"\n------------Data ingestion successful for record id :{apollo_id}, client_id : {client_id}------------\n")
