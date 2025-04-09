@@ -124,6 +124,7 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
                     'organization_short_description': data.get('organization').get('short_description') if data.get('organization') else '',
                     'organization_technology_names': str(data.get('organization').get('technology_names')) if data.get('organization') else '',
                     'created_time':str(timestamp),
+                    'filter_criteria':"generic",
                 }
                 if qualify_leads=='yes':
                     qualification_status = qualify_lead(apollo_id,data_dict,index_name)

@@ -48,7 +48,7 @@ def trigger_custom_pipeline(client_id):
                 ]
             concurrent.futures.wait(futures)
             organization_last_index= fetch_client_column("client_config",client_id,"organization_last_index")
-            organization_last_index_updated = str(int(organization_last_index)+2)
+            organization_last_index_updated = str(int(organization_last_index)+20)
             update_column_value(
                 table_name=CLIENT_CONFIG_TABLE_NAME,
                 column_name="organization_last_index",

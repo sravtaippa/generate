@@ -48,7 +48,7 @@ def generate_apollo_url(client_id,page_number=1,records_required=2,organization=
         if len(organization_domains_new) == 0:
             print(f"\n\n =========================== All the domains have been processed. Resetting the organization last index =========================== ")
             organization_last_index = 0
-            organization_domains_new = organization_domains[organization_last_index:organization_last_index+2]
+            organization_domains_new = organization_domains[organization_last_index:organization_last_index+20]
             update_column_value(
                         table_name=CLIENT_CONFIG_TABLE_NAME,
                         column_name="organization_last_index",
@@ -67,7 +67,7 @@ def generate_apollo_url(client_id,page_number=1,records_required=2,organization=
         ]
         
         query_params_test = query_params.copy()
-        query_params.append(f"include_similar_titles=false")
+        query_params.append(f"include_similar_titles=true")
         query_params.append(f"page={page_number}")
         query_params_test.append(f"page=1")
         query_params.append(f"per_page={records_required}")
