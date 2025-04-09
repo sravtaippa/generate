@@ -9,6 +9,7 @@ import time
 # from pipelines.data_sanitization import fetch_and_update_data, update_email_opens, test_sanitize
 from pipelines.data_sanitization import update_email_opens, test_sanitize
 from pipelines.data_extractor import people_enrichment,test_run_pipeline,run_demo_pipeline
+from pipelines.guideline_data_sync import parse_contacts
 from db.table_creation import create_client_tables
 from pipelines.icp_generation import generate_icp,generate_apollo_url
 from db.db_utils import fetch_client_details,export_to_airtable,unique_key_check_airtable,parse_people_info,add_client_tables_info,add_apollo_webhook_info,fetch_latest_created_time,fetch_record_count_after_time,phone_number_updation
@@ -28,6 +29,15 @@ print(f"\n =============== Generate : Pipeline started  ===============")
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
 app = Flask(__name__)
+
+@app.route("/guideline_data_sync", methods=["GET"])
+def sync_data_guideline():
+    try:
+        print(f"Syncing data for guideline")
+        parse_contacts()
+        return {"Status":"Data sync successful"}
+    except Exception as e:
+        return {"Status":f"Oops something wrong happened!: {e}"}
 
 @app.route("/update_client_configuration_form", methods=["GET"])
 def update_client_configuration_form():
