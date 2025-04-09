@@ -179,7 +179,8 @@ def sanitize_data(client_id, data_dict):
                 "apollo_id",
                 "associated_client_id",
                 "employment_summary",
-                "created_time"
+                "created_time", 
+                "filter_criteria"
             ],
             field_mapping=campaign_field_mapping,
             icp_to_outreach=icp_to_outreach_mapping,
