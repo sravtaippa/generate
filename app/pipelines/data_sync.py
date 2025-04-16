@@ -39,7 +39,7 @@ def trigger_custom_pipeline(client_id):
         print(f"Formatting the dynamic url for Apollo search for client {client_id}")
         include_organization = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"include_organization")
         if include_organization.upper()=="YES":
-            page_numbers = [1]
+            page_numbers = [1,2,3,4,5,6,7,8,9,10,11,12,13]
             organization_last_index= fetch_client_column("client_config",client_id,"organization_last_index")
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 futures = [
@@ -81,14 +81,14 @@ def process_organization(page_number, client_id, records_required, qualify_leads
     except Exception as e:
         print(f"Error occurred while running data refresh for the page number: {page_number} - {e}")
 
-def manual_data_sync(qualify_leads,client_id,index_name):
-    try:
-        records_list = get_source_data("source_table")
-        manual_data_insertion(records_list,qualify_leads,client_id,index_name)
-        response = fetch_and_update_data(client_id)
-        print(f"Completed data cleaning and outreach")
-    except Exception as e:
-        print(f"Error occured while running data sync for client.{e}")
+# def manual_data_sync(qualify_leads,client_id,index_name):
+#     try:
+#         records_list = get_source_data("source_table")
+#         manual_data_insertion(records_list,qualify_leads,client_id,index_name)
+#         response = fetch_and_update_data(client_id)
+#         print(f"Completed data cleaning and outreach")
+#     except Exception as e:
+#         print(f"Error occured while running data sync for client.{e}")
 
 def trigger_pipeline_custom():
     try:
@@ -109,7 +109,7 @@ def trigger_pipeline_custom():
                 print(f"Formatting the dynamic url for Apollo search for client {client_id}")
                 include_organization = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"include_organization")
                 if include_organization.upper()=="YES":
-                    page_numbers = [1]
+                    page_numbers = [1,2]
                     organization_last_index= fetch_client_column("client_config",client_id,"organization_last_index")
                     with concurrent.futures.ThreadPoolExecutor() as executor:
                         futures = [
@@ -128,7 +128,7 @@ def trigger_pipeline_custom():
                         primary_key_value=client_id)
                     print(f"Updated the organization last index to {organization_last_index_updated}")
                 profiles_enriched = 2
-                response = fetch_and_update_data(client_id)
+                # response = fetch_and_update_data(client_id)
                 print(f"Completed data cleaning and outreach")
                 # updated_status = update_client_config(CLIENT_CONFIG_TABLE_NAME,client_id,profiles_enriched)
                 print(f"\n------------ Data populated for the outreach table for the client_id: {client_id}\n")
@@ -164,33 +164,33 @@ def process_client(client_details):
     except Exception as e:
         print(f"Error occurred while running data refresh for the organization: {organization} - {e}")
 
-def trigger_pipeline_generic():
-    try:
-        config_data = get_clients_config(CLIENT_CONFIG_TABLE_NAME)
-        print("\n================= Scheduled Pipeline Execution Started ==========================================\n")
-        for client_config in config_data:
-            try: 
-                client_details = client_config.get('fields')
-                print(f"Formatting the dynamic url for Apollo search for client {client_id}")
-                include_organization = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"include_organization")
-                if include_organization.upper()=="YES":
-                    with concurrent.futures.ThreadPoolExecutor() as executor:
-                        futures = [
-                            executor.submit(process_client,client_config.get('fields'))
-                            for client_config in config_data
-                        ]
-                        # Wait for all tasks to complete
-                    concurrent.futures.wait(futures)
-                profiles_enriched = 2
-                response = fetch_and_update_data(client_id)
-                print(f"Completed data cleaning and outreach")
-                # updated_status = update_client_config(CLIENT_CONFIG_TABLE_NAME,client_id,profiles_enriched)
-                print(f"\n------------ Data populated for the outreach table for the client_id: {client_id}\n")
-                print(f"\n\n======================= Data Sync Completed For Client : {client_id} ======================= \n") 
-            except Exception as e:
-                print(f"Error occured during data sync for client.{e}")
+# def trigger_pipeline_generic():
+#     try:
+#         config_data = get_clients_config(CLIENT_CONFIG_TABLE_NAME)
+#         print("\n================= Scheduled Pipeline Execution Started ==========================================\n")
+#         for client_config in config_data:
+#             try: 
+#                 client_details = client_config.get('fields')
+#                 print(f"Formatting the dynamic url for Apollo search for client {client_id}")
+#                 include_organization = fetch_client_column(CLIENT_CONFIG_TABLE_NAME,client_id,"include_organization")
+#                 if include_organization.upper()=="YES":
+#                     with concurrent.futures.ThreadPoolExecutor() as executor:
+#                         futures = [
+#                             executor.submit(process_client,client_config.get('fields'))
+#                             for client_config in config_data
+#                         ]
+#                         # Wait for all tasks to complete
+#                     concurrent.futures.wait(futures)
+#                 profiles_enriched = 2
+#                 response = fetch_and_update_data(client_id)
+#                 print(f"Completed data cleaning and outreach")
+#                 # updated_status = update_client_config(CLIENT_CONFIG_TABLE_NAME,client_id,profiles_enriched)
+#                 print(f"\n------------ Data populated for the outreach table for the client_id: {client_id}\n")
+#                 print(f"\n\n======================= Data Sync Completed For Client : {client_id} ======================= \n") 
+#             except Exception as e:
+#                 print(f"Error occured during data sync for client.{e}")
         
-        print("\n================= Scheduled Pipeline Execution Completed ==========================================\n")
-        return config_data
-    except Exception as e:
-        execute_error_block(f"Exception occured while triggering the pipeline run {e}")
+#         print("\n================= Scheduled Pipeline Execution Completed ==========================================\n")
+#         return config_data
+#     except Exception as e:
+#         execute_error_block(f"Exception occured while triggering the pipeline run {e}")

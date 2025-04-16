@@ -40,15 +40,15 @@ def generate_apollo_url(client_id,page_number=1,records_required=2,organization=
         organization_domains = ast.literal_eval(fetch_client_column("client_config",client_id,"organization_domains"))
         organization_last_index= int(fetch_client_column("client_config",client_id,"organization_last_index"))
         email_status = ['verified']
-        organization_domains_new = organization_domains[organization_last_index:organization_last_index+40]
+        organization_domains_new = organization_domains[organization_last_index:organization_last_index+2]
         print(f"================== ICP Generation for client id: {client_id}==================")
         print(f"Organization last index: {organization_last_index}")
         print(f"Organization domains: {organization_domains_new}")
         print(f"=====================================================================")
-        if len(organization_domains_new) == 0:
+        if organization_last_index >= len(organization_domains):
             print(f"\n\n =========================== All the domains have been processed. Resetting the organization last index =========================== ")
             organization_last_index = 0
-            organization_domains_new = organization_domains[organization_last_index:organization_last_index+40]
+            organization_domains_new = organization_domains[organization_last_index:organization_last_index+2]
             update_column_value(
                         table_name=CLIENT_CONFIG_TABLE_NAME,
                         column_name="organization_last_index",

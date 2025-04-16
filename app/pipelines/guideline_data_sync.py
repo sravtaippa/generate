@@ -9,7 +9,7 @@ from error_logger import execute_error_block
 from pipelines.data_extractor import people_search_v2,manual_data_insertion
 from pipelines.icp_generation import generate_apollo_url
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
-
+import pandas as pd
 
 # from lead_magnet.industry_insights import get_cold_email_kpis
  
@@ -213,6 +213,86 @@ def parse_contacts():
         print("Excluded profiles: ",excluded_profiles)
     except Exception as e:
         execute_error_block(f"Error occured while parsing the contacts: {e}")
+
+
+# from pyairtable import Table,Api
+
+# def data_enrich(first_name,last_name,organization):
+#   query_params=[]
+#   query_params.append(f"first_name={first_name}")
+#   query_params.append(f"last_name={last_name}")
+#   encoded_organization = urllib.parse.quote(organization)
+#   query_params.append(f"organization_name={encoded_organization}")
+#   query_params.append("reveal_personal_emails=true")
+#   query_params.append("reveal_phone_number=false")
+#   base_url = "https://api.apollo.io/api/v1/people/match"
+#   dynamic_url = f"{base_url}?{'&'.join(query_params)}"
+#   headers = {
+#       "accept": "application/json",
+#       "Cache-Control": "no-cache",
+#       "Content-Type": "application/json",
+#       "x-api-key": "ti7hoaAD9sOc5DGzqZUk-Q"
+#   }
+#   # print(dynamic_url)
+#   response = requests.post(dynamic_url, headers=headers)
+#   data = response.json()
+#   print(data)
+#   return data['person'] if data else None
+
+# def export_to_airtable(data,raw_table):
+#     try:
+#         # print(f"\nExporting results to Airtable")
+#         api = Api("patELEdV0LAx6Aba3.393bf0e41eb59b4b80de15b94a3d122eab50035c7c34189b53ec561de590dff3")
+#         airtable_obj = api.table("app5s8zl7DsUaDmtx", raw_table)
+#         response = airtable_obj.create(data)
+#         if 'id' in response:
+#             print("Record inserted successfully:", response['id'])
+#         else:
+#             print("Error inserting record:", response)
+#     except Exception as e:
+#         print(f"Error occured in {__name__} while exporting the data to Airtable. {e}")
+
+# def unique_key_check_airtable(column_name,unique_value,table_name):
+#     try:
+#         api = Api("patELEdV0LAx6Aba3.393bf0e41eb59b4b80de15b94a3d122eab50035c7c34189b53ec561de590dff3")
+#         airtable_obj = api.table('app5s8zl7DsUaDmtx', table_name)
+#         records = airtable_obj.all()
+#         # print(f"\nCompleted unique key check")
+#         return any(record['fields'].get(column_name) == unique_value for record in records) 
+#     except Exception as e:
+#       print(f"error occured while unique key check {e}")
+
+
+# # Read the Excel file
+# df = pd.read_excel("/content/drive/MyDrive/Guideline/POSSIBLE Attendee List 3.4.xlsx")
+# # len(df)
+# # # Iterate through each row
+# profiles = []
+# final_list= []
+# for index, row in df.iterrows():
+#     if index < 591:
+#       continue
+
+#     print(f"======Index {index}===============")
+#     info={}
+#     first_name = row['First Name']
+#     last_name = row['Last Name']
+#     organization = row['Org Name']
+#     data = data_enrich(first_name,last_name,organization)
+#     if data is None:
+#       continue
+#     parsed_data = parse_record(data,organization)
+#     if parsed_data is None:
+#       continue
+#     apollo_id = parsed_data['apollo_id']
+#     record_exists = unique_key_check_airtable('apollo_id',apollo_id,"src_possible_event_updated_list")   
+#     if record_exists:
+#       print(f'Record with the following id: {apollo_id} already exists. Skipping the entry...')
+#       continue    
+#     profiles.append(parsed_data)
+#     export_to_airtable(parsed_data,"src_possible_event_updated_list")
+#     print(f"===============================")
+
 
 if __name__ == "__main__":
     parse_contacts()
