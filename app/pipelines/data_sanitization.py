@@ -98,6 +98,16 @@ def fetch_client_details(df, airtable_instance, icp_field="associated_client_id"
                 client_details.append(records[0]['fields'])
     return pd.DataFrame(client_details)
 
+def clean_urls(url, unique_id, column_name):
+    if pd.isna(url) or not str(url).strip() or url.lower() in ["unknown", "n/a"]:
+        placeholder_url = f"https://Unknown-{column_name}-{unique_id}.com"
+        print(f"Missing {column_name} for ID {unique_id}, using placeholder: {placeholder_url}")
+        return placeholder_url
+    url = url.strip()
+    if not url.startswith(("http://", "https://")):
+        url = "https://" + url
+    return url
+
 def sanitize_data(client_id, data_dict):
     try:
         raw_table_name, cleaned_table_name, outreach_table_name = retrieve_client_tables(client_id)
@@ -125,6 +135,8 @@ def sanitize_data(client_id, data_dict):
                 .str.strip()
                 .apply(lambda x: re.sub(r'\+.*?@', '@', x))
             )
+            
+        df['unique_id'] = df['apollo_id'].fillna("Unknown") + "_" + df['email'].fillna("Unknown")
         if 'linkedin_url' in df.columns:
             df['linkedin_url'] = df.apply(
                 lambda row: clean_urls(row['linkedin_url'], row['unique_id'], 'linkedin_url'),
@@ -133,11 +145,11 @@ def sanitize_data(client_id, data_dict):
 
         
 
-        df['unique_id'] = df['apollo_id'].fillna("Unknown") + "_" + df['email'].fillna("Unknown")
+        
         # df['created_time'] = str(datetime.now())
         df = df.drop_duplicates(subset=['apollo_id', 'email'])
+        df = df[~((df['email'].str.lower() == "unknown") | (df['linkedin_url'].str.lower() == "unknown"))]
         filtered_df = df[~((df['email'].str.lower() == "unknown") | (df['linkedin_url'].str.lower() == "unknown"))]
-
 
 
 
