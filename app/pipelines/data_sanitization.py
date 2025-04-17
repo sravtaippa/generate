@@ -125,10 +125,21 @@ def sanitize_data(client_id, data_dict):
                 .str.strip()
                 .apply(lambda x: re.sub(r'\+.*?@', '@', x))
             )
+        if 'linkedin_url' in df.columns:
+            df['linkedin_url'] = df.apply(
+                lambda row: clean_urls(row['linkedin_url'], row['unique_id'], 'linkedin_url'),
+                axis=1
+            )
+
+        
 
         df['unique_id'] = df['apollo_id'].fillna("Unknown") + "_" + df['email'].fillna("Unknown")
+        # df['created_time'] = str(datetime.now())
         df = df.drop_duplicates(subset=['apollo_id', 'email'])
-        filtered_df = df[df['email'] != "Unknown"]
+        filtered_df = df[~((df['email'].str.lower() == "unknown") | (df['linkedin_url'].str.lower() == "unknown"))]
+
+
+
 
         campaign_field_mapping = {
             "first_name": "recipient_first_name",
