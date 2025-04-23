@@ -9,7 +9,7 @@ import time
 # from pipelines.data_sanitization import fetch_and_update_data, update_email_opens, test_sanitize
 from pipelines.data_sanitization import update_email_opens, test_sanitize
 from pipelines.data_extractor import people_enrichment,test_run_pipeline,run_demo_pipeline
-from pipelines.guideline_data_sync import parse_contacts
+from pipelines.guideline_data_sync import parse_contacts,influencer_marketing
 from db.table_creation import create_client_tables
 from pipelines.icp_generation import generate_icp,generate_apollo_url
 from db.db_utils import fetch_client_details,export_to_airtable,unique_key_check_airtable,parse_people_info,add_client_tables_info,add_apollo_webhook_info,fetch_latest_created_time,fetch_record_count_after_time,phone_number_updation
@@ -34,7 +34,8 @@ app = Flask(__name__)
 def sync_data_guideline():
     try:
         print(f"Syncing data for guideline")
-        parse_contacts()
+        influencer_marketing()
+        # parse_contacts()
         return {"Status":"Data sync successful"}
     except Exception as e:
         return {"Status":f"Oops something wrong happened!: {e}"}

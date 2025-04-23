@@ -12,12 +12,11 @@ from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TAB
 CLIENT_DETAILS_TABLE_NAME = os.getenv("CLIENT_DETAILS_TABLE_NAME")
 CLIENT_INFO_TABLE_NAME = os.getenv("CLIENT_INFO_TABLE_NAME")
 
-
 def people_enrichment_v2(apollo_id):
     try:
-        url = f"https://api.apollo.io/api/v1/people/match?id={apollo_id}&reveal_personal_emails=true&reveal_phone_number=true&webhook_url=https%3A%2F%2Fmagmostafa.pythonanywhere.com%2Fapollo_webhook"
+        url = f"https://api.apollo.io/api/v1/people/match?id={apollo_id}&reveal_personal_emails=true&reveal_phone_number=false&webhook_url=https%3A%2F%2Fmagmostafa.pythonanywhere.com%2Fapollo_webhook"
         response = requests.post(url, headers=APOLLO_HEADERS)
-        print(f"Extracting phone numbers via people enrichment")
+        # print(f"Extracting phone numbers via people enrichment")
         return response
         
     except Exception as e:
