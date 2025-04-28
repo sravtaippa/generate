@@ -97,8 +97,10 @@ def collect_information(linkedin_url):
     try:
         enrichment_api_response = people_enrichment_linkedin(linkedin_url)
         if enrichment_api_response.status_code == 200:
+            print(f"ernichment API successfull")
             data = enrichment_api_response.json()
             data=data['person']
+            print(data)
             client = openai.OpenAI(api_key=OPENAI_API_KEY)
             response = client.chat.completions.create(
                 model="gpt-4",

@@ -549,9 +549,9 @@ def create_personalized_pdf(user_details, output_path, image_path):
     content.append(Spacer(1, 0.1 * inch))  # Reduced spacing
 
     greeting = Paragraph(f"Hi {name},", greeting_style)
-    print(f"user details: {user_details.keys()}")
+    print(f"user details: {user_details}")
     organization_short_description = user_details.get("organization_short_description")
-    # print(f"organization_short_description: {organization_short_description}")
+    print(f"organization_short_description: {organization_short_description}")
     if organization_short_description not in ["",None]:
         ice_breaker_content = ice_breaker_generator(organization_short_description)
         ice_breaker_message = Paragraph(ice_breaker_content, ice_breaker_style)
@@ -559,15 +559,6 @@ def create_personalized_pdf(user_details, output_path, image_path):
     #     message = Paragraph(f"Breakthrough sales growth starts here: A powerful 15-day blueprint to revolutionize your {job_title} strategy at {company} and drive exceptional results.", ice_breaker_style)
     message_text = "Breakthrough sales growth starts here!"
     message = Paragraph(message_text, ice_breaker_style)  # <- Wrap it properly
-    
-    img1 = Img(user_details.get('organization_logo'))
-    img1.drawWidth = 200  # Set image width
-    img1.drawHeight = 100  # Set image height
-   
-    # images=[img1,img2,img3,img4,img5,img6]
-    counter=1
-    image_index=0
-    content.append(img1)
     content.append(greeting)
     content.append(ice_breaker_message)
 
