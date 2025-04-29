@@ -4,10 +4,22 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, PageBreak, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.graphics.shapes import Drawing, Line
 from pyairtable import Api,Table as airtable_obj
+
+from reportlab.lib.pagesizes import letter 
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.platypus import Paragraph, Frame
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.enums import TA_CENTER
+
 import os
 import requests
 import ast
@@ -146,6 +158,7 @@ def ice_breaker_generator(company_short_description):
         Company description: "{company_short_description}"
 
         This icebreaker will be sent to the client to demonstrate that we have knowledge about their company. Please ensure it is crafted accordingly.
+        The output should be text-only, without any additional formatting, disclaimers, or explanations.
         """
 
         client = openai.OpenAI(api_key=OPENAI_API_KEY)
@@ -531,6 +544,122 @@ def create_personalized_pdf(user_details, output_path, image_path):
         drawing.add(line)
         return drawing
 
+    c = canvas.Canvas(output_path, pagesize=letter)
+    width, height = letter
+
+    # Top-left: Guideline logo
+    c.drawImage("https://taippa.com/wp-content/uploads/2025/03/guideline_ai_logo_new-1.jpeg", 40, height - 130, width=170, height=150, mask='auto')
+
+    # Top-right: Contact Info
+    c.setFont("Poppins", 16)
+    c.setFillColor(colors.HexColor('#081956'))
+    c.drawString(width - 160, height - 40, user_details.get("organization_name"))
+
+    c.setFont("Poppins", 10)
+    c.setFillColor(colors.HexColor('#0761fd'))
+    c.drawString(width - 160, height - 55, user_details.get("organization_website"))
+    c.setFillColor(colors.black)
+    c.drawString(width - 160, height - 70, user_details.get("email"))
+
+
+
+    # Center: MBC logo (above box if you wish)
+    # c.drawImage("https://taippa.com/wp-content/uploads/2025/03/guideline_ai_logo_new-1.jpeg", width / 2 - 50, height - 240, width=100, height=40, mask='auto')
+
+    # White rounded rectangle for description
+    box_x = 80
+    box_y = height - 520
+    box_width = width - 160
+    box_height = 400  # Increased to accommodate logo
+
+    c.setFillColor(colors.HexColor('#f6f4f1'))
+    c.roundRect(box_x, box_y, box_width, box_height, radius=10, fill=1, stroke=0)
+    print(f"\n\n----------First-------\n\n")
+    # Insert second logo inside box (e.g., left-aligned)
+    second_logo_url = "https://taippa.com/wp-content/uploads/2025/04/image-13.png"
+    second_logo_url = user_details.get('organization_logo')
+    logo_width = 180
+    logo_height = 120
+    logo_x_center = box_x + (box_width - logo_width) / 2
+    logo_y = box_y + box_height - logo_height - 10
+
+    c.drawImage(second_logo_url, logo_x_center, logo_y, width=logo_width, height=logo_height, mask='auto')
+
+    print(f"\n\n----------Second-------\n\n")
+    # Description Text
+    styles = getSampleStyleSheet()
+    desc_style = ParagraphStyle(
+        'desc',
+        parent=styles['Normal'],
+        fontName='Poppins',
+        fontSize=22,
+        leading=22,
+        alignment=4,
+        textColor=colors.HexColor("#0c1c59")
+    )
+    organization_short_description = user_details.get("organization_short_description")
+    # print(f"organization_short_description: {organization_short_description}")
+    if organization_short_description not in ["",None]:
+        ice_breaker_content = ice_breaker_generator(organization_short_description)
+        ice_breaker_message = Paragraph(ice_breaker_content, ice_breaker_style)
+    # else:
+    text = """
+    <b>MBC Group</b>, formerly known as Middle East Broadcasting Center, is a Saudi media conglomerate based in the Riyadh region.
+    Launched in London in 1991, the company moved its headquarters to Dubai in 2002 and to Riyadh in 2022.
+    It is majority owned by the Saudi government-operated Public Investment Fund.
+    """
+    text = ice_breaker_content
+    # Frame for text (adjusted below logo)
+    frame_margin_top = 150
+    frame = Frame(box_x + 10, box_y + 10, box_width - 20, box_height - frame_margin_top, showBoundary=0)
+    frame.addFromList([Paragraph(text, desc_style)], c)
+    print(f"\n\n----------third-------\n\n")
+    # Bottom image
+    c.drawImage("https://taippa.com/wp-content/uploads/2025/03/logo_guideline.png", width / 2 - 50, -10, width=150, height=80, mask='auto')
+
+    c.save()
+    return 
+    c = canvas.Canvas(output_path, pagesize=letter)
+    
+    # Title of the white paper
+    c.setFont("Helvetica-Bold", 20)
+    c.drawString(100, 750, "Title of the White Paper")
+
+    # Subtitle
+    c.setFont("Helvetica", 12)
+    c.setFillColor(colors.grey)
+    c.drawString(100, 730, "Subtitle or brief description of the white paper")
+
+    # Content header
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(100, 700, "Introduction")
+    
+    # Content
+    c.setFont("Helvetica", 12)
+    text = """This is a sample white paper document generated using ReportLab.
+    
+    You can use this template to generate your own content. The document can include 
+    various sections like introduction, methodology, findings, and conclusions.
+    
+    ReportLab allows you to create complex PDFs programmatically, making it a great 
+    tool for generating reports, invoices, or white papers."""
+    
+    c.drawString(100, 670, text.split("\n")[0])
+    y_position = 650
+    
+    for line in text.split("\n")[1:]:
+        c.drawString(100, y_position, line)
+        y_position -= 15
+    
+    # Footer
+    c.setFont("Helvetica-Oblique", 10)
+    c.setFillColor(colors.grey)
+    c.drawString(100, 50, "Generated by ReportLab - White Paper Document")
+    
+    # Save the PDF
+    c.save()
+    
+    return 
     content = []
 
     # Get user details
