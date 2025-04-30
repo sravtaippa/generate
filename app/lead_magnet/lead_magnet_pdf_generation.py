@@ -553,14 +553,14 @@ def create_personalized_pdf(user_details, output_path, image_path):
     
     c.setFont("Switzer", 16)
     c.setFillColor(colors.HexColor('#081956'))
-    c.drawString(width - 160, height - 40, user_details.get("organization_name"))
-    c.drawImage("https://taippa.com/wp-content/uploads/2025/04/globe.png", width - 160, height - 60, width=10, height=10, mask='auto')
+    c.drawString(width - 200, height - 40, user_details.get("organization_name"))
+    c.drawImage("https://taippa.com/wp-content/uploads/2025/04/globe.png", width - 200, height - 60, width=10, height=10, mask='auto')
     c.setFont("Poppins", 10)
     c.setFillColor(colors.HexColor('#0761fd'))
-    c.drawString(width - 145, height - 60, user_details.get("organization_website"))
+    c.drawString(width - 185, height - 60, user_details.get("organization_website"))
     c.setFillColor(colors.HexColor('#0761fd'))
-    c.drawImage("https://taippa.com/wp-content/uploads/2025/04/phone-call-1.png", width - 160, height - 80, width=10, height=10, mask='auto')
-    c.drawString(width - 145, height - 80, user_details.get("email"))
+    c.drawImage("https://taippa.com/wp-content/uploads/2025/04/phone-call-1.png", width - 200, height - 80, width=10, height=10, mask='auto')
+    c.drawString(width - 185, height - 80, user_details.get("email"))
 
     # # Top-right: Contact Info
     # c.setFont("Poppins", 16)
