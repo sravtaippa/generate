@@ -438,5 +438,5 @@ def lead_magnet_test():
         print(f"Error occured while testing lead magnet: {e}")
 
 if __name__ == '__main__':
-#   app.run(debug=True,use_reloader=False)
-  app.run(port=8000)
+  app.run(debug=True,use_reloader=False)
+#   app.run(port=8000)
