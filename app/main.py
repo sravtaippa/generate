@@ -24,13 +24,23 @@ from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TAB
 from dashboard.dashboard_updation import process_whatsapp_data
 from dashboard.client_onboarding_update_form import update_client_onboarding
 from dashboard.client_configuration_form import update_client_configuration
+from pipelines.organization_list_enrichment import fetch_organization_domains
+
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
 app = Flask(__name__)
 
-
+@app.route("/organization_list_enrichment", methods=["GET"])
+def organization_list_enrichment():
+    try:
+        print(f"Fetching organization list")
+        fetch_organization_domains(1)
+        print(f"Successfully fetched organization list")
+        return {"Status":"Successfully fetched organization list"}
+    except Exception as e:
+        print(f"Error occured while fetching organization list: {e}")
 
 @app.route("/guideline_data_sync", methods=["GET"])
 def sync_data_guideline():
