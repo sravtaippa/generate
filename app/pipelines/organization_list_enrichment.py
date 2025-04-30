@@ -2,6 +2,8 @@ import requests
 import ast
 import pandas as pd
 from db.db_utils import retrieve_column_value, update_column_value 
+from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
+
 
 def construct_query_param(key, values):
     res = "&".join([f"{key}[]={value.replace(' ', '%20').replace(',', '%2C')}" for value in values])
@@ -14,8 +16,8 @@ def fetch_organization_domains(page_number):
     organization_locations = ["Europe"]
     # organization_locations = ["UAE","Quatar","United Arab Emirates"]
     organization_not_locations = ["Australia","United States"]
-    keywords=["advertising","broadcast media","media production"]
-    keywords=["media buying","media planning","media strategy"]
+    # keywords=["advertising","broadcast media","media production"]
+    keywords=["media buying","media planning","media strategy","ad placement","broadcast media","tv advertising","radio advertising","advertising campaigns"]
     # keywords=["insurance","media","media and broadcasting","education","automotive","finance","telecom","internet services","retail","marketing","business services"]
     # employee_size = ["300,1000000"]
     min_revenue_range = 100000000
@@ -66,11 +68,12 @@ def fetch_organization_domains(page_number):
         'manager of price and yield optimization', 'product strategy manager', 
         'director of research and insights', 'ad sales finance manager'
         ]
-
+        icp_job_seniorities = ['owner', 'founder', 'c_suite', 'partner', 'vp', 'head', 'director', 'manager', 'senior']
         query_params = [
             construct_query_param("person_titles", icp_job_details),
             construct_query_param("contact_email_status", "verified"),
             construct_query_param("q_organization_domains_list", organization_domains_new),
+            construct_query_param("person_seniorities", icp_job_seniorities),
             "include_similar_titles=true",
             f"page={page_number}",
             f"per_page={records_required}"
@@ -83,7 +86,7 @@ def fetch_organization_domains(page_number):
             "accept": "application/json",
             "Cache-Control": "no-cache",
             "Content-Type": "application/json",
-            "x-api-key": "3DPjL0uAdul_TqcOssoBqg"
+            "x-api-key": APOLLO_API_KEY
         }
 
         response = requests.post(dynamic_url, headers=headers)

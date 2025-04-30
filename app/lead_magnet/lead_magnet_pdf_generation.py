@@ -53,6 +53,7 @@ FONTS_DIR = os.path.join(SCRIPT_DIR, 'fonts')
 pdfmetrics.registerFont(TTFont('Anton', os.path.join(FONTS_DIR, 'Anton-Regular.ttf')))
 pdfmetrics.registerFont(TTFont('Poppins', os.path.join(FONTS_DIR, 'Poppins-Regular.ttf')))
 pdfmetrics.registerFont(TTFont('PoppinsBold', os.path.join(FONTS_DIR, 'Poppins-Bold.ttf')))
+pdfmetrics.registerFont(TTFont('Switzer', os.path.join(FONTS_DIR, 'Switzer-Light.ttf')))
 
 from reportlab.platypus import Flowable
 from reportlab.lib import colors
@@ -167,7 +168,7 @@ def ice_breaker_generator(company_short_description):
                     messages=[
                     {
                     "role": "system",
-                    "content": "You are an expert ice breaker creator. Generate a short, engaging, and well-crafted icebreaker. The output should be text-only, without any additional formatting, disclaimers, or explanations."
+                    "content": "You are an expert ice breaker creator. Generate a short, engaging, and well-crafted icebreaker. The output should be text-only without quotes, without any additional formatting, disclaimers, or explanations."
                     },
                     {"role": "user", "content": prompt}
                     ],
@@ -549,28 +550,37 @@ def create_personalized_pdf(user_details, output_path, image_path):
 
     # Top-left: Guideline logo
     c.drawImage("https://taippa.com/wp-content/uploads/2025/03/guideline_ai_logo_new-1.jpeg", 40, height - 130, width=170, height=150, mask='auto')
-
-    # Top-right: Contact Info
-    c.setFont("Poppins", 16)
+    
+    c.setFont("Switzer", 16)
     c.setFillColor(colors.HexColor('#081956'))
     c.drawString(width - 160, height - 40, user_details.get("organization_name"))
-
+    c.drawImage("https://taippa.com/wp-content/uploads/2025/04/globe.png", width - 160, height - 60, width=10, height=10, mask='auto')
     c.setFont("Poppins", 10)
     c.setFillColor(colors.HexColor('#0761fd'))
-    c.drawString(width - 160, height - 55, user_details.get("organization_website"))
-    c.setFillColor(colors.black)
-    c.drawString(width - 160, height - 70, user_details.get("email"))
+    c.drawString(width - 145, height - 60, user_details.get("organization_website"))
+    c.setFillColor(colors.HexColor('#0761fd'))
+    c.drawImage("https://taippa.com/wp-content/uploads/2025/04/phone-call-1.png", width - 160, height - 80, width=10, height=10, mask='auto')
+    c.drawString(width - 145, height - 80, user_details.get("email"))
 
+    # # Top-right: Contact Info
+    # c.setFont("Poppins", 16)
+    # c.setFillColor(colors.HexColor('#081956'))
+    # c.drawString(width - 160, height - 40, user_details.get("organization_name"))
 
+    # c.setFont("Poppins", 10)
+    # c.setFillColor(colors.HexColor('#0761fd'))
+    # c.drawString(width - 160, height - 55, user_details.get("organization_website"))
+    # c.setFillColor(colors.black)
+    # c.drawString(width - 160, height - 70, user_details.get("email"))
 
     # Center: MBC logo (above box if you wish)
     # c.drawImage("https://taippa.com/wp-content/uploads/2025/03/guideline_ai_logo_new-1.jpeg", width / 2 - 50, height - 240, width=100, height=40, mask='auto')
 
     # White rounded rectangle for description
-    box_x = 80
-    box_y = height - 520
     box_width = width - 160
-    box_height = 400  # Increased to accommodate logo
+    box_height = 400  # Height remains the same
+    box_x = (width - box_width) / 2  # This centers the box horizontally
+    box_y = (height - box_height) / 2
 
     c.setFillColor(colors.HexColor('#f6f4f1'))
     c.roundRect(box_x, box_y, box_width, box_height, radius=10, fill=1, stroke=0)
