@@ -59,6 +59,73 @@ from reportlab.platypus import Flowable
 from reportlab.lib import colors
 from reportlab.lib.utils import simpleSplit
 
+import os
+import requests
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+
+
+AIRTABLE_TABLE_NAME = "outreach_guideline"
+
+# Google Drive scope
+SCOPES = ['https://www.googleapis.com/auth/drive.file']
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def upload_to_drive(file_path):
+    creds = None
+    if os.path.exists('token.json'):
+        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    else:
+        flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
+        creds = flow.run_local_server(port=0)
+        with open('token.json', 'w') as token:
+            token.write(creds.to_json())
+
+    service = build('drive', 'v3', credentials=creds)
+    file_metadata = {'name': os.path.basename(file_path)}
+    media = MediaFileUpload(file_path, mimetype='application/pdf')
+
+    uploaded_file = service.files().create(
+        body=file_metadata,
+        media_body=media,
+        fields='id'
+    ).execute()
+
+    file_id = uploaded_file.get('id')
+
+    service.permissions().create(
+        fileId=file_id,
+        body={'role': 'reader', 'type': 'anyone'},
+    ).execute()
+
+    return f"https://drive.google.com/uc?id={file_id}&export=download"
+
+def find_airtable_record_by_linkedin(linkedin_url):
+    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE_NAME}"
+    headers = {"Authorization": f"Bearer {AIRTABLE_API_KEY}"}
+    params = {"filterByFormula": f"{{linkedin_url}}='{linkedin_url}'"}
+
+    response = requests.get(url, headers=headers, params=params)
+    data = response.json()
+    records = data.get('records', [])
+    return records[0]['id'] if records else None
+
+def update_airtable_pdf(record_id, file_url):
+    url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE_NAME}/{record_id}"
+    headers = {
+        "Authorization": f"Bearer {AIRTABLE_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "fields": {
+            "lead_magnet_pdf": [{"url": file_url}]
+        }
+    }
+    return requests.patch(url, headers=headers, json=data).json()
+
 class CheckboxItem(Flowable):
     """
     Custom Flowable to create a checkbox with text and appropriate spacing.
@@ -860,39 +927,151 @@ def get_image_path():
     except Exception as e:
         print(f"Error occured at {__name__} while retrieving the images")
 
-def generate_lead_magnet_pdf(email,linkedin_url):
+# def generate_lead_magnet_pdf(email,linkedin_url):
+#     try:
+#         user_details = collect_information(linkedin_url)
+#         print(f" User details: {user_details}")
+#         if user_details is None:
+#             return "No user details found"
+#         # print(user_details)
+#         print(f" Directory path for pdf: {os.path.dirname(os.path.abspath(__file__))}")
+#         output_path = os.path.join(SCRIPT_DIR,"pdf/lead_magnet_personalized.pdf")
+#         first_pager = os.path.join(SCRIPT_DIR,"pdf/first_page.pdf")
+#         last_pager = os.path.join(SCRIPT_DIR,"pdf/last_page.pdf")
+#         company_name = user_details.get('organization_name','your company')
+#         final_pdf = os.path.join(SCRIPT_DIR,f"pdf/15-day Sales Booster for {company_name}.pdf")
+#         # image_path = get_image_path()
+#         # print(f"Image path: {image_path}")
+#         create_personalized_pdf(user_details,output_path)
+#         # print("Successfully created lead magnet pdf")
+#         # embed_existing_pdf(output_path, first_pager, last_pager,final_pdf)
+#         # print("Sending lead magnet email..")
+#         # email_status = send_lead_magnet_email(email,user_details,final_pdf)
+#         # print("Successfully sent lead magnet email")
+#         # print(email_status)
+#         # return {"Status":email_status}
+        
+
+#         return {"Status":"Successfully created lead magnet pdf"}
+#     except Exception as e:
+#         print(f"Exception occured at {__name__} while generating the lead magnet pdf : {e}")
+#         return "Oops! It seems our server is a bit busy right now. Please try again shortly."
+import os
+import pickle
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+
+# Google Drive API scopes
+SCOPES = ['https://www.googleapis.com/auth/drive.file']
+
+def get_authenticated_drive_service():
+    creds = None
+    token_path = 'token.pickle'
+
+    # Load saved credentials
+    if os.path.exists(token_path):
+        with open(token_path, 'rb') as token:
+            creds = pickle.load(token)
+
+    # If no valid credentials, let user log in
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
+            creds = flow.run_local_server(port=0)
+
+        # Save credentials for next time
+        with open(token_path, 'wb') as token:
+            pickle.dump(creds, token)
+
+    # Build Drive API client
+    return build('drive', 'v3', credentials=creds)
+
+def generate_lead_magnet_pdf(email, linkedin_url):
     try:
         user_details = collect_information(linkedin_url)
-        print(f" User details: {user_details}")
         if user_details is None:
             return "No user details found"
-        # print(user_details)
-        print(f" Directory path for pdf: {os.path.dirname(os.path.abspath(__file__))}")
-        output_path = os.path.join(SCRIPT_DIR,"pdf/lead_magnet_personalized.pdf")
-        first_pager = os.path.join(SCRIPT_DIR,"pdf/first_page.pdf")
-        last_pager = os.path.join(SCRIPT_DIR,"pdf/last_page.pdf")
-        company_name = user_details.get('organization_name','your company')
-        final_pdf = os.path.join(SCRIPT_DIR,f"pdf/15-day Sales Booster for {company_name}.pdf")
-        # image_path = get_image_path()
-        # print(f"Image path: {image_path}")
-        create_personalized_pdf(user_details,output_path)
-        # print("Successfully created lead magnet pdf")
-        # embed_existing_pdf(output_path, first_pager, last_pager,final_pdf)
-        # print("Sending lead magnet email..")
-        # email_status = send_lead_magnet_email(email,user_details,final_pdf)
-        # print("Successfully sent lead magnet email")
-        # print(email_status)
-        # return {"Status":email_status}
-        return {"Status":"Successfully created lead magnet pdf"}
+
+        print(f"User details: {user_details}")
+
+        output_path = os.path.join(SCRIPT_DIR, "pdf/lead_magnet_personalized.pdf")
+        create_personalized_pdf(user_details, output_path)
+
+        # 1. Upload to Google Drive
+        drive_service = get_authenticated_drive_service()
+        file_metadata = {"name": f"Lead Magnet - {linkedin_url}.pdf"}
+        media = MediaFileUpload(output_path, mimetype="application/pdf")
+        uploaded_file = drive_service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields="id"
+        ).execute()
+        file_id = uploaded_file.get("id")
+
+        # 2. Make file public
+        drive_service.permissions().create(
+            fileId=file_id,
+            body={"role": "reader", "type": "anyone"},
+        ).execute()
+
+        # 3. Generate direct download URL
+        drive_url = f"https://drive.google.com/uc?id={file_id}&export=download"
+        print(f"Drive URL: {drive_url}")
+
+        # 4. Update Airtable
+        airtable_update_url = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/outreach_guideline"
+        headers = {
+            "Authorization": f"Bearer {AIRTABLE_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        # print("Querying Airtable with:")
+        # print(json.dumps({
+        #     "filterByFormula": f"{{linkedin_url}} = {json.dumps(linkedin_url)}"
+        # }, indent=2))
+
+        # First: find the record by linkedin_url
+        find_response = requests.get(
+            airtable_update_url,
+            headers=headers,
+            params={
+                "filterByFormula": f"FIND({json.dumps(linkedin_url)}, {{linkedin_profile_url}})"
+                
+            },
+        )
+        records = find_response.json().get("records", [])
+        if not records:
+            print("No matching record found in Airtable.")
+            return "No matching Airtable record"
+
+        record_id = records[0]["id"]
+
+        # Then: patch the record
+        update_payload = {
+            "fields": {
+                "lead_magnet_pdf": [{"url": drive_url}]
+            }
+        }
+        update_response = requests.patch(
+            f"{airtable_update_url}/{record_id}",
+            headers=headers,
+            data=json.dumps(update_payload),
+        )
+        print(f"Airtable update response: {update_response.text}")
+
+        return {"Status": "PDF created and uploaded to Airtable"}
+
     except Exception as e:
-        print(f"Exception occured at {__name__} while generating the lead magnet pdf : {e}")
-        return "Oops! It seems our server is a bit busy right now. Please try again shortly."
+        print(f"Exception occurred while generating the lead magnet PDF: {e}")
+        return "Server error. Please try again later."
 
 def test_run():
     try:
         output_pdf = "lead_magnet_personalized.pdf"
         user_id = "sravan.workemail@gmail.com"
-        linkedin_url = "https://www.linkedin.com/in/michelmalkoun/"
+        linkedin_url = "http://www.linkedin.com/in/akshay-patil-digital"
         generate_lead_magnet_pdf(user_id,linkedin_url)
         return {"Status":"Successfully created lead magnet pdf"}
     except Exception as e:
