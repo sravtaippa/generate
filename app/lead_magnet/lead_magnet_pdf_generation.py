@@ -601,7 +601,7 @@ def create_personalized_pdf(user_details, output_path, image_path):
     desc_style = ParagraphStyle(
         'desc',
         parent=styles['Normal'],
-        fontName='Poppins',
+        fontName='Switzer',
         fontSize=22,
         leading=22,
         alignment=4,
