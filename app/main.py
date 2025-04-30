@@ -432,11 +432,14 @@ def run_pipeline_check():
 @app.route("/lead_magnet_test")
 def lead_magnet_test():
     try:
+        linkedin_url = "https://www.linkedin.com/in/michelmalkoun/"
+        user_id = "sravan.workemail@gmail.com"
         print(f"Testing lead magnet")
+        generate_lead_magnet_pdf(user_id,linkedin_url)
         return test_run()
     except Exception as e:
         print(f"Error occured while testing lead magnet: {e}")
 
 if __name__ == '__main__':
-#   app.run(debug=True,use_reloader=False)
-  app.run(port=8000)
+  app.run(debug=True,use_reloader=False)
+#   app.run(port=8000)
