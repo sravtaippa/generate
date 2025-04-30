@@ -1071,7 +1071,7 @@ def test_run():
     try:
         output_pdf = "lead_magnet_personalized.pdf"
         user_id = "sravan.workemail@gmail.com"
-        linkedin_url = "http://www.linkedin.com/in/akshay-patil-digital"
+        linkedin_url = "http://www.linkedin.com/in/cindy-cappia-aaa64895"
         generate_lead_magnet_pdf(user_id,linkedin_url)
         return {"Status":"Successfully created lead magnet pdf"}
     except Exception as e:

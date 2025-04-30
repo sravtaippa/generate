@@ -432,7 +432,7 @@ def run_pipeline_check():
 @app.route("/lead_magnet_test")
 def lead_magnet_test():
     try:
-        linkedin_url = "http://www.linkedin.com/in/akshay-patil-digital"
+        linkedin_url = "http://www.linkedin.com/in/cindy-cappia-aaa64895"
         user_id = "sravan.workemail@gmail.com"
         print(f"Testing lead magnet")
         generate_lead_magnet_pdf(user_id,linkedin_url)
