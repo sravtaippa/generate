@@ -351,7 +351,7 @@ def content_formatting_json(content):
     return result
 
 
-def create_personalized_pdf(user_details, output_path, image_path):
+def create_personalized_pdf(user_details, output_path):
 
     styles = getSampleStyleSheet()
 
@@ -602,7 +602,7 @@ def create_personalized_pdf(user_details, output_path, image_path):
         'desc',
         parent=styles['Normal'],
         fontName='Switzer',
-        fontSize=22,
+        fontSize=18,
         leading=22,
         alignment=4,
         textColor=colors.HexColor("#0c1c59")
@@ -625,7 +625,7 @@ def create_personalized_pdf(user_details, output_path, image_path):
     frame.addFromList([Paragraph(text, desc_style)], c)
     print(f"\n\n----------third-------\n\n")
     # Bottom image
-    c.drawImage("https://taippa.com/wp-content/uploads/2025/03/logo_guideline.png", width / 2 - 50, -10, width=150, height=80, mask='auto')
+    c.drawImage("https://taippa.com/wp-content/uploads/2025/03/logo_guideline.png", width / 2 - 50, -10, width=150, height=120, mask='auto')
 
     c.save()
     return 
@@ -866,16 +866,16 @@ def generate_lead_magnet_pdf(email,linkedin_url):
         print(f" User details: {user_details}")
         if user_details is None:
             return "No user details found"
-        print(user_details)
+        # print(user_details)
         print(f" Directory path for pdf: {os.path.dirname(os.path.abspath(__file__))}")
         output_path = os.path.join(SCRIPT_DIR,"pdf/lead_magnet_personalized.pdf")
         first_pager = os.path.join(SCRIPT_DIR,"pdf/first_page.pdf")
         last_pager = os.path.join(SCRIPT_DIR,"pdf/last_page.pdf")
         company_name = user_details.get('organization_name','your company')
         final_pdf = os.path.join(SCRIPT_DIR,f"pdf/15-day Sales Booster for {company_name}.pdf")
-        image_path = get_image_path()
-        print(f"Image path: {image_path}")
-        create_personalized_pdf(user_details,output_path, image_path)
+        # image_path = get_image_path()
+        # print(f"Image path: {image_path}")
+        create_personalized_pdf(user_details,output_path)
         # print("Successfully created lead magnet pdf")
         # embed_existing_pdf(output_path, first_pager, last_pager,final_pdf)
         # print("Sending lead magnet email..")
