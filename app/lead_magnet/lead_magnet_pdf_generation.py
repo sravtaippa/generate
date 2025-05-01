@@ -36,8 +36,6 @@ from lead_magnet.email_module import send_lead_magnet_email
 
 from reportlab.lib.enums import TA_CENTER
 
-# Lead magnet 
-
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY")
 AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
@@ -976,20 +974,20 @@ def get_authenticated_drive_service():
         with open(token_path, 'rb') as token:
             creds = pickle.load(token)
 
-    # If no valid credentials, let user log in
+    # If no valid credentials, raise error (PythonAnywhere has no GUI)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
+            print("No valid credentials found and cannot run local server on PythonAnywhere.")
+            raise Exception("Token missing. Please generate 'token.pickle' locally and upload to PythonAnywhere.")
 
         # Save credentials for next time
         with open(token_path, 'wb') as token:
             pickle.dump(creds, token)
 
-    # Build Drive API client
     return build('drive', 'v3', credentials=creds)
+
 
 def generate_lead_magnet_pdf(email, linkedin_url):
     try:
@@ -1053,14 +1051,16 @@ def generate_lead_magnet_pdf(email, linkedin_url):
         # Then: patch the record
         update_payload = {
             "fields": {
-                "lead_magnet_pdf": [{"url": drive_url}]
+                "lead_magnet_pdf": drive_url
             }
         }
+
         update_response = requests.patch(
             f"{airtable_update_url}/{record_id}",
             headers=headers,
-            data=json.dumps(update_payload),
+            json=update_payload,  # send as JSON
         )
+
         print(f"Airtable update response: {update_response.text}")
 
         return {"Status": "PDF created and uploaded to Airtable"}
@@ -1073,7 +1073,7 @@ def test_run():
     try:
         output_pdf = "lead_magnet_personalized.pdf"
         user_id = "sravan.workemail@gmail.com"
-        linkedin_url = "http://www.linkedin.com/in/cindy-cappia-aaa64895"
+        linkedin_url = "http://www.linkedin.com/in/esther-tabet-73939927"
         generate_lead_magnet_pdf(user_id,linkedin_url)
         return {"Status":"Successfully created lead magnet pdf"}
     except Exception as e:
