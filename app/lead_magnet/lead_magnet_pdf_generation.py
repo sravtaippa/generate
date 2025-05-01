@@ -221,26 +221,36 @@ def ice_breaker_generator(company_short_description):
         - Acknowledge the company's industry, expertise, or key achievements if available.  
         - Be warm, natural, and professional.  
         - Show that we understand the company and its value.  
-        - Be brief (1-2 sentences) and relevant for initiating a conversation.  
-        - Don't ask any questions
+        - Be brief (1-2 sentences) which can be used as an icebreaker for the first page of a lead magnet personalized PDF that would be sent to the client.  
+        - Don't ask any questions.
 
         Company description: "{company_short_description}"
 
-        This icebreaker will be sent to the client to demonstrate that we have knowledge about their company. Please ensure it is crafted accordingly.
-        The output should be text-only, without any additional formatting, disclaimers, or explanations.
+        This icebreaker will be sent to the client to demonstrate that we have knowledge about their company. 
+        Please ensure it is crafted accordingly.
+
+        The output should be text-only, without any additional formatting, disclaimers, or explanations. 
         The output should not exceed 300 characters strictly.
         """
 
         client = openai.OpenAI(api_key=OPENAI_API_KEY)
+
         response = client.chat.completions.create(
-                    model="gpt-4",
-                    messages=[
-                    {
+            model="gpt-4",
+            messages=[
+                {
                     "role": "system",
-                    "content": "You are an expert ice breaker creator. Generate a short, engaging, and well-crafted icebreaker. The output should be text-only without quotes and shouldn't exceed 300 characters strictly, without any additional formatting, disclaimers, or explanations."
-                    },
-                    {"role": "user", "content": prompt}
-                    ],
+                    "content": (
+                        "You are an expert ice breaker creator. Generate a short, engaging, and well-crafted icebreaker. "
+                        "The output should be text-only without quotes and shouldn't exceed 300 characters strictly, "
+                        "without any additional formatting, disclaimers, or explanations."
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
         )
 
         result = response.choices[0].message.content.strip()
