@@ -988,6 +988,25 @@ def get_authenticated_drive_service():
 
     return build('drive', 'v3', credentials=creds)
 
+from pypdf import PdfReader, PdfWriter
+
+def merge_pdfs_with_appendix(main_pdf_path, appendix_pdf_path, output_pdf_path):
+    writer = PdfWriter()
+
+    # Read the main personalized PDF
+    main_pdf = PdfReader(main_pdf_path)
+    for page in main_pdf.pages:
+        writer.add_page(page)
+
+    # Read the appendix PDF to be added from page 2
+    appendix_pdf = PdfReader(appendix_pdf_path)
+    for page in appendix_pdf.pages:
+        writer.add_page(page)
+
+    # Write the combined PDF
+    with open(output_pdf_path, 'wb') as f_out:
+        writer.write(f_out)
+
 
 def generate_lead_magnet_pdf(email, linkedin_url):
     try:
@@ -999,6 +1018,15 @@ def generate_lead_magnet_pdf(email, linkedin_url):
 
         output_path = os.path.join(SCRIPT_DIR, "pdf/lead_magnet_personalized.pdf")
         create_personalized_pdf(user_details, output_path)
+        # Path to appendix PDF
+        appendix_pdf_path = os.path.join(SCRIPT_DIR, "pdf/main_content.pdf")
+        merged_pdf_path = os.path.join(SCRIPT_DIR, "pdf/lead_magnet_merged.pdf")
+
+        # Merge personalized PDF with appendix starting from second page
+        merge_pdfs_with_appendix(output_path, appendix_pdf_path, merged_pdf_path)
+
+        # Use merged PDF as final output
+        output_path = merged_pdf_path
 
         # 1. Upload to Google Drive
         drive_service = get_authenticated_drive_service()
@@ -1073,7 +1101,7 @@ def test_run():
     try:
         output_pdf = "lead_magnet_personalized.pdf"
         user_id = "sravan.workemail@gmail.com"
-        linkedin_url = "http://www.linkedin.com/in/georgieva-maria"
+        linkedin_url = "http://www.linkedin.com/in/galeapatricia"
         generate_lead_magnet_pdf(user_id,linkedin_url)
         return {"Status":"Successfully created lead magnet pdf"}
     except Exception as e:
