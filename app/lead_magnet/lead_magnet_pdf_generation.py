@@ -36,6 +36,8 @@ from lead_magnet.email_module import send_lead_magnet_email
 
 from reportlab.lib.enums import TA_CENTER
 
+# Lead magnet 
+
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY")
 AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
