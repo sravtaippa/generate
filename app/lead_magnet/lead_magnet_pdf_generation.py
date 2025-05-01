@@ -49,6 +49,7 @@ print(f"Client info table for Lead Magnet : {CLIENT_INFO_TABLE_NAME}")
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # Path to fonts directory
 FONTS_DIR = os.path.join(SCRIPT_DIR, 'fonts')
+PICKLE_DIR = os.path.join(SCRIPT_DIR, 'files')
 
 pdfmetrics.registerFont(TTFont('Anton', os.path.join(FONTS_DIR, 'Anton-Regular.ttf')))
 pdfmetrics.registerFont(TTFont('Poppins', os.path.join(FONTS_DIR, 'Poppins-Regular.ttf')))
@@ -227,6 +228,7 @@ def ice_breaker_generator(company_short_description):
 
         This icebreaker will be sent to the client to demonstrate that we have knowledge about their company. Please ensure it is crafted accordingly.
         The output should be text-only, without any additional formatting, disclaimers, or explanations.
+        The output should not exceed 300 characters strictly.
         """
 
         client = openai.OpenAI(api_key=OPENAI_API_KEY)
@@ -235,7 +237,7 @@ def ice_breaker_generator(company_short_description):
                     messages=[
                     {
                     "role": "system",
-                    "content": "You are an expert ice breaker creator. Generate a short, engaging, and well-crafted icebreaker. The output should be text-only without quotes, without any additional formatting, disclaimers, or explanations."
+                    "content": "You are an expert ice breaker creator. Generate a short, engaging, and well-crafted icebreaker. The output should be text-only without quotes and shouldn't exceed 300 characters strictly, without any additional formatting, disclaimers, or explanations."
                     },
                     {"role": "user", "content": prompt}
                     ],
@@ -651,18 +653,18 @@ def create_personalized_pdf(user_details, output_path):
 
     c.setFillColor(colors.HexColor('#f6f4f1'))
     c.roundRect(box_x, box_y, box_width, box_height, radius=10, fill=1, stroke=0)
-    print(f"\n\n----------First-------\n\n")
+    print(f"\n\n--------- Adding Company logo -------\n\n")
     # Insert second logo inside box (e.g., left-aligned)
     second_logo_url = "https://taippa.com/wp-content/uploads/2025/04/image-13.png"
     second_logo_url = user_details.get('organization_logo')
-    logo_width = 180
+    logo_width = 120
     logo_height = 120
     logo_x_center = box_x + (box_width - logo_width) / 2
     logo_y = box_y + box_height - logo_height - 10
 
     c.drawImage(second_logo_url, logo_x_center, logo_y, width=logo_width, height=logo_height, mask='auto')
 
-    print(f"\n\n----------Second-------\n\n")
+    print(f"\n\n----------Adding icebreaker-------\n\n")
     # Description Text
     styles = getSampleStyleSheet()
     desc_style = ParagraphStyle(
@@ -679,6 +681,7 @@ def create_personalized_pdf(user_details, output_path):
     if organization_short_description not in ["",None]:
         ice_breaker_content = ice_breaker_generator(organization_short_description)
         ice_breaker_message = Paragraph(ice_breaker_content, ice_breaker_style)
+    
     # else:
     text = """
     <b>MBC Group</b>, formerly known as Middle East Broadcasting Center, is a Saudi media conglomerate based in the Riyadh region.
@@ -690,7 +693,7 @@ def create_personalized_pdf(user_details, output_path):
     frame_margin_top = 150
     frame = Frame(box_x + 10, box_y + 10, box_width - 20, box_height - frame_margin_top, showBoundary=0)
     frame.addFromList([Paragraph(text, desc_style)], c)
-    print(f"\n\n----------third-------\n\n")
+    print(f"\n\n-------- Adding Guideline Logo -------\n\n")
     # Bottom image
     c.drawImage("https://taippa.com/wp-content/uploads/2025/03/logo_guideline.png", width / 2 - 50, -10, width=150, height=120, mask='auto')
 
@@ -967,7 +970,7 @@ SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 def get_authenticated_drive_service():
     creds = None
-    token_path = 'token.pickle'
+    token_path = os.path.join(PICKLE_DIR,'token.pickle')
 
     # Load saved credentials
     if os.path.exists(token_path):

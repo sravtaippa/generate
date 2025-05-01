@@ -429,10 +429,12 @@ def run_pipeline_check():
     except Exception as e:
         return {"Status":f"Oops something wrong happened!: {e}"}
 
-@app.route("/lead_magnet_test")
-def lead_magnet_test():
+@app.route("/lead_magnet_generate")
+def lead_magnet_generate():
     try:
-        linkedin_url = "http://www.linkedin.com/in/galeapatricia"
+        # linkedin_url = "http://www.linkedin.com/in/galeapatricia"
+        # linkedin_url = "http://www.linkedin.com/in/akshay-patil-digital"
+        linkedin_url = request.args.get('linkedin_url', type=str)
         user_id = "sravan.workemail@gmail.com"
         print(f"Testing lead magnet")
         generate_lead_magnet_pdf(user_id,linkedin_url)
