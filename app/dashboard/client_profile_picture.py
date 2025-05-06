@@ -7,11 +7,11 @@ app = Flask(__name__)
 def get_profile_picture(username):
     try:
         conn = psycopg2.connect(
-            host="localhost",
-            port="5432",
             dbname="taippa",
             user="super",
-            password="drowsapp_2025"
+            password="drowsapp_2025",
+            host="magmostafa-4523.postgres.pythonanywhere-services.com",
+            port="14523"
         )
         cur = conn.cursor()
         cur.execute(
