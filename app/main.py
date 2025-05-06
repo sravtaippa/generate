@@ -446,8 +446,8 @@ def lead_magnet_generate():
 #dashboard 
 
 @app.route("/get_profile_picture_dashboard/<username>", methods=["GET"])
-def get_profile_picture_dashboard(username):
-    # username = request.args.get('username', type=str)
+def get_profile_picture_dashboard():
+    username = request.args.get('username', type=str)
     return  get_profile_picture(username)
 
 if __name__ == '__main__':
