@@ -154,14 +154,14 @@ def sanitize_data(client_id, data_dict):
         client_config_table = Airtable(BASE_ID_NEW, 'client_config', API_KEY_NEW)
         associated_client_id = data_dict.get("associated_client_id")
 
-        target_region = None
-        if associated_client_id:
-            matching_records = client_config_table.search("client_id", associated_client_id)
-            if matching_records:
-                target_region = matching_records[0].get("fields", {}).get("target_region", None)
+        # target_region = None
+        # if associated_client_id:
+        #     matching_records = client_config_table.search("client_id", associated_client_id)
+        #     if matching_records:
+        #         target_region = matching_records[0].get("fields", {}).get("target_region", None)
 
-        if target_region:
-            filtered_df["target_region"] = target_region
+        # if target_region:
+        #     filtered_df["target_region"] = target_region
 
 
 

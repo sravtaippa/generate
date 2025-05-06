@@ -638,7 +638,7 @@ def create_personalized_pdf(user_details, output_path):
     c.setFillColor(colors.HexColor('#0761fd'))
     c.drawString(width - 185, height - 60, user_details.get("organization_website"))
     c.setFillColor(colors.HexColor('#0761fd'))
-    c.drawImage("https://taippa.com/wp-content/uploads/2025/04/phone-call-1.png", width - 200, height - 80, width=10, height=10, mask='auto')
+    c.drawImage("https://taippa.com/wp-content/uploads/2025/05/email.jpeg", width - 200, height - 80, width=8, height=8, mask='auto')
     c.drawString(width - 185, height - 80, user_details.get("email"))
 
     # # Top-right: Contact Info
