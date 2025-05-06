@@ -3,7 +3,7 @@ import psycopg2
 
 app = Flask(__name__)
 
-@app.route("/get-profile-picture/<username>")
+
 def get_profile_picture(username):
     conn = psycopg2.connect(
         host="localhost",
