@@ -150,18 +150,7 @@ def sanitize_data(client_id, data_dict):
         df = df.drop_duplicates(subset=['apollo_id', 'email'])
         df = df[~((df['email'].str.lower() == "unknown") | (df['linkedin_url'].str.lower() == "unknown"))]
         filtered_df = df[~((df['email'].str.lower() == "unknown") | (df['linkedin_url'].str.lower() == "unknown"))]
-        # Step 1: Fetch target_region from client_config table
-        # client_config_table = Airtable(BASE_ID_NEW, 'client_config', API_KEY_NEW)
-        # associated_client_id = data_dict.get("associated_client_id")
-
-        # target_region = None
-        # if associated_client_id:
-        #     matching_records = client_config_table.search("client_id", associated_client_id)
-        #     if matching_records:
-        #         target_region = matching_records[0].get("fields", {}).get("target_region", None)
-
-        # if target_region:
-        #     filtered_df["target_region"] = target_region
+        
 
 
 
