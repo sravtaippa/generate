@@ -24,6 +24,7 @@ from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TAB
 from dashboard.dashboard_updation import process_whatsapp_data
 from dashboard.client_onboarding_update_form import update_client_onboarding
 from dashboard.client_configuration_form import update_client_configuration
+from dashboard.client_profile_picture import get_profile_picture
 from pipelines.organization_list_enrichment import fetch_organization_domains
 
 print(f"\n =============== Generate : Pipeline started  ===============")
@@ -441,6 +442,12 @@ def lead_magnet_generate():
         return test_run()
     except Exception as e:
         print(f"Error occured while testing lead magnet: {e}")
+
+#dashboard 
+
+@app.route("/get_profile_picture_dashboard/<username>", methods=["GET"])
+def get_profile_picture_dashboard():
+    return  get_profile_picture()
 
 if __name__ == '__main__':
   app.run(debug=True,use_reloader=False)
