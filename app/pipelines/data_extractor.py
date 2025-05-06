@@ -45,6 +45,22 @@ def people_enrichment_linkedin(linkedin_url):
     except Exception as e:
         execute_error_block(f"Error occured in {__name__} for the data enrichment layer. {e}")
 
+def segregate_region(region):
+    try:
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are an expert in geography. Respond only with one of the following tags: europe, asia, north_america, south_america, australia, or other."},
+                {"role": "user", "content": f"Classify the region '{region}' into one of the following: europe, asia, north_america, australia, or other. Respond with only the tag."}
+            ],
+            temperature=0,
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        print(f"Error occured while segregating region: {e}")
+        return "other"
+
 def people_search_v2(search_url,client_id,qualify_leads,index_name):
   try:
     print(f"\n---------- Started Persona Data Mining for client : {client_id} ----------")
@@ -87,6 +103,7 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
                 )
                 # employment_summary = response['choices'][0]['message']['content']
                 employment_summary = response.choices[0].message.content
+                target_region = segregate_region(data.get('organization').get('country') if data.get('organization') else '')
                 timestamp = datetime.now()
                 data_dict = {
                     'apollo_id': data.get('id'),
@@ -124,6 +141,7 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
                     'organization_technology_names': str(data.get('organization').get('technology_names')) if data.get('organization') else '',
                     'created_time':str(timestamp),
                     'filter_criteria':"generic",
+                    'target_region': target_region,
                 }
                 if qualify_leads=='yes':
                     qualification_status = qualify_lead(apollo_id,data_dict,index_name)
