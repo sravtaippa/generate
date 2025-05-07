@@ -52,7 +52,7 @@ def segregate_region(region):
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are an expert in geography. Respond only with one of the following tags: europe, asia, north_america, south_america, australia, or other."},
-                {"role": "user", "content": f"Classify the region '{region}' into one of the following: europe, asia, north_america, australia, or other. Respond with only the tag."}
+                {"role": "user", "content": f"Classify the region '{region}' into one of the following: europe, middle_east, asia, africa, north_america, australia, or other. Respond with only the tag."}
             ],
             temperature=0,
         )
