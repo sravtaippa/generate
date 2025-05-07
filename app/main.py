@@ -12,6 +12,7 @@ from pipelines.data_extractor import people_enrichment,test_run_pipeline,run_dem
 from pipelines.guideline_data_sync import parse_contacts,influencer_marketing
 from db.table_creation import create_client_tables
 from pipelines.icp_generation import generate_icp,generate_apollo_url
+from db.db_ops import test
 from db.db_utils import fetch_client_details,export_to_airtable,unique_key_check_airtable,parse_people_info,add_client_tables_info,add_apollo_webhook_info,fetch_latest_created_time,fetch_record_count_after_time,phone_number_updation
 from error_logger import execute_error_block
 from lead_magnet.lead_magnet_pdf_generation import generate_lead_magnet_pdf,test_run
@@ -36,9 +37,9 @@ app = Flask(__name__)
 @app.route("/organization_list_enrichment", methods=["GET"])
 def organization_list_enrichment():
     try:
-        print(f"Fetching organization list")
-        fetch_organization_domains(1)
-        print(f"Successfully fetched organization list")
+        # print(f"Fetching organization list")
+        # fetch_organization_domains(1)
+        # print(f"Successfully fetched organization list")
         return {"Status":"Successfully fetched organization list"}
     except Exception as e:
         print(f"Error occured while fetching organization list: {e}")
@@ -449,6 +450,15 @@ def lead_magnet_generate():
 def get_profile_picture_dashboard(username):
     # username = request.args.get('username', type=str)
     return  get_profile_picture(username)
+
+@app.route("/test_db",methods=["GET"])
+def connect_db():
+    try:
+        test()
+        return {"Status":"Testing completed"}
+    except Exception as e:
+        print(f"Error occured while testing connection")
+
 
 if __name__ == '__main__':
   app.run(debug=True,use_reloader=False)
