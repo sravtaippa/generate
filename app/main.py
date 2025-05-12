@@ -7,7 +7,7 @@ from urllib.parse import unquote
 import time
 
 # from pipelines.data_sanitization import fetch_and_update_data, update_email_opens, test_sanitize
-# from pipelines.data_sanitization import update_email_opens, test_sanitize
+# from pipelines.data_sanitization import update_email_opens
 from pipelines.data_extractor import people_enrichment,test_run_pipeline,run_demo_pipeline
 from pipelines.guideline_data_sync import parse_contacts,influencer_marketing
 from db.table_creation import create_client_tables
@@ -263,13 +263,13 @@ def generate_lead_magnet():
     except Exception as e:
         execute_error_block(f"Error occured while generating lead magnet {e}")
 
-@app.route("/update-email-opens", methods=["GET"])
-def update_email_opens_clicked():
-    try:
-        response = update_email_opens()
-        return response
-    except Exception as e:
-        execute_error_block(f"Error occured while counting email opened and email clicked {e}")
+# @app.route("/update-email-opens", methods=["GET"])
+# def update_email_opens_clicked():
+#     try:
+#         response = update_email_opens()
+#         return response
+#     except Exception as e:
+#         execute_error_block(f"Error occured while counting email opened and email clicked {e}")
 # # test datasanitization
 # @app.route("/test_sanitize_new", methods=["GET"])
 # def test_sanitize_new():
