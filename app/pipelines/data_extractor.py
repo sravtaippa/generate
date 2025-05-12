@@ -6,6 +6,7 @@ from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_
 from pipelines.lead_qualifier import qualify_lead
 from pipelines.data_sanitization import sanitize_data
 from error_logger import execute_error_block
+from db.db_ops import db_manager
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
 # from lead_magnet.industry_insights import get_cold_email_kpis
 
@@ -82,8 +83,11 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
             iteration += 1
             apollo_id = contact['id']    
             print(f"------------Data ingestion started for record id :{apollo_id}, for client_id :{client_id} ------------")
-            raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
-            record_exists = unique_key_check_airtable('apollo_id',apollo_id,raw_table)   
+            # raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
+            info_details = db_manager.get_record(CLIENT_INFO_TABLE_NAME,"client_id",client_id)
+            raw_table,cleaned_table,outreach_table = info_details.get('raw_table'),info_details.get('cleaned_table'),info_details.get('outreach_table')
+            # record_exists = unique_key_check_airtable('apollo_id',apollo_id,raw_table)   
+            record_exists = db_manager.unique_key_check('apollo_id', apollo_id, raw_table)
             if record_exists:
                 print(f'Record with the following id: {apollo_id} already exists. Skipping the entry...')
                 continue   
@@ -101,7 +105,6 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
                     {"role": "user", "content": f"Please shorten this description: {data['employment_history']}"}
                 ],
                 )
-                # employment_summary = response['choices'][0]['message']['content']
                 employment_summary = response.choices[0].message.content
                 target_region = segregate_region(data.get('organization').get('country') if data.get('organization') else '')
                 timestamp = datetime.now()
@@ -120,8 +123,6 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
                     'photo_url': data.get('photo_url'),
                     'email_status': data.get('email_status'),
                     'twitter_url': data.get('twitter_url'),
-                    'github_url': data.get('github_url'),
-                    'facebook_url': data.get('facebook_url'),
                     'employment_history': str(data.get('employment_history')),
                     'employment_summary':str(employment_summary),
                     'organization_name': data.get('organization').get('name'),
@@ -143,6 +144,50 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
                     'filter_criteria':"generic",
                     'target_region': target_region,
                 }
+
+                # apollo_id
+                # first_name
+                # last_name
+                # name
+                # email
+                # linkedin_url
+                # associated_client_id
+                # title
+                # seniority
+                # headline
+                # is_likely_to_engage
+                # photo_url
+                # email_status
+
+                # organization_estimated_num_employees
+                # organization_website
+                # organization_short_description
+                # organization_linkedin
+                
+                
+                # organization_technology_names
+                # organization_industry
+                # organization_city
+                # organization_country
+                # organization_facebook
+                # first_name
+                
+                # organization_primary_phone
+                # employment_summary
+                
+                # organization_phone
+                # target_region
+                # organization_logo
+                # organization_state
+                # employment_history
+                
+                # twitter_url
+                
+                # created_time
+                # organization_primary_domain
+                
+                # filter_criteria
+                # organization_name
                 if qualify_leads=='yes':
                     qualification_status = qualify_lead(apollo_id,data_dict,index_name)
                     if not qualification_status:
@@ -153,10 +198,11 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
                 else:
                     print(f"Skipping lead qualification...")
                     # continue
-                export_to_airtable(data_dict,raw_table)
+                db_manager.insert_data_collection(data_dict)
+                # export_to_airtable(data_dict,raw_table)
                 print(f"Data collected in source table")
-                response = sanitize_data(client_id,data_dict)
-                print(f"Data sanitized and uploaded to outreach table")
+                # response = sanitize_data(client_id,data_dict)
+                # print(f"Data sanitized and uploaded to outreach table")
                 ingested_apollo_ids.append(apollo_id)
                 selected_profiles+=1
                 print(f"\n------------Data ingestion successful for record id :{apollo_id}, client_id : {client_id}------------\n")

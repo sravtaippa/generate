@@ -261,8 +261,8 @@ def influencer_marketing():
             records_required=8
             org_domain=[org]
             query_params = [
-                                # construct_query_param("person_titles", person_titles),
-                                construct_query_param("person_seniorities", person_seniorities),
+                                construct_query_param("person_titles", person_titles),
+                                # construct_query_param("person_seniorities", person_seniorities),
                                 construct_query_param("q_organization_domains_list", org_domain),
             ]
             query_params.append(f"page_number={page_number}")

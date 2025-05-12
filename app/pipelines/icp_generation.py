@@ -7,6 +7,7 @@ from error_logger import execute_error_block
 from db.db_utils import unique_key_check_airtable,export_to_airtable,update_client_info,fetch_client_column,retrieve_column_value,update_column_value
 from pipelines.lead_website_analysis import web_analysis
 from config import APOLLO_HEADERS
+from db.db_ops import db_manager
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 CLIENT_CONFIG_TABLE_NAME = os.getenv("CLIENT_CONFIG_TABLE_NAME")
@@ -33,12 +34,19 @@ def lowercase_keys(json_data, keys_to_lowercase):
 
 def generate_apollo_url(client_id,page_number=1,records_required=2,organization=""):
     try:
-        icp_job_details = ast.literal_eval(fetch_client_column("client_config",client_id,"icp_job_details"))
-        icp_job_seniorities = ast.literal_eval(fetch_client_column("client_config",client_id,"icp_job_seniorities"))
-        icp_employee_range = ast.literal_eval(fetch_client_column("client_config",client_id,"icp_employee_range"))
-        icp_locations = ast.literal_eval(fetch_client_column("client_config",client_id,"icp_locations"))
-        organization_domains = ast.literal_eval(fetch_client_column("client_config",client_id,"organization_domains"))
-        organization_last_index= int(fetch_client_column("client_config",client_id,"organization_last_index"))
+        config_details = db_manager.get_record(CLIENT_CONFIG_TABLE_NAME,"client_id",client_id)
+        icp_job_details = ast.literal_eval(config_details.get("icp_job_details"))
+        icp_job_seniorities = ast.literal_eval(config_details.get("icp_job_seniorities"))
+        icp_employee_range = ast.literal_eval(config_details.get("icp_employee_range"))
+        icp_locations = ast.literal_eval(config_details.get("icp_locations"))
+        organization_domains = ast.literal_eval(config_details.get("organization_domains"))
+        organization_last_index= int(config_details.get("organization_last_index"))
+        # icp_job_details = ast.literal_eval(fetch_client_column("client_config",client_id,"icp_job_details"))
+        # icp_job_seniorities = ast.literal_eval(fetch_client_column("client_config",client_id,"icp_job_seniorities"))
+        # icp_employee_range = ast.literal_eval(fetch_client_column("client_config",client_id,"icp_employee_range"))
+        # icp_locations = ast.literal_eval(fetch_client_column("client_config",client_id,"icp_locations"))
+        # organization_domains = ast.literal_eval(fetch_client_column("client_config",client_id,"organization_domains"))
+        # organization_last_index= int(fetch_client_column("client_config",client_id,"organization_last_index"))
         email_status = ['verified']
         organization_domains_new = organization_domains[organization_last_index:organization_last_index+2]
         print(f"================== ICP Generation for client id: {client_id}==================")
@@ -49,12 +57,13 @@ def generate_apollo_url(client_id,page_number=1,records_required=2,organization=
             print(f"\n\n =========================== All the domains have been processed. Resetting the organization last index =========================== ")
             organization_last_index = 0
             organization_domains_new = organization_domains[organization_last_index:organization_last_index+2]
-            update_column_value(
-                        table_name=CLIENT_CONFIG_TABLE_NAME,
-                        column_name="organization_last_index",
-                        column_value=organization_last_index,
-                        primary_key_col="client_id",
-                        primary_key_value=client_id)
+            db_manager.update_single_field(table_name=CLIENT_CONFIG_TABLE_NAME,column_name= "organization_last_index", column_value=organization_last_index, primary_key_col="client_id", primary_key_value=client_id)
+            # update_column_value(
+            #             table_name=CLIENT_CONFIG_TABLE_NAME,
+            #             column_name="organization_last_index",
+            #             column_value=organization_last_index,
+            #             primary_key_col="client_id",
+            #             primary_key_value=client_id)
         print('Creating query params')
         query_params = [
                     construct_query_param("person_titles", icp_job_details),
