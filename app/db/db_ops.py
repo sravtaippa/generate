@@ -295,7 +295,45 @@ class DatabaseManager:
         except Exception as e:
             print(f"An error occurred: {e}")
         return 'Done'
-    
+
+    def insert_data(self, table_name, data):
+        try:
+            # Establish SSH tunnel
+            with sshtunnel.SSHTunnelForwarder(
+                ('ssh.pythonanywhere.com'),
+                ssh_username=self.ssh_username,
+                ssh_password=self.ssh_password,
+                remote_bind_address=(self.postgres_hostname, self.postgres_host_port)
+            ) as tunnel:
+                # Connect to the database through the tunnel
+                connection = psycopg2.connect(
+                    user=self.db_user, password=self.db_password,
+                    host='127.0.0.1', port=tunnel.local_bind_port,
+                    database=self.db_name,
+                )
+
+                # Perform database operation
+                cursor = connection.cursor()
+
+                # Dynamically build SQL from data keys
+                columns = ', '.join(data.keys())
+                placeholders = ', '.join(['%s'] * len(data))
+                values = tuple(data.values())
+
+                insert_query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
+                cursor.execute(insert_query, values)
+
+                connection.commit()
+                print(f"Entry added successfully to table '{table_name}'")
+
+                # Close resources
+                cursor.close()
+                connection.close()
+        except Exception as e:
+            print(f"An error occurred: {e}")
+        return 'Done'
+
+
 db_manager = DatabaseManager(
     ssh_username='magmostafa',
     ssh_password='Drowssap_2024',
