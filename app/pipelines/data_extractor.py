@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from db.db_utils import fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable,retrieve_client_tables,fetch_client_outreach_mappings,fetch_client_column
 from pipelines.lead_qualifier import qualify_lead
-from pipelines.data_sanitization import sanitize_data
+# from pipelines.data_sanitization import sanitize_data
 from error_logger import execute_error_block
 from db.db_ops import db_manager
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
