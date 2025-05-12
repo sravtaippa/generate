@@ -28,11 +28,21 @@ from dashboard.client_profile_picture import get_profile_picture
 from pipelines.organization_list_enrichment import fetch_organization_domains
 # from pipelines.guideline_generate import generate_content_guideline
 from pipelines.data_sanitization_psql import sanitize_data
+from pipelines.guideline_generate import execute_generate_sequence
+
+print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
 app = Flask(__name__)
 
+@app.route("/guideline_generate", methods=["GET"])
+def guideline_generate():
+    try:
+        execute_generate_sequence()
+        return {"Status":"Successfully fetched organization list"}
+    except Exception as e:
+        print(f"Error occured while generating the content for outreach: {e}")
 # @app.route("/guideline_generate", methods=["GET"])
 # def guideline_generate():
 #     try:
