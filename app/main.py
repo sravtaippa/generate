@@ -298,17 +298,16 @@ def test_sanitize_psql():
         data = request.get_json(force=True)
 
         client_id = data.get("client_id")
-        data_dict = data.get("data_dict")
+        data_dict = data.get("data")  # <-- FIXED HERE
 
         if not client_id or not data_dict:
-            return jsonify({"error": "Missing client_id or data_dict"}), 400
+            return jsonify({"error": "Missing client_id or data"}), 400
 
         response = sanitize_data(client_id, data_dict)
         return jsonify(response)
 
     except Exception as e:
         return jsonify({"error": f"Unexpected error: {e}"}), 500
-
 
 
 
