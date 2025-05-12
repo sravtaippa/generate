@@ -33,7 +33,7 @@ def fetch_recent_leads_from_db(client_id):
 
         # Step 2: Fetch recent replies
         cur.execute("""
-            SELECT full_name, email, linkedin_profile_url, profile_picture_url
+            SELECT full_name, email, linkedin_profile_url, sentiment
             FROM email_response_guideline
             WHERE campaign_id = %s
             ORDER BY created_time DESC
