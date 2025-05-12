@@ -181,7 +181,8 @@ def sanitize_data(client_id, data_dict):
             "business_type": "business_type",
             "outreach_table": "outreach_table"
         }
-
+        # Save to cleaned table
+        send_to_postgres_if_new(df, cleaned_table_name, unique_field='unique_id')
         send_to_postgres_if_new(
             filtered_df,
             outreach_table_name,
