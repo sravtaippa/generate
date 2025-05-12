@@ -6,8 +6,8 @@ from flask import Flask, render_template, request, jsonify
 from urllib.parse import unquote
 import time
 
-# from pipelines.data_sanitization import fetch_and_update_data, update_email_opens, test_sanitize
-from pipelines.data_sanitization_copy import update_email_opens
+from pipelines.data_sanitization import fetch_and_update_data, update_email_opens, test_sanitize
+from pipelines.data_sanitization import update_email_opens
 from pipelines.data_extractor import people_enrichment,test_run_pipeline,run_demo_pipeline
 from pipelines.guideline_data_sync import parse_contacts,influencer_marketing
 from db.table_creation import create_client_tables
@@ -26,20 +26,20 @@ from dashboard.client_onboarding_update_form import update_client_onboarding
 from dashboard.client_configuration_form import update_client_configuration
 from dashboard.client_profile_picture import get_profile_picture
 from pipelines.organization_list_enrichment import fetch_organization_domains
-from pipelines.guideline_generate import generate_content_guideline
-from pipelines.data_sanitization import sanitize_data
+# from pipelines.guideline_generate import generate_content_guideline
+from pipelines.data_sanitization_psql import sanitize_data
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
 app = Flask(__name__)
 
-@app.route("/guideline_generate", methods=["GET"])
-def guideline_generate():
-    try:
-        generate_content_guideline()
-        return {"Status":"Successfully fetched organization list"}
-    except Exception as e:
-        print(f"Error occured while generating the content for outreach: {e}")
+# @app.route("/guideline_generate", methods=["GET"])
+# def guideline_generate():
+#     try:
+#         generate_content_guideline()
+#         return {"Status":"Successfully fetched organization list"}
+#     except Exception as e:
+#         print(f"Error occured while generating the content for outreach: {e}")
 
 @app.route("/organization_list_enrichment", methods=["GET"])
 def organization_list_enrichment():
