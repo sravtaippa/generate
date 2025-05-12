@@ -27,8 +27,7 @@ from dashboard.client_configuration_form import update_client_configuration
 from dashboard.client_profile_picture import get_profile_picture
 from pipelines.organization_list_enrichment import fetch_organization_domains
 from pipelines.guideline_generate import generate_content_guideline
-
-print(f"\n =============== Generate : Pipeline started  ===============")
+from pipelines.data_sanitization import sanitize_data
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
@@ -271,14 +270,34 @@ def update_email_opens_clicked():
         return response
     except Exception as e:
         execute_error_block(f"Error occured while counting email opened and email clicked {e}")
-# test datasanitization
-@app.route("/test_sanitize_new", methods=["GET"])
-def test_sanitize_new():
+# # test datasanitization
+# @app.route("/test_sanitize_new", methods=["GET"])
+# def test_sanitize_new():
+#     try:
+#         response = test_sanitize()
+#         return response
+#     except Exception as e:
+#         execute_error_block(f"Error occured while counting email opened and email clicked {e}")
+#         @app.route("/test_sanitize_new", methods=["GET"])
+
+
+
+@app.route("/test_sanitize_psql", methods=["POST"])
+def test_sanitize_psql():
     try:
-        response = test_sanitize()
-        return response
+        client_id = request.args.get("client_id")
+        data_dict = request.get_json()
+
+        if not client_id or not data_dict:
+            return jsonify({"error": "Missing client_id or JSON body"}), 400
+
+        response = sanitize_data(client_id, data_dict)
+        return jsonify(response)
+
     except Exception as e:
-        execute_error_block(f"Error occured while counting email opened and email clicked {e}")
+        return jsonify({"error": f"Error occurred: {str(e)}"}), 500
+
+
 
 @app.route("/test_chroma",methods=["GET"])
 def test_chroma():
