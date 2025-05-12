@@ -26,3 +26,9 @@ unstructured
 tiktoken
 pypdf
 python-dotenv
+google_auth_oauthlib
+google-auth-oauthlib
+requests
+Flask-SQLAlchemy
+psycopg2-binary
+sshtunnel
