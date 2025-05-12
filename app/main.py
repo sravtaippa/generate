@@ -12,7 +12,6 @@ from pipelines.data_extractor import people_enrichment,test_run_pipeline,run_dem
 from pipelines.guideline_data_sync import parse_contacts,influencer_marketing
 from db.table_creation import create_client_tables
 from pipelines.icp_generation import generate_icp,generate_apollo_url
-from db.db_ops import test
 from db.db_utils import fetch_client_details,export_to_airtable,unique_key_check_airtable,parse_people_info,add_client_tables_info,add_apollo_webhook_info,fetch_latest_created_time,fetch_record_count_after_time,phone_number_updation
 from error_logger import execute_error_block
 from lead_magnet.lead_magnet_pdf_generation import generate_lead_magnet_pdf,test_run
@@ -27,12 +26,21 @@ from dashboard.client_onboarding_update_form import update_client_onboarding
 from dashboard.client_configuration_form import update_client_configuration
 from dashboard.client_profile_picture import get_profile_picture
 from pipelines.organization_list_enrichment import fetch_organization_domains
+from pipelines.guideline_generate import generate_content_guideline
 
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
 app = Flask(__name__)
+
+@app.route("/guideline_generate", methods=["GET"])
+def guideline_generate():
+    try:
+        generate_content_guideline()
+        return {"Status":"Successfully fetched organization list"}
+    except Exception as e:
+        print(f"Error occured while generating the content for outreach: {e}")
 
 @app.route("/organization_list_enrichment", methods=["GET"])
 def organization_list_enrichment():
@@ -377,32 +385,33 @@ def demo_test():
         return {"Status":f"Oops something wrong happened!: {e}"}
         # execute_error_block(f"Error occured while client onboarding : {e}")
 
-@app.route("/scheduled_data_sync_generic", methods=["GET"])
-def scheduled_data_sync_generic():
-    try:
-        start_time = time.time()  
-        status = trigger_pipeline_generic()
-        end_time = time.time()  
-        elapsed_minutes = (end_time - start_time) / 60
-        print(f"~~~~~~~~~ Execution Time: {elapsed_minutes:.2f} minutes ~~~~~~~~~~~~")
-        return {"Status":"Successful"}
-    except Exception as e:
-        print(f"Exception occured during scheduled data sync: {e}")
-        execute_error_block(f"Exception occured during scheduled data sync: {e}")
+# @app.route("/scheduled_data_sync_generic", methods=["GET"])
+# def scheduled_data_sync_generic():
+#     try:
+#         start_time = time.time()  
+#         status = trigger_pipeline_generic()
+#         end_time = time.time()  
+#         elapsed_minutes = (end_time - start_time) / 60
+#         print(f"~~~~~~~~~ Execution Time: {elapsed_minutes:.2f} minutes ~~~~~~~~~~~~")
+#         return {"Status":"Successful"}
+#     except Exception as e:
+#         print(f"Exception occured during scheduled data sync: {e}")
+#         execute_error_block(f"Exception occured during scheduled data sync: {e}")
 
-@app.route("/scheduled_data_sync", methods=["GET"])
-def scheduled_data_sync():
-    try:
-        start_time = time.time()  # Start timer
-        status = trigger_pipeline_custom()
-        end_time = time.time()  # End timer
-        elapsed_minutes = (end_time - start_time) / 60  # Convert seconds to minutes
-        print(f"~~~~~~~~~ Execution Time: {elapsed_minutes:.2f} minutes ~~~~~~~~~~~~")
-        return {"Status":"Successful"}
-    except Exception as e:
-        print(f"Exception occured during scheduled data sync: {e}")
-        execute_error_block(f"Exception occured during scheduled data sync: {e}")
+# @app.route("/scheduled_data_sync", methods=["GET"])
+# def scheduled_data_sync():
+#     try:
+#         start_time = time.time()  # Start timer
+#         status = trigger_pipeline_custom()
+#         end_time = time.time()  # End timer
+#         elapsed_minutes = (end_time - start_time) / 60  # Convert seconds to minutes
+#         print(f"~~~~~~~~~ Execution Time: {elapsed_minutes:.2f} minutes ~~~~~~~~~~~~")
+#         return {"Status":"Successful"}
+#     except Exception as e:
+#         print(f"Exception occured during scheduled data sync: {e}")
+#         execute_error_block(f"Exception occured during scheduled data sync: {e}")
 
+# 127.0.0.1:8080/scheduled_data_sync_custom?client_id=guideline
 @app.route("/scheduled_data_sync_custom", methods=["GET"])
 def scheduled_data_sync_custom():
     try:
@@ -445,7 +454,6 @@ def lead_magnet_generate():
         print(f"Error occured while testing lead magnet: {e}")
 
 #dashboard 
-
 @app.route("/get_profile_picture_dashboard/<username>", methods=["GET"])
 def get_profile_picture_dashboard(username):
     # username = request.args.get('username', type=str)
@@ -459,7 +467,7 @@ def connect_db():
     except Exception as e:
         print(f"Error occured while testing connection")
 
-
 if __name__ == '__main__':
-  app.run(debug=True,use_reloader=False)
-#   app.run(port=8001)
+#   app.run(debug=True,use_reloader=False)
+#   app.run(port=8001) 
+  app.run(port=8080)
