@@ -285,17 +285,18 @@ def update_email_opens_clicked():
 @app.route("/test_sanitize_psql", methods=["POST"])
 def test_sanitize_psql():
     try:
-        client_id = request.args.get("client_id")
-        data_dict = request.get_json()
+        client_id = request.json.get("client_id")
+        data_dict = request.json.get("data_dict")
 
         if not client_id or not data_dict:
-            return jsonify({"error": "Missing client_id or JSON body"}), 400
+            return jsonify({"error": "Missing client_id or data_dict"}), 400
 
         response = sanitize_data(client_id, data_dict)
         return jsonify(response)
 
     except Exception as e:
-        return jsonify({"error": f"Error occurred: {str(e)}"}), 500
+        return jsonify({"error": f"Unexpected error: {e}"}), 500
+
 
 
 
