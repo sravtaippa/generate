@@ -7,7 +7,7 @@ from urllib.parse import unquote
 import time
 
 # from pipelines.data_sanitization import fetch_and_update_data, update_email_opens, test_sanitize
-from pipelines.data_sanitization import update_email_opens, test_sanitize
+# from pipelines.data_sanitization import update_email_opens, test_sanitize
 from pipelines.data_extractor import people_enrichment,test_run_pipeline,run_demo_pipeline
 from pipelines.guideline_data_sync import parse_contacts,influencer_marketing
 from db.table_creation import create_client_tables
