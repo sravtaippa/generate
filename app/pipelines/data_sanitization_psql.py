@@ -45,32 +45,47 @@ def fetch_client_details_postgres(df, icp_field="associated_client_id", client_d
         return pd.DataFrame()
 
 def record_exists(unique_id, table_name):
-    query = f"SELECT 1 FROM {table_name} WHERE unique_id = %s LIMIT 1"
-    cursor.execute(query, (unique_id,))
-    return cursor.fetchone() is not None
+    try:
+        query = f"SELECT 1 FROM {table_name} WHERE unique_id = %s LIMIT 1"
+        cursor.execute(query, (unique_id,))
+        exists = cursor.fetchone() is not None
+        print(f"Checking existence for {unique_id} in {table_name}: {exists}")
+        return exists
+    except Exception as e:
+        print(f"Error in record_exists: {e}")
+        return False
 
 def insert_record(row_dict, table_name):
     try:
         columns = ', '.join(row_dict.keys())
         values = ', '.join(['%s'] * len(row_dict))
         query = f"INSERT INTO {table_name} ({columns}) VALUES ({values})"
+        print(f"\n--- INSERTING INTO {table_name} ---")
+        print(f"Query: {query}")
+        print(f"Values: {tuple(row_dict.values())}")
         cursor.execute(query, tuple(row_dict.values()))
         conn.commit()
+        print(f"✅ Inserted record into {table_name}")
     except Exception as e:
-        print(f"Insert error into {table_name}: {e}")
+        print(f"❌ Insert error into {table_name}: {e}")
+        print(f"Data: {row_dict}")
         conn.rollback()
 
 def send_to_postgres_if_new(df, table_name, unique_field, desired_fields=None, field_mapping=None, default_values=None, icp_to_outreach=None, icp_df=None):
     for i, row in df.iterrows():
         try:
             record_data = row.dropna().to_dict()
+            print(f"\n🔁 Processing row {i}...")
 
             if desired_fields:
                 record_data = {field: record_data[field] for field in desired_fields if field in record_data}
+                print(f"Filtered to desired fields: {list(record_data.keys())}")
 
+            # Build unique_id
             unique_id_value = f"{record_data.get('apollo_id', '')}_{record_data.get('email', '')}"
             record_data["unique_id"] = unique_id_value
 
+            # Apply ICP enrichment
             if icp_to_outreach and icp_df is not None:
                 client_id = row.get("associated_client_id")
                 if client_id:
@@ -80,27 +95,31 @@ def send_to_postgres_if_new(df, table_name, unique_field, desired_fields=None, f
                             if icp_field in matching_icp_rows.columns:
                                 record_data[outreach_field] = matching_icp_rows.iloc[0][icp_field]
 
+            # Map field names
             if field_mapping:
                 record_data = {field_mapping.get(k, k): v for k, v in record_data.items()}
+                print(f"After field mapping: {list(record_data.keys())}")
 
-            record_data["created_time"] = str(datetime.now())
+            # Add created_time
+            record_data["created_time"] = datetime.now()
 
+            # Apply default values
             if default_values:
                 for key, value in default_values.items():
                     record_data.setdefault(key, value)
 
+            # Insert if not exists
             if not record_exists(record_data["unique_id"], table_name):
                 insert_record(record_data, table_name)
-                print(f"Record {i} inserted into {table_name}")
             else:
-                print(f"Record {i} already exists in {table_name}, skipping.")
-
+                print(f"⚠️ Record {i} already exists in {table_name}, skipping.")
         except Exception as e:
-            print(f"Error processing record {i}: {e}")
+            print(f"❌ Error processing record {i}: {e}")
 
 def sanitize_data(client_id, data_dict):
     try:
         raw_table_name, cleaned_table_name, outreach_table_name = retrieve_client_tables(client_id)
+        print(f"\n📥 Tables: raw={raw_table_name}, cleaned={cleaned_table_name}, outreach={outreach_table_name}")
 
         df = pd.DataFrame([data_dict])
         df.replace([np.inf, -np.inf], np.nan, inplace=True)
@@ -163,10 +182,6 @@ def sanitize_data(client_id, data_dict):
             "outreach_table": "outreach_table"
         }
 
-        # Save to cleaned table
-        # send_to_postgres_if_new(df, cleaned_table_name, unique_field='unique_id')
-
-        # Save to outreach table
         send_to_postgres_if_new(
             filtered_df,
             outreach_table_name,
@@ -196,4 +211,5 @@ def sanitize_data(client_id, data_dict):
         return {"message": "Data cleaned and processed successfully."}
 
     except Exception as e:
+        print(f"❌ Error in sanitize_data: {e}")
         return {"error": f"Error in sanitizing data: {e}"}
