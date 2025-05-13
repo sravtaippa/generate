@@ -499,8 +499,12 @@ def get_recent_leads_dashboard(username):
 
 @app.route("/get_statistics_dashboard/<username>", methods=["GET"])
 def get_statistics_dashboard(username):
-    data, status = fetch_metric_value(username)
-    return jsonify(data), status   
+    field = request.args.get("field")
+    if not field:
+        return jsonify({"error": "Missing field parameter"}), 400
+
+    value = fetch_metric_value(username, field)
+    return jsonify({"value": value}), 200
 
 @app.route("/test_db",methods=["GET"])
 def connect_db():
