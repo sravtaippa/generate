@@ -510,13 +510,16 @@ def get_statistics_dashboard():
 
 @app.route("/get_booking_count_dashboard", methods=["GET"])
 def get_booking_count_dashboard():
-    username = request.args.get("username")
+    username = request.args.get("username", default=None)
     
     if not username:
-        return jsonify({"error": "Missing 'username' "}), 400
-
-    value = get_booking_count(username)
+        # If 'username' is missing, use 0 as the value
+        value = 0
+    else:
+        value = get_booking_count(username)
+    
     return jsonify({"value": value}), 200
+
 
 @app.route("/test_db",methods=["GET"])
 def connect_db():
