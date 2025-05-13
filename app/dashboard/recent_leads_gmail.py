@@ -55,7 +55,7 @@ def fetch_metric_value(username, field):
         conn = connect_to_postgres()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-        # Step 1: Fetch instantly_campaign_id using client_id (username)
+        # Step 1: Get campaign ID from client_info
         cursor.execute("""
             SELECT instantly_campaign_id 
             FROM client_info 
@@ -64,12 +64,12 @@ def fetch_metric_value(username, field):
         """, (username,))
         result = cursor.fetchone()
 
-        if not result:
+        if not result or 'instantly_campaign_id' not in result:
             return 0
 
-        instantly_campaign_id = result[0]
+        instantly_campaign_id = result['instantly_campaign_id']
 
-        # Step 2: Fetch metric value
+        # Step 2: Fetch the desired metric
         cursor.execute(f"""
             SELECT {field} 
             FROM metrics 
@@ -78,7 +78,7 @@ def fetch_metric_value(username, field):
         """, (instantly_campaign_id,))
         metric_result = cursor.fetchone()
 
-        return int(metric_result[0]) if metric_result else 0
+        return int(metric_result[field]) if metric_result and field in metric_result else 0
 
     except Exception as e:
         print("Error:", e)
