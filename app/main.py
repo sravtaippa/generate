@@ -497,14 +497,17 @@ def get_recent_leads_dashboard(username):
     data, status = fetch_recent_leads_from_db(username)
     return jsonify(data), status
 
-@app.route("/get_statistics_dashboard/<username>", methods=["GET"])
-def get_statistics_dashboard(username):
+@app.route("/get_statistics_dashboard", methods=["GET"])
+def get_statistics_dashboard():
+    username = request.args.get("username")
     field = request.args.get("field")
-    if not field:
-        return jsonify({"error": "Missing field parameter"}), 400
+
+    if not username or not field:
+        return jsonify({"error": "Missing 'username' or 'field' parameter"}), 400
 
     value = fetch_metric_value(username, field)
     return jsonify({"value": value}), 200
+
 
 @app.route("/test_db",methods=["GET"])
 def connect_db():
