@@ -515,7 +515,7 @@ def get_booking_count_dashboard():
     if not username:
         return jsonify({"error": "Missing 'username' "}), 400
 
-    value = fetch_metric_value(username)
+    value = get_booking_count(username)
     return jsonify({"value": value}), 200
 
 @app.route("/test_db",methods=["GET"])
