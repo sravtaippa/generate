@@ -50,5 +50,44 @@ def fetch_recent_leads_from_db(client_id):
         if conn:
             conn.close()
 
+def fetch_metric_value(username, field):
+    try:
+        conn = psycopg2.connect(**DB_CONFIG)
+        cursor = conn.cursor()
+
+        # Step 1: Fetch instantly_campaign_id using client_id (username)
+        cursor.execute("""
+            SELECT instantly_campaign_id 
+            FROM client_info 
+            WHERE client_id = %s
+            LIMIT 1;
+        """, (username,))
+        result = cursor.fetchone()
+
+        if not result:
+            return 0
+
+        instantly_campaign_id = result[0]
+
+        # Step 2: Fetch metric value
+        cursor.execute(f"""
+            SELECT {field} 
+            FROM metrics 
+            WHERE campaign_id = %s
+            LIMIT 1;
+        """, (instantly_campaign_id,))
+        metric_result = cursor.fetchone()
+
+        return int(metric_result[0]) if metric_result else 0
+
+    except Exception as e:
+        print("Error:", e)
+        return 0
+
+    finally:
+        if conn:
+            cursor.close()
+            conn.close()
+
 if __name__ == '__main__':
     app.run(debug=True)

@@ -25,7 +25,7 @@ from dashboard.dashboard_updation import process_whatsapp_data
 from dashboard.client_onboarding_update_form import update_client_onboarding
 from dashboard.client_configuration_form import update_client_configuration
 from dashboard.client_profile_picture import get_profile_picture
-from dashboard.recent_leads_gmail import fetch_recent_leads_from_db
+from dashboard.recent_leads_gmail import fetch_recent_leads_from_db, fetch_metric_value
 from pipelines.organization_list_enrichment import fetch_organization_domains
 # from pipelines.guideline_generate import generate_content_guideline
 from pipelines.data_sanitization_psql import sanitize_data
@@ -490,13 +490,17 @@ def lead_magnet_generate():
 @app.route("/get_profile_picture_dashboard/<username>", methods=["GET"])
 def get_profile_picture_dashboard(username):
     # username = request.args.get('username', type=str)
-    return   get_recent_leads(username)
+    return   get_profile_picture(username)
 
 @app.route("/get_recent_leads_dashboard/<username>", methods=["GET"])
 def get_recent_leads_dashboard(username):
     data, status = fetch_recent_leads_from_db(username)
     return jsonify(data), status
 
+@app.route("/get_statistics_dashboard/<username>", methods=["GET"])
+def get_statistics_dashboard(username):
+    data, status = fetch_metric_value(username)
+    return jsonify(data), status   
 
 @app.route("/test_db",methods=["GET"])
 def connect_db():
