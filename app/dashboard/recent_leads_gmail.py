@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime, timedelta
-
+from psycopg2 import errors
 app = Flask(__name__)
 
 def connect_to_postgres():
@@ -168,12 +168,15 @@ def email_sent_chart(username):
         if conn:
             conn.close()
 
-def get_campaign_details(username):  # <- accepts username as argument now
+def get_campaign_details(username):
+    if not username:
+        return jsonify({'error': 'Missing username'}), 400
+
     try:
         conn = connect_to_postgres()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-        # Fetch campaigns for this user
+        
         cursor.execute("""
             SELECT * FROM campaign_details
             WHERE client_id = %s
@@ -187,17 +190,22 @@ def get_campaign_details(username):  # <- accepts username as argument now
 
         for campaign in campaigns:
             campaign_id = campaign.get('instantly_campaign_id')
+            profile_pictures = []
 
-            # Fetch latest 5 replies with profile pictures
-            cursor.execute("""
-                SELECT profile_picture_url
-                FROM replies_received
-                WHERE campaign_id = %s
-                ORDER BY created DESC
-                LIMIT 5
-            """, (campaign_id,))
-            replies = cursor.fetchall()
-            profile_pictures = [reply['profile_picture_url'] for reply in replies]
+            try:
+                cursor.execute("""
+                    SELECT profile_picture_url
+                    FROM replies_received
+                    WHERE campaign_id = %s
+                    ORDER BY created DESC
+                    LIMIT 5
+                """, (campaign_id,))
+                replies = cursor.fetchall()
+                profile_pictures = [reply['profile_picture_url'] for reply in replies]
+
+            except errors.UndefinedTable:
+                
+                profile_pictures = []
 
             campaign['profile_pictures'] = profile_pictures
             campaign_data.append(campaign)
