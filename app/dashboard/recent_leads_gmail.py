@@ -120,36 +120,42 @@ def email_sent_chart(username):
     try:
         conn = connect_to_postgres()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        # Step 1: Get the campaign ID
+
+        # Step 1: Get the campaign ID from client_info
         cursor.execute("""
             SELECT instantly_campaign_id 
             FROM client_info 
             WHERE client_id = %s
         """, (username,))
         result = cursor.fetchone()
-        if not result:
+        if not result or not result['instantly_campaign_id']:
             return jsonify({'error': 'No campaign ID found'}), 404
 
         campaign_id = result['instantly_campaign_id']
 
-        # Step 2: Get current week's date range
+        # Step 2: Determine current week's start and end dates
         today = datetime.now()
         start_of_week = today - timedelta(days=today.weekday())  # Monday
-        end_of_week = start_of_week + timedelta(days=6)           # Sunday
+        end_of_week = start_of_week + timedelta(days=6)          # Sunday
 
-        # Step 3: Get emails created within the week
+        # Step 3: Fetch email records from dashboard_inbox within the week
         cursor.execute("""
             SELECT created 
             FROM dashboard_inbox 
             WHERE campaign_id = %s
-            AND created >= %s AND created <= %s
+            AND CAST(created AS date) >= %s 
+            AND CAST(created AS date) <= %s
         """, (campaign_id, start_of_week.date(), end_of_week.date()))
         emails = cursor.fetchall()
 
-        # Step 4: Count per day
+        # Step 4: Aggregate email count by day of week
         day_counts = {'Mon': 0, 'Tue': 0, 'Wed': 0, 'Thu': 0, 'Fri': 0, 'Sat': 0, 'Sun': 0}
         for row in emails:
-            created_day = row['created'].strftime('%a')
+            try:
+                created_date = datetime.strptime(row['created'], '%Y-%m-%d')
+            except:
+                created_date = row['created']  # If already a datetime
+            created_day = created_date.strftime('%a')
             if created_day in day_counts:
                 day_counts[created_day] += 1
 
@@ -161,6 +167,7 @@ def email_sent_chart(username):
     finally:
         if conn:
             conn.close()
+
 
 if __name__ == '__main__':
     app.run(debug=True)
