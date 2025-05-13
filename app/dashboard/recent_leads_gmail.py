@@ -89,5 +89,23 @@ def fetch_metric_value(username, field):
             cursor.close()
             conn.close()
 
+def get_booking_count():
+    conn = connect_to_postgres()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    # Get the client_id from query params (like ?client_id=username)
+    client_id = request.args.get('client_id')
+    
+    if not client_id:
+        return jsonify({"error": "client_id is required"}), 400
+
+        # Query the database for the count of meetings booked by the client
+    cursor.execute("SELECT COUNT(*) FROM booking_records WHERE client_id = %s", (client_id,))
+    result = cursor.fetchone()
+
+    # Close the connection
+    cursor.close()
+    conn.close()
+
 if __name__ == '__main__':
     app.run(debug=True)
