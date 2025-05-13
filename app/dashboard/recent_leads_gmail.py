@@ -168,6 +168,47 @@ def email_sent_chart(username):
         if conn:
             conn.close()
 
+def get_campaign_details(username):  # <- accepts username as argument now
+    try:
+        conn = connect_to_postgres()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
 
+        # Fetch campaigns for this user
+        cursor.execute("""
+            SELECT * FROM campaign_details
+            WHERE client_id = %s
+        """, (username,))
+        campaigns = cursor.fetchall()
+
+        if not campaigns:
+            return jsonify({'message': 'No campaigns found'}), 404
+
+        campaign_data = []
+
+        for campaign in campaigns:
+            campaign_id = campaign.get('instantly_campaign_id')
+
+            # Fetch latest 5 replies with profile pictures
+            cursor.execute("""
+                SELECT profile_picture_url
+                FROM replies_received
+                WHERE campaign_id = %s
+                ORDER BY created DESC
+                LIMIT 5
+            """, (campaign_id,))
+            replies = cursor.fetchall()
+            profile_pictures = [reply['profile_picture_url'] for reply in replies]
+
+            campaign['profile_pictures'] = profile_pictures
+            campaign_data.append(campaign)
+
+        cursor.close()
+        conn.close()
+
+        return jsonify({'campaigns': campaign_data})
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
 if __name__ == '__main__':
     app.run(debug=True)

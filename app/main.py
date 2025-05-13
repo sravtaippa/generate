@@ -25,7 +25,7 @@ from dashboard.dashboard_updation import process_whatsapp_data
 from dashboard.client_onboarding_update_form import update_client_onboarding
 from dashboard.client_configuration_form import update_client_configuration
 from dashboard.client_profile_picture import get_profile_picture
-from dashboard.recent_leads_gmail import fetch_recent_leads_from_db, fetch_metric_value, get_booking_count, email_sent_chart
+from dashboard.recent_leads_gmail import fetch_recent_leads_from_db, fetch_metric_value, get_booking_count, email_sent_chart, get_campaign_details
 from pipelines.organization_list_enrichment import fetch_organization_domains
 # from pipelines.guideline_generate import generate_content_guideline
 from pipelines.data_sanitization_psql import sanitize_data
@@ -524,6 +524,9 @@ def get_booking_count_dashboard():
 def get_email_sent_chart_dashboard(username):
     return email_sent_chart(username)
 
+@app.route("/get_campaign_details_dashboard/<username>", methods=["GET"])
+def get_campaign_details_dashboard(username):
+    return get_campaign_details(username)
 
 @app.route("/test_db",methods=["GET"])
 def connect_db():
