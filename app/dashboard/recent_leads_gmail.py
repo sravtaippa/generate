@@ -89,8 +89,7 @@ def fetch_metric_value(username, field):
             cursor.close()
             conn.close()
 
-@app.route("/get_booking_count_dashboard", methods=["GET"])
-def get_booking_count_dashboard():
+def get_booking_count():
     try:
         client_id = request.args.get("client_id")
         if not client_id:
