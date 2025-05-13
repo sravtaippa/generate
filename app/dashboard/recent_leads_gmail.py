@@ -89,23 +89,32 @@ def fetch_metric_value(username, field):
             cursor.close()
             conn.close()
 
-def get_booking_count():
-    conn = connect_to_postgres()
-    cursor = conn.cursor(cursor_factory=RealDictCursor)
+@app.route("/get_booking_count_dashboard", methods=["GET"])
+def get_booking_count_dashboard():
+    try:
+        client_id = request.args.get("client_id")
+        if not client_id:
+            return jsonify({"error": "client_id is required"}), 400
 
-    # Get the client_id from query params (like ?client_id=username)
-    client_id = request.args.get('client_id')
-    
-    if not client_id:
-        return jsonify({"error": "client_id is required"}), 400
+        conn = connect_to_postgres()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-        # Query the database for the count of meetings booked by the client
-    cursor.execute("SELECT COUNT(*) FROM booking_records WHERE client_id = %s", (client_id,))
-    result = cursor.fetchone()
+        cursor.execute("SELECT COUNT(*) FROM booking_records WHERE client_id = %s", (client_id,))
+        result = cursor.fetchone()
 
-    # Close the connection
-    cursor.close()
-    conn.close()
+        booking_count = result['count'] if result and 'count' in result else 0
+
+        return jsonify({"value": booking_count}), 200
+
+    except Exception as e:
+        print("Error in get_booking_count_dashboard:", e)
+        return jsonify({"error": "Internal Server Error"}), 500
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 if __name__ == '__main__':
     app.run(debug=True)
