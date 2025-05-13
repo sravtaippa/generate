@@ -522,8 +522,7 @@ def get_booking_count_dashboard():
 
 @app.route("/get_email_sent_chart_dashboard/<username>", methods=["GET"])
 def get_email_sent_chart_dashboard(username):
-    # username = request.args.get('username', type=str)
-    return   email_sent_chart(username)
+    return email_sent_chart(username)
 
 
 @app.route("/test_db",methods=["GET"])
