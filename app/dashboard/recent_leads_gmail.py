@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
@@ -115,16 +116,11 @@ def get_booking_count():
         if conn:
             conn.close()
 
-def email_sent_chart():
-    username = request.args.get('username')
-    if not username:
-        return jsonify({'error': 'Missing username'}), 400
-
+def email_sent_chart(username):
     try:
         conn = connect_to_postgres()
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-
-        # Get instantly_campaign_id
+        # Step 1: Get the campaign ID
         cursor.execute("""
             SELECT instantly_campaign_id 
             FROM client_info 
@@ -136,11 +132,12 @@ def email_sent_chart():
 
         campaign_id = result['instantly_campaign_id']
 
-        # Calculate start and end of the current week
+        # Step 2: Get current week's date range
         today = datetime.now()
         start_of_week = today - timedelta(days=today.weekday())  # Monday
         end_of_week = start_of_week + timedelta(days=6)           # Sunday
 
+        # Step 3: Get emails created within the week
         cursor.execute("""
             SELECT created 
             FROM dashboard_inbox 
@@ -149,9 +146,8 @@ def email_sent_chart():
         """, (campaign_id, start_of_week.date(), end_of_week.date()))
         emails = cursor.fetchall()
 
-        # Initialize counts
+        # Step 4: Count per day
         day_counts = {'Mon': 0, 'Tue': 0, 'Wed': 0, 'Thu': 0, 'Fri': 0, 'Sat': 0, 'Sun': 0}
-
         for row in emails:
             created_day = row['created'].strftime('%a')
             if created_day in day_counts:
