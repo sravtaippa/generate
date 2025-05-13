@@ -52,8 +52,8 @@ def fetch_recent_leads_from_db(client_id):
 
 def fetch_metric_value(username, field):
     try:
-        conn = psycopg2.connect(**DB_CONFIG)
-        cursor = conn.cursor()
+        conn = connect_to_postgres()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
 
         # Step 1: Fetch instantly_campaign_id using client_id (username)
         cursor.execute("""
