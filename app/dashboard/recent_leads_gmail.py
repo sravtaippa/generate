@@ -115,5 +115,56 @@ def get_booking_count():
         if conn:
             conn.close()
 
+def email_sent_chart():
+    username = request.args.get('username')
+    if not username:
+        return jsonify({'error': 'Missing username'}), 400
+
+    try:
+        conn = connect_to_postgres()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Get instantly_campaign_id
+        cursor.execute("""
+            SELECT instantly_campaign_id 
+            FROM client_info 
+            WHERE client_id = %s
+        """, (username,))
+        result = cursor.fetchone()
+        if not result:
+            return jsonify({'error': 'No campaign ID found'}), 404
+
+        campaign_id = result['instantly_campaign_id']
+
+        # Calculate start and end of the current week
+        today = datetime.now()
+        start_of_week = today - timedelta(days=today.weekday())  # Monday
+        end_of_week = start_of_week + timedelta(days=6)           # Sunday
+
+        cursor.execute("""
+            SELECT created 
+            FROM dashboard_inbox 
+            WHERE campaign_id = %s
+            AND created >= %s AND created <= %s
+        """, (campaign_id, start_of_week.date(), end_of_week.date()))
+        emails = cursor.fetchall()
+
+        # Initialize counts
+        day_counts = {'Mon': 0, 'Tue': 0, 'Wed': 0, 'Thu': 0, 'Fri': 0, 'Sat': 0, 'Sun': 0}
+
+        for row in emails:
+            created_day = row['created'].strftime('%a')
+            if created_day in day_counts:
+                day_counts[created_day] += 1
+
+        return jsonify(day_counts)
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+    finally:
+        if conn:
+            conn.close()
+
 if __name__ == '__main__':
     app.run(debug=True)
