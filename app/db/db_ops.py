@@ -238,7 +238,7 @@ class DatabaseManager:
                 # Perform database operation
                 cursor = connection.cursor()
                 values = (
-                    data.get('id'),
+                    data.get('apollo_id'),
                     data.get('first_name'),
                     data.get('last_name'),
                     data.get('name'),
