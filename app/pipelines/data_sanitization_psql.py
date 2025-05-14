@@ -207,7 +207,7 @@ def sanitize_data(client_id, data_dict):
             field_mapping=campaign_field_mapping,
             icp_to_outreach=icp_to_outreach_mapping,
             icp_df=icp_df,
-            default_values={"status": "inactiv
+            default_values={"status": "inactive"}
         )
 
         return {"message": "Data cleaned and processed successfully."}
