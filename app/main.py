@@ -26,7 +26,7 @@ from dashboard.client_onboarding_update_form import update_client_onboarding
 from dashboard.client_configuration_form import update_client_configuration
 from dashboard.client_profile_picture import get_profile_picture
 from dashboard.recent_leads_gmail import fetch_recent_leads_from_db, fetch_metric_value, get_booking_count, email_sent_chart, get_campaign_details
-from dashboard.recent_leads_gmail import fetch_airtable_data_and_create_csv
+from dashboard.leads_email import fetch_airtable_data_and_create_csv
 from dashboard.leads_email import fetch_organization_domains
 # from pipelines.guideline_generate import generate_content_guideline
 from pipelines.data_sanitization_psql import sanitize_data
