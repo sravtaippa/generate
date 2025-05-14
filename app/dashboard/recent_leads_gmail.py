@@ -197,7 +197,7 @@ def get_campaign_details(username):
                     SELECT photo_url
                     FROM email_response_guideline
                     WHERE campaign_id = %s
-                    ORDER BY created DESC
+                    ORDER BY created_time DESC
                     LIMIT 5
                 """, (campaign_id,))
                 replies = cursor.fetchall()
