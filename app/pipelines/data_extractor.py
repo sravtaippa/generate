@@ -86,7 +86,7 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
             # raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
             info_details = db_manager.get_record(CLIENT_INFO_TABLE_NAME,"client_id",client_id)
             raw_table,cleaned_table,outreach_table = info_details.get('raw_table'),info_details.get('cleaned_table'),info_details.get('outreach_table')
-            print(raw_table)
+            print("\n******-----------------------Raw Table:----------------------------******\n", raw_table)
             # record_exists = unique_key_check_airtable('apollo_id',apollo_id,raw_table)   
             record_exists = db_manager.unique_key_check('apollo_id', apollo_id, raw_table)
             if record_exists:
