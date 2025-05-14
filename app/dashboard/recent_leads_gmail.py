@@ -194,14 +194,14 @@ def get_campaign_details(username):
 
             try:
                 cursor.execute("""
-                    SELECT profile_picture_url
-                    FROM replies_received
+                    SELECT photo_url
+                    FROM email_response_guideline
                     WHERE campaign_id = %s
                     ORDER BY created DESC
                     LIMIT 5
                 """, (campaign_id,))
                 replies = cursor.fetchall()
-                profile_pictures = [reply['profile_picture_url'] for reply in replies]
+                profile_pictures = [reply['photo_url'] for reply in replies]
 
             except errors.UndefinedTable:
                 
