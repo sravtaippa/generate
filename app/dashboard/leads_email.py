@@ -16,9 +16,9 @@ CSV_FILE = 'leads_guideline.csv'
 EMAIL_ADDRESS = 'shibla@taippa.com'
 EMAIL_PASSWORD = 'rkecttakcyajughv'
 TO_EMAIL = 'shiblashilu@gmail.com'
-
+CC_EMAILS = ['shilusaifshilu@gmail.com', 'sravan@taippa.com'] 
 def generate_csv_and_send_email():
-    # Fetch from Airtable
+    # Fetch data from Airtable
     url = f'https://api.airtable.com/v0/{BASE_ID}/{TABLE_NAME}'
     headers = {'Authorization': f'Bearer {AIRTABLE_API_KEY}'}
 
@@ -38,7 +38,7 @@ def generate_csv_and_send_email():
     if not records:
         return "No records found.", 404
 
-    # Write to CSV
+    # Write data to CSV
     fieldnames = list(records[0]['fields'].keys())
     with open(CSV_FILE, mode='w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -46,19 +46,22 @@ def generate_csv_and_send_email():
         for record in records:
             writer.writerow(record['fields'])
 
-    # Email CSV
+    # Create and send email with attachment
     msg = EmailMessage()
     msg['Subject'] = 'Leads Guideline CSV'
     msg['From'] = EMAIL_ADDRESS
     msg['To'] = TO_EMAIL
+    msg['Cc'] = ', '.join(CC_EMAILS)
     msg.set_content('Attached is the leads_guideline CSV file.')
 
     with open(CSV_FILE, 'rb') as f:
         msg.add_attachment(f.read(), maintype='text', subtype='csv', filename=f.name)
 
+    recipients = [TO_EMAIL] + CC_EMAILS
+
     with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
         smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-        smtp.send_message(msg)
+        smtp.send_message(msg, to_addrs=recipients)
 
     return "CSV created and email sent successfully."
 
