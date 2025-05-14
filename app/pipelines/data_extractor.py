@@ -86,6 +86,7 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
             # raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
             info_details = db_manager.get_record(CLIENT_INFO_TABLE_NAME,"client_id",client_id)
             raw_table,cleaned_table,outreach_table = info_details.get('raw_table'),info_details.get('cleaned_table'),info_details.get('outreach_table')
+            print(raw_table)
             # record_exists = unique_key_check_airtable('apollo_id',apollo_id,raw_table)   
             record_exists = db_manager.unique_key_check('apollo_id', apollo_id, raw_table)
             if record_exists:
@@ -155,7 +156,8 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
                 else:
                     print(f"Skipping lead qualification...")
                     # continue
-                db_manager.insert_data_collection(data_dict)
+                # db_manager.insert_data_collection(data_dict)
+                db_manager.insert_data(data_dict,raw_table)
                 # export_to_airtable(data_dict,raw_table)
                 print(f"Data collected in source table")
                 response = sanitize_data(client_id,data_dict)
