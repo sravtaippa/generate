@@ -531,9 +531,9 @@ def trigger_csv_generation():
     return generate_csv_and_send_email()
 
 
-@app.route("/get_campaign_details_dashboard", methods=["GET"])
-def get_campaign_details_dashboard():
-    return get_campaign_details()
+@app.route("/get_campaign_details_dashboard/<username>", methods=["GET"])
+def get_campaign_details_dashboard(username):
+    return get_campaign_details(username)
 
 @app.route("/test_db",methods=["GET"])
 def connect_db():
