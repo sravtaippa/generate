@@ -237,6 +237,7 @@ class DatabaseManager:
 
                 # Perform database operation
                 cursor = connection.cursor()
+                print("Data:",data)
                 values = (
                     data.get('apollo_id'),
                     data.get('first_name'),
