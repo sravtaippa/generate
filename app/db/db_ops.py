@@ -274,7 +274,7 @@ class DatabaseManager:
                 )
             
                 cursor.execute('''
-                INSERT INTO src_guideline (
+                INSERT INTO src_dummy (
                     apollo_id, first_name, last_name, name, email, linkedin_url, associated_client_id,
                     title, seniority, headline, is_likely_to_engage, photo_url, email_status,
                     twitter_url, employment_history, employment_summary,
