@@ -69,7 +69,7 @@ class DatabaseManager:
                 )
                 # Use DictCursor to get results as dictionaries. So this creates a PostgreSQL cursor that returns query results as dictionary-like objects instead of the default tuples
                 cursor = connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
-                query = f"SELECT * FROM {table_name} WHERE {primary_key_col} = %s"
+                query = f"SELECT * FROM {table_name} WHERE {primary_key_col} = %s LIMIT 1"
                 print(query)
                 cursor.execute(query, (primary_key_value,)) # note: , for tuple validation
                 print('database query executed')
@@ -77,7 +77,7 @@ class DatabaseManager:
                 if record is None:
                     print(f"No records found for {primary_key_col} = {primary_key_value} in {table_name}")
                     return None    
-                print(dict(record))
+                # print(dict(record))
                 cursor.close()
                 connection.close()
                 return dict(record)
@@ -92,7 +92,6 @@ class DatabaseManager:
             table_name (str): Name of the table.
             record (dict): Dictionary of column-value pairs to update (must include primary_key_col).
             primary_key_col (str): Name of the primary key column.
-            db_params (dict): Database connection parameters.
         
         Returns:
             bool: True if a record was updated, False otherwise.
