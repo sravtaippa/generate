@@ -29,7 +29,7 @@ from dashboard.recent_leads_gmail import fetch_recent_leads_from_db, fetch_metri
 from dashboard.leads_email import generate_csv_and_send_email
 from pipelines.organization_list_enrichment import fetch_organization_domains
 # from pipelines.guideline_generate import generate_content_guideline
-from pipelines.data_sanitization_psql import sanitize_data
+# from pipelines.data_sanitization_psql import sanitize_data
 from pipelines.guideline_generate import execute_generate_sequence
 
 print(f"\n =============== Generate : Pipeline started  ===============")
@@ -41,7 +41,11 @@ app = Flask(__name__)
 @app.route("/guideline_generate", methods=["GET"])
 def guideline_generate():
     try:
+        start_time = time.time()  # Start timer
         execute_generate_sequence()
+        end_time = time.time()  # End timer
+        elapsed_minutes = (end_time - start_time) / 60  # Convert seconds to minutes
+        print(f"~~~~~~~~~ Execution Time: {elapsed_minutes:.2f} minutes ~~~~~~~~~~~~")
         return {"Status":"Successfully fetched organization list"}
     except Exception as e:
         print(f"Error occured while generating the content for outreach: {e}")
