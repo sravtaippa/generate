@@ -53,7 +53,7 @@ def generate_csv_and_send_email():
     start_date, end_date = get_current_week_range()
     filtered_records = []
     for record in records:
-        date_str = record['fields'].get('Date')  # Replace 'Date' with your actual field name
+        date_str = record['fields'].get('created_time')  # Replace 'Date' with your actual field name
         if date_str:
             try:
                 record_date = datetime.strptime(date_str[:10], '%Y-%m-%d').date()
