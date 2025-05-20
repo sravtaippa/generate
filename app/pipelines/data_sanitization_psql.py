@@ -5,14 +5,19 @@ import re
 import psycopg2
 from db.db_utils import retrieve_client_tables, phone_number_updation
 from datetime import datetime
-from db.db_ops import DatabaseManager
+
 # Flask app setup
 app = Flask(__name__)
-import psycopg2
-import sshtunnel
 
-
-
+# PostgreSQL connection
+conn = psycopg2.connect(
+    dbname="taippa",
+    user="super",
+    password="drowsapp_2025",
+    host="magmostafa-4523.postgres.pythonanywhere-services.com",
+    port="14523"
+)
+cursor = conn.cursor()
 
 def clean_urls(url, unique_id, column_name):
     if pd.isna(url) or not str(url).strip() or url.lower() in ["unknown", "n/a"]:
@@ -31,12 +36,10 @@ def fetch_client_details_postgres(df, icp_field="associated_client_id", client_d
             return pd.DataFrame()
         format_strings = ','.join(['%s'] * len(client_ids))
         query = f"SELECT * FROM client_info WHERE {client_details_field} IN ({format_strings})"
-        db_manager = DatabaseManager()
-        with db_manager.get_cursor() as cursor:
-            cursor.execute(query, tuple(client_ids))
-            rows = cursor.fetchall()
-            colnames = [desc[0] for desc in cursor.description]
-            return pd.DataFrame([dict(zip(colnames, row)) for row in rows])
+        cursor.execute(query, tuple(client_ids))
+        rows = cursor.fetchall()
+        colnames = [desc[0] for desc in cursor.description]
+        return pd.DataFrame([dict(zip(colnames, row)) for row in rows])
     except Exception as e:
         print(f"Error fetching client details from PostgreSQL: {e}")
         return pd.DataFrame()
@@ -44,12 +47,10 @@ def fetch_client_details_postgres(df, icp_field="associated_client_id", client_d
 def record_exists(unique_id, table_name):
     try:
         query = f"SELECT 1 FROM {table_name} WHERE unique_id = %s LIMIT 1"
-        db_manager = DatabaseManager()
-        with db_manager.get_cursor() as cursor:
-            cursor.execute(query, (unique_id,))
-            exists = cursor.fetchone() is not None
-            print(f"Checking existence for {unique_id} in {table_name}: {exists}")
-            return exists
+        cursor.execute(query, (unique_id,))
+        exists = cursor.fetchone() is not None
+        print(f"Checking existence for {unique_id} in {table_name}: {exists}")
+        return exists
     except Exception as e:
         print(f"Error in record_exists: {e}")
         return False
@@ -62,13 +63,13 @@ def insert_record(row_dict, table_name):
         print(f"\n--- INSERTING INTO {table_name} ---")
         print(f"Query: {query}")
         print(f"Values: {tuple(row_dict.values())}")
-        db_manager = DatabaseManager()
-        with db_manager.get_cursor() as cursor:
-            cursor.execute(query, tuple(row_dict.values()))
+        cursor.execute(query, tuple(row_dict.values()))
+        conn.commit()
         print(f"✅ Inserted record into {table_name}")
     except Exception as e:
         print(f"❌ Insert error into {table_name}: {e}")
         print(f"Data: {row_dict}")
+        conn.rollback()
 
 def send_to_postgres_if_new(df, table_name, unique_field, desired_fields=None, field_mapping=None, default_values=None, icp_to_outreach=None, icp_df=None):
     for i, row in df.iterrows():
@@ -80,9 +81,11 @@ def send_to_postgres_if_new(df, table_name, unique_field, desired_fields=None, f
                 record_data = {field: record_data[field] for field in desired_fields if field in record_data}
                 print(f"Filtered to desired fields: {list(record_data.keys())}")
 
+            # Build unique_id
             unique_id_value = f"{record_data.get('apollo_id', '')}_{record_data.get('email', '')}"
             record_data["unique_id"] = unique_id_value
 
+            # Apply ICP enrichment
             if icp_to_outreach and icp_df is not None:
                 client_id = row.get("associated_client_id")
                 if client_id:
@@ -92,16 +95,20 @@ def send_to_postgres_if_new(df, table_name, unique_field, desired_fields=None, f
                             if icp_field in matching_icp_rows.columns:
                                 record_data[outreach_field] = matching_icp_rows.iloc[0][icp_field]
 
+            # Map field names
             if field_mapping:
                 record_data = {field_mapping.get(k, k): v for k, v in record_data.items()}
                 print(f"After field mapping: {list(record_data.keys())}")
 
+            # Add created_time
             record_data["created_time"] = datetime.now()
 
+            # Apply default values
             if default_values:
                 for key, value in default_values.items():
                     record_data.setdefault(key, value)
 
+            # Insert if not exists
             if not record_exists(record_data["unique_id"], table_name):
                 insert_record(record_data, table_name)
             else:
@@ -174,16 +181,28 @@ def sanitize_data(client_id, data_dict):
             "business_type": "business_type",
             "outreach_table": "outreach_table"
         }
-
+        # Save to cleaned table
         send_to_postgres_if_new(df, cleaned_table_name, unique_field='unique_id')
         send_to_postgres_if_new(
             filtered_df,
             outreach_table_name,
             unique_field="unique_id",
             desired_fields=[
-                "linkedin_url", "first_name", "last_name", "email", "organization_name", "title",
-                "organization_website", "organization_short_description", "unique_id", "apollo_id",
-                "associated_client_id", "employment_summary", "created_time", "filter_criteria", "target_region"
+                "linkedin_url",
+                "first_name",
+                "last_name",
+                "email",
+                "organization_name",
+                "title",
+                "organization_website",
+                "organization_short_description",
+                "unique_id",
+                "apollo_id",
+                "associated_client_id",
+                "employment_summary",
+                "created_time",
+                "filter_criteria",
+                "target_region"
             ],
             field_mapping=campaign_field_mapping,
             icp_to_outreach=icp_to_outreach_mapping,
@@ -196,3 +215,5 @@ def sanitize_data(client_id, data_dict):
     except Exception as e:
         print(f"❌ Error in sanitize_data: {e}")
         return {"error": f"Error in sanitizing data: {e}"}
+
+
