@@ -29,7 +29,7 @@ from dashboard.recent_leads_gmail import fetch_recent_leads_from_db, fetch_metri
 from dashboard.leads_email import generate_csv_and_send_email
 from pipelines.organization_list_enrichment import fetch_organization_domains
 # from pipelines.guideline_generate import generate_content_guideline
-# from pipelines.data_sanitization_psql import sanitize_data
+from pipelines.data_sanitization_psql import sanitize_data
 from pipelines.guideline_generate import execute_generate_sequence
 
 print(f"\n =============== Generate : Pipeline started  ===============")
@@ -550,4 +550,4 @@ def connect_db():
 if __name__ == '__main__':
 #   app.run(debug=True,use_reloader=False)
 #   app.run(port=8001) 
-  app.run(port=8080)
+  app.run(host="127.0.0.1", port=5000)
