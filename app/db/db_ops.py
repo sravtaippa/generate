@@ -332,7 +332,7 @@ class DatabaseManager:
         except Exception as e:
             print(f"An error occurred: {e}")
         return 'Done'
-
+        
 
 db_manager = DatabaseManager(
     ssh_username='magmostafa',

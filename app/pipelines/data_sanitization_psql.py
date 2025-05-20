@@ -42,7 +42,7 @@ def fetch_client_details_postgres(df, icp_field="associated_client_id", client_d
         return pd.DataFrame([dict(zip(colnames, row)) for row in rows])
     except Exception as e:
         print(f"Error fetching client details from PostgreSQL: {e}")
-        return pd.DataFrame()
+        return pd.DataFrame()  
 
 def record_exists(unique_id, table_name):
     try:
