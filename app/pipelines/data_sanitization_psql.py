@@ -31,7 +31,8 @@ def fetch_client_details_postgres(df, icp_field="associated_client_id", client_d
             return pd.DataFrame()
         format_strings = ','.join(['%s'] * len(client_ids))
         query = f"SELECT * FROM client_info WHERE {client_details_field} IN ({format_strings})"
-        with DatabaseManager.db_manager.get_cursor() as cursor:
+        db_manager = DatabaseManager()
+        with db_manager.get_cursor() as cursor:
             cursor.execute(query, tuple(client_ids))
             rows = cursor.fetchall()
             colnames = [desc[0] for desc in cursor.description]
@@ -43,7 +44,8 @@ def fetch_client_details_postgres(df, icp_field="associated_client_id", client_d
 def record_exists(unique_id, table_name):
     try:
         query = f"SELECT 1 FROM {table_name} WHERE unique_id = %s LIMIT 1"
-        with DatabaseManager.db_manager.get_cursor() as cursor:
+        db_manager = DatabaseManager()
+        with db_manager.get_cursor() as cursor:
             cursor.execute(query, (unique_id,))
             exists = cursor.fetchone() is not None
             print(f"Checking existence for {unique_id} in {table_name}: {exists}")
@@ -60,7 +62,8 @@ def insert_record(row_dict, table_name):
         print(f"\n--- INSERTING INTO {table_name} ---")
         print(f"Query: {query}")
         print(f"Values: {tuple(row_dict.values())}")
-        with DatabaseManager.db_manager.get_cursor(commit=True) as cursor:
+        db_manager = DatabaseManager()
+        with db_manager.get_cursor() as cursor:
             cursor.execute(query, tuple(row_dict.values()))
         print(f"✅ Inserted record into {table_name}")
     except Exception as e:
