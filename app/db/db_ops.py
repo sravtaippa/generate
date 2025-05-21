@@ -1,7 +1,7 @@
 import psycopg2
 import sshtunnel
 import psycopg2.extras
-
+import pandas as pd
 sshtunnel.SSH_TIMEOUT = 10.0
 sshtunnel.TUNNEL_TIMEOUT = 10.0
 
@@ -226,7 +226,7 @@ class DatabaseManager:
                 ssh_username=self.ssh_username,
                 ssh_password=self.ssh_password,
                 remote_bind_address=(self.postgres_hostname, self.postgres_host_port)
-            ) as tunnel:
+                ) as tunnel:
                 # Connect to the database through the tunnel
                 connection = psycopg2.connect(
                     user=self.db_user, password=self.db_password,
@@ -332,7 +332,121 @@ class DatabaseManager:
         except Exception as e:
             print(f"An error occurred: {e}")
         return 'Done'
-        
+    
+    def get_record(self, table_name, cols_list, col_values, limit=1):
+        try:
+            # Establish SSH tunnel
+            with sshtunnel.SSHTunnelForwarder(
+                ('ssh.pythonanywhere.com'),
+                ssh_username=self.ssh_username,
+                ssh_password=self.ssh_password,
+                remote_bind_address=(self.postgres_hostname, self.postgres_host_port)
+            ) as tunnel:
+                # Connect to the database through the tunnel
+                connection = psycopg2.connect(
+                    user=self.db_user,
+                    password=self.db_password,
+                    host='127.0.0.1',
+                    port=tunnel.local_bind_port,
+                    database=self.db_name,
+                )
+                cursor = connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+                # Build WHERE clause dynamically
+                where_clause = " AND ".join([f"{col} = %s" for col in cols_list])
+                query = f"SELECT * FROM {table_name} WHERE {where_clause} LIMIT {limit};"
+                print("Executing query:", query)
+
+                # Execute query with values
+                cursor.execute(query, col_values)
+
+                record = cursor.fetchone()
+                cursor.close()
+                connection.close()
+
+                if record is None:
+                    print("No matching record found.")
+                    return None
+
+                return dict(record)
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return None
+
+    # def fetch_client_details(self, client_ids, client_details_field="client_id"): 
+    #     try:
+    #         with sshtunnel.SSHTunnelForwarder(
+    #             ('ssh.pythonanywhere.com'),
+    #             ssh_username=self.ssh_username,
+    #             ssh_password=self.ssh_password,
+    #             remote_bind_address=(self.postgres_hostname, self.postgres_host_port)
+    #         ) as tunnel:
+    #             connection = psycopg2.connect(
+    #                 user=self.db_user, password=self.db_password,
+    #                 host='127.0.0.1', port=tunnel.local_bind_port,
+    #                 database=self.db_name,
+    #             )
+    #             if not client_ids:
+    #                 return pd.DataFrame()
+    #             format_strings = ','.join(['%s'] * len(client_ids))
+    #             query = f"SELECT * FROM client_info WHERE {client_details_field} IN ({format_strings})"
+                
+    #             with connection.cursor() as cursor:
+    #                 cursor.execute(query, tuple(client_ids))
+    #                 rows = cursor.fetchall()
+    #                 colnames = [desc[0] for desc in cursor.description]
+    #                 return pd.DataFrame([dict(zip(colnames, row)) for row in rows])
+    #     except Exception as e:
+    #         print(f"Error fetching client details: {e}")
+    #         return pd.DataFrame()
+
+    # def record_exists(self, unique_id, table_name):
+    #     try:
+    #         with sshtunnel.SSHTunnelForwarder(
+    #             ('ssh.pythonanywhere.com'),
+    #             ssh_username=self.ssh_username,
+    #             ssh_password=self.ssh_password,
+    #             remote_bind_address=(self.postgres_hostname, self.postgres_host_port)
+    #         ) as tunnel:
+    #             connection = psycopg2.connect(
+    #                 user=self.db_user, password=self.db_password,
+    #                 host='127.0.0.1', port=tunnel.local_bind_port,
+    #                 database=self.db_name,
+    #             )
+    #             query = f"SELECT 1 FROM {table_name} WHERE unique_id = %s LIMIT 1"
+    #             with connection.cursor() as cursor:
+    #                 cursor.execute(query, (unique_id,))
+    #                 return cursor.fetchone() is not None
+    #     except Exception as e:
+    #         print(f"Error in record_exists: {e}")
+    #         return False
+
+
+    # def insert_record(self, row_dict, table_name):
+    #     try:
+    #         with sshtunnel.SSHTunnelForwarder(
+    #             ('ssh.pythonanywhere.com'),
+    #             ssh_username=self.ssh_username,
+    #             ssh_password=self.ssh_password,
+    #             remote_bind_address=(self.postgres_hostname, self.postgres_host_port)
+    #         ) as tunnel:
+    #             connection = psycopg2.connect(
+    #                 user=self.db_user, password=self.db_password,
+    #                 host='127.0.0.1', port=tunnel.local_bind_port,
+    #                 database=self.db_name,
+    #             )
+    #             columns = ', '.join(row_dict.keys())
+    #             values = ', '.join(['%s'] * len(row_dict))
+    #             query = f"INSERT INTO {table_name} ({columns}) VALUES ({values})"
+
+    #             with connection.cursor() as cursor:
+    #                 # Handle Series or dict
+    #                 value_tuple = tuple(row_dict.values())  if hasattr(row_dict, 'to_list') else tuple(row_dict.values())
+    #                 cursor.execute(query, value_tuple)
+    #                 connection.commit()
+    #     except Exception as e:
+    #         print(f"Insert error into {table_name}: {e}")
 
 db_manager = DatabaseManager(
     ssh_username='magmostafa',
