@@ -27,7 +27,7 @@ from dashboard.client_configuration_form import update_client_configuration
 from dashboard.client_profile_picture import get_profile_picture
 from dashboard.recent_leads_gmail import fetch_recent_leads_from_db, fetch_metric_value, get_booking_count, email_sent_chart, get_campaign_details
 from dashboard.leads_email import generate_csv_and_send_email
-from dashboard.test_databse import test_database
+from dashboard.test_databse import run_database_test
 from pipelines.organization_list_enrichment import fetch_organization_domains
 # from pipelines.guideline_generate import generate_content_guideline
 from pipelines.data_sanitization_psql import sanitize_data
@@ -549,8 +549,14 @@ def connect_db():
         print(f"Error occured while testing connection")
 
 @app.route("/test_database", methods=["GET"])
-def test_database():
-    return test_database()
+def test_database_route():
+    try:
+        run_database_test()
+        return {"status": "success", "message": "Testing completed"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 500
+
+    
 
 if __name__ == '__main__':
 #   app.run(debug=True,use_reloader=False)
