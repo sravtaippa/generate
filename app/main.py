@@ -32,6 +32,7 @@ from pipelines.organization_list_enrichment import fetch_organization_domains
 # from pipelines.guideline_generate import generate_content_guideline
 from pipelines.data_sanitization_psql import sanitize_data
 from pipelines.guideline_generate import execute_generate_sequence
+from make.guideline_3_inkedIn_message_sent_tracker import run_database_test
 
 print(f"\n =============== Generate : Pipeline started  ===============")
 
