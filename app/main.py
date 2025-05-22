@@ -32,7 +32,7 @@ from pipelines.organization_list_enrichment import fetch_organization_domains
 # from pipelines.guideline_generate import generate_content_guideline
 from pipelines.data_sanitization_psql import sanitize_data
 from pipelines.guideline_generate import execute_generate_sequence
-from make.guideline_3_inkedIn_message_sent_tracker import run_database_test
+from make.guideline_3_inkedIn_message_sent_tracker import linkedin_message_sent_tacker
 
 print(f"\n =============== Generate : Pipeline started  ===============")
 
@@ -549,10 +549,24 @@ def connect_db():
     except Exception as e:
         print(f"Error occured while testing connection")
 
-@app.route("/test_database", methods=["GET"])
-def test_database_route():
+@app.route("/run_linkedin_message_sent_tacker", methods=["GET"])
+def run_linkedin_message_sent_tacker():
     try:
-        run_database_test()
+        thread_id = request.args.get("thread_id", default=None)
+        campaign_name = request.args.get("campaign_name", default=None)
+        linkedin_profile_url = request.args.get("linkedin_profile_url", default=None)
+        full_name = request.args.get("full_name", default=None)
+        email = request.args.get("email", default=None)
+        picture = request.args.get("picture", default=None)
+        data = {
+            "thread_id": thread_id,
+            "campaign_name": campaign_name,
+            "linkedin_profile_url": linkedin_profile_url,
+            "full_name": full_name,
+            "email": email,
+            "picture": picture
+        }
+        linkedin_message_sent_tacker(data)
         return {"status": "success", "message": "Testing completed"}
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500

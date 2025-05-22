@@ -333,7 +333,7 @@ class DatabaseManager:
             print(f"An error occurred: {e}")
         return 'Done'
     
-    def get_record(self, table_name, cols_list, col_values, limit=1):
+    def get_records_with_filter(self, table_name, cols_list, col_values, limit=1):
         try:
             # Establish SSH tunnel
             with sshtunnel.SSHTunnelForwarder(
