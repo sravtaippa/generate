@@ -576,22 +576,22 @@ def run_linkedin_message_sent_tacker():
 @app.route("/run_linkedin_invite_sent_tacker", methods=["GET"])
 def run_linkedin_invite_sent_tacker():
     try:
-        # thread_id = request.args.get("thread_id", default=None)
-        # campaign_name = request.args.get("campaign_name", default=None)
-        # linkedin_profile_url = request.args.get("linkedin_profile_url", default=None)
-        # full_name = request.args.get("full_name", default=None)
-        # email = request.args.get("email", default=None)
-        # picture = request.args.get("picture", default=None)
-        # data = {
-        #     "thread_id": thread_id,
-        #     "campaign_name": campaign_name,
-        #     "linkedin_profile_url": linkedin_profile_url,
-        #     "full_name": full_name,
-        #     "email": email,
-        #     "picture": picture
-        # }
-        # linkedin_invite_sent_tacker(data)
-        linkedin_invite_sent_tacker()
+        thread_id = request.args.get("thread_id", default=None)
+        campaign_name = request.args.get("campaign_name", default=None)
+        linkedin_profile_url = request.args.get("linkedin_profile_url", default=None)
+        full_name = request.args.get("full_name", default=None)
+        email = request.args.get("email", default=None)
+        picture = request.args.get("picture", default=None)
+        data = {
+            "thread_id": thread_id,
+            "campaign_name": campaign_name,
+            "linkedin_profile_url": linkedin_profile_url,
+            "full_name": full_name,
+            "email": email,
+            "picture": picture
+        }
+        linkedin_invite_sent_tacker(data)
+        # linkedin_invite_sent_tacker()
         return {"status": "success", "message": "Testing completed"}
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500  
@@ -599,22 +599,22 @@ def run_linkedin_invite_sent_tacker():
 @app.route("/run_linkedin_invite_accepted_tacker", methods=["GET"])
 def run_linkedin_invite_accepted_tacker():
     try:
-        # thread_id = request.args.get("thread_id", default=None)
-        # campaign_name = request.args.get("campaign_name", default=None)
-        # linkedin_profile_url = request.args.get("linkedin_profile_url", default=None)
-        # full_name = request.args.get("full_name", default=None)
-        # email = request.args.get("email", default=None)
-        # picture = request.args.get("picture", default=None)
-        # data = {
-        #     "thread_id": thread_id,
-        #     "campaign_name": campaign_name,
-        #     "linkedin_profile_url": linkedin_profile_url,
-        #     "full_name": full_name,
-        #     "email": email,
-        #     "picture": picture
-        # }
-        # linkedin_invite_accepted_tacker(data)
-        linkedin_invite_accepted_tacker()
+        thread_id = request.args.get("thread_id", default=None)
+        campaign_name = request.args.get("campaign_name", default=None)
+        linkedin_profile_url = request.args.get("linkedin_profile_url", default=None)
+        full_name = request.args.get("full_name", default=None)
+        email = request.args.get("email", default=None)
+        picture = request.args.get("picture", default=None)
+        data = {
+            "thread_id": thread_id,
+            "campaign_name": campaign_name,
+            "linkedin_profile_url": linkedin_profile_url,
+            "full_name": full_name,
+            "email": email,
+            "picture": picture
+        }
+        linkedin_invite_accepted_tacker(data)
+        # linkedin_invite_accepted_tacker()
         return {"status": "success", "message": "Testing completed"}
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500   
@@ -622,8 +622,24 @@ def run_linkedin_invite_accepted_tacker():
 @app.route("/run_linkedin_ai_response_tacker", methods=["GET"])
 def run_linkedin_ai_response_tacker():
     try:
-        message= "Thanks for reaching out. I'd be happy to learn more. Can we set up a call?"
-        linkedin_ai_response_tacker(message)
+        thread_id = request.args.get("thread_id", default=None)
+        campaign_name = request.args.get("campaign_name", default=None)
+        linkedin_profile_url = request.args.get("linkedin_profile_url", default=None)
+        full_name = request.args.get("full_name", default=None)
+        email = request.args.get("email", default=None)
+        picture = request.args.get("picture", default=None)
+        message= request.args.get("message", default=None)
+        data = {
+            "thread_id": thread_id,
+            "campaign_name": campaign_name,
+            "linkedin_profile_url": linkedin_profile_url,
+            "full_name": full_name,
+            "email": email,
+            "picture": picture,
+            "message": message
+        }
+        # message= "Thanks for reaching out. I'd be happy to learn more. Can we set up a call?"
+        linkedin_ai_response_tacker(data)
         return {"status": "success", "message": "Testing completed"}
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500   
