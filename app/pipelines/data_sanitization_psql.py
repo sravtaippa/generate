@@ -8,16 +8,26 @@ from datetime import datetime
 
 # Flask app setup
 app = Flask(__name__)
+from db.db_ops import db_manager
+# db = DatabaseManager(
+#     ssh_username='magmostafa',
+#     ssh_password='Drowssap_2024',
+#     postgres_hostname="magmostafa-4523.postgres.pythonanywhere-services.com",
+#     postgres_host_port=14523, 
+#     db_user='super',
+#     db_password='drowsapp_2025',
+#     db_name='taippa'
+#     )
 
-# PostgreSQL connection
-conn = psycopg2.connect(
-    dbname="taippa",
-    user="super",
-    password="drowsapp_2025",
-    host="magmostafa-4523.postgres.pythonanywhere-services.com",
-    port="14523"
-)
-cursor = conn.cursor()
+# # PostgreSQL connection
+# conn = psycopg2.connect(
+#     dbname="taippa",
+#     user="super",
+#     password="drowsapp_2025",
+#     host="magmostafa-4523.postgres.pythonanywhere-services.com",
+#     port="14523"
+# )
+# cursor = conn.cursor()
 
 def clean_urls(url, unique_id, column_name):
     if pd.isna(url) or not str(url).strip() or url.lower() in ["unknown", "n/a"]:
@@ -29,47 +39,47 @@ def clean_urls(url, unique_id, column_name):
         url = "https://" + url
     return url
 
-def fetch_client_details_postgres(df, icp_field="associated_client_id", client_details_field="client_id"):
-    try:
-        client_ids = df[icp_field].dropna().unique().tolist()
-        if not client_ids:
-            return pd.DataFrame()
-        format_strings = ','.join(['%s'] * len(client_ids))
-        query = f"SELECT * FROM client_info WHERE {client_details_field} IN ({format_strings})"
-        cursor.execute(query, tuple(client_ids))
-        rows = cursor.fetchall()
-        colnames = [desc[0] for desc in cursor.description]
-        return pd.DataFrame([dict(zip(colnames, row)) for row in rows])
-    except Exception as e:
-        print(f"Error fetching client details from PostgreSQL: {e}")
-        return pd.DataFrame()
+# def fetch_client_details_postgres(df, icp_field="associated_client_id", client_details_field="client_id"):
+#     try:
+#         client_ids = df[icp_field].dropna().unique().tolist()
+#         if not client_ids:
+#             return pd.DataFrame()
+#         format_strings = ','.join(['%s'] * len(client_ids))
+#         query = f"SELECT * FROM client_info WHERE {client_details_field} IN ({format_strings})"
+#         cursor.execute(query, tuple(client_ids))
+#         rows = cursor.fetchall()
+#         colnames = [desc[0] for desc in cursor.description]
+#         return pd.DataFrame([dict(zip(colnames, row)) for row in rows])
+#     except Exception as e:
+#         print(f"Error fetching client details from PostgreSQL: {e}")
+#         return pd.DataFrame()  
 
-def record_exists(unique_id, table_name):
-    try:
-        query = f"SELECT 1 FROM {table_name} WHERE unique_id = %s LIMIT 1"
-        cursor.execute(query, (unique_id,))
-        exists = cursor.fetchone() is not None
-        print(f"Checking existence for {unique_id} in {table_name}: {exists}")
-        return exists
-    except Exception as e:
-        print(f"Error in record_exists: {e}")
-        return False
+# def record_exists(unique_id, table_name):
+#     try:
+#         query = f"SELECT 1 FROM {table_name} WHERE unique_id = %s LIMIT 1"
+#         cursor.execute(query, (unique_id,))
+#         exists = cursor.fetchone() is not None
+#         print(f"Checking existence for {unique_id} in {table_name}: {exists}")
+#         return exists
+#     except Exception as e:
+#         print(f"Error in record_exists: {e}")
+#         return False
 
-def insert_record(row_dict, table_name):
-    try:
-        columns = ', '.join(row_dict.keys())
-        values = ', '.join(['%s'] * len(row_dict))
-        query = f"INSERT INTO {table_name} ({columns}) VALUES ({values})"
-        print(f"\n--- INSERTING INTO {table_name} ---")
-        print(f"Query: {query}")
-        print(f"Values: {tuple(row_dict.values())}")
-        cursor.execute(query, tuple(row_dict.values()))
-        conn.commit()
-        print(f"✅ Inserted record into {table_name}")
-    except Exception as e:
-        print(f"❌ Insert error into {table_name}: {e}")
-        print(f"Data: {row_dict}")
-        conn.rollback()
+# def insert_record(row_dict, table_name):
+#     try:
+#         columns = ', '.join(row_dict.keys())
+#         values = ', '.join(['%s'] * len(row_dict))
+#         query = f"INSERT INTO {table_name} ({columns}) VALUES ({values})"
+#         print(f"\n--- INSERTING INTO {table_name} ---")
+#         print(f"Query: {query}")
+#         print(f"Values: {tuple(row_dict.values())}")
+#         cursor.execute(query, tuple(row_dict.values()))
+#         conn.commit()
+#         print(f"✅ Inserted record into {table_name}")
+#     except Exception as e:
+#         print(f"❌ Insert error into {table_name}: {e}")
+#         print(f"Data: {row_dict}")
+#         conn.rollback()
 
 def send_to_postgres_if_new(df, table_name, unique_field, desired_fields=None, field_mapping=None, default_values=None, icp_to_outreach=None, icp_df=None):
     for i, row in df.iterrows():
@@ -102,15 +112,16 @@ def send_to_postgres_if_new(df, table_name, unique_field, desired_fields=None, f
 
             # Add created_time
             record_data["created_time"] = datetime.now()
-
+            
             # Apply default values
             if default_values:
                 for key, value in default_values.items():
                     record_data.setdefault(key, value)
-
+            print(f"📦 Final record_data before insert: {record_data}")
             # Insert if not exists
-            if not record_exists(record_data["unique_id"], table_name):
-                insert_record(record_data, table_name)
+            print(f"Unique Field:{unique_field}")
+            if not db_manager.unique_key_check(unique_field, unique_id_value, table_name):
+                db_manager.insert_data(table_name, record_data)
             else:
                 print(f"⚠️ Record {i} already exists in {table_name}, skipping.")
         except Exception as e:
@@ -164,9 +175,16 @@ def sanitize_data(client_id, data_dict):
             "organization_short_description": "recipient_bio",
             "linkedin_url": "linkedin_profile_url",
         }
+        
 
-        icp_df = fetch_client_details_postgres(df)
-
+        client_ids = df["associated_client_id"].dropna().unique().tolist()
+        print(f"Client ids:{client_ids}")
+        # icp_df = db_manager.fetch_client_details(client_ids)
+        icp_df_dict = db_manager.get_record("client_info","client_id",client_ids[0])
+        # print(f"Client ids:{client_ids}")
+        icp_df = pd.DataFrame([icp_df_dict])
+        # icp_df = fetch_client_details_postgres(df)
+        # icp_df = dbget_record(self,table_name,primary_key_col,primary_key_value):
         icp_to_outreach_mapping = {
             "sender_email": "email",
             "sender_company": "company_name",
@@ -215,3 +233,5 @@ def sanitize_data(client_id, data_dict):
     except Exception as e:
         print(f"❌ Error in sanitize_data: {e}")
         return {"error": f"Error in sanitizing data: {e}"}
+
+
