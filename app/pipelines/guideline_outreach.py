@@ -66,7 +66,10 @@ def execute_outreach_sequence():
 
         db_manager.update_multiple_fields("outreach_guideline", update_fields, "apollo_id")
         print(f"Outreach table updated successfully")
-
+        filter_cols= ["thread_id"]
+        filter_values = [client_config.get("campaign_name")+"_"+lead_info_outreach.get("apollo_id")]
+        linkedin_leads_record = db_manager.get_record("linkedin_leads", "thread_id", client_config.get("campaign_name")+"_"+lead_info_outreach.get("apollo_id"))
+        print(f"LinkedIn leads duplicate record found: {linkedin_leads_record}")
         update_fields = {
             "thread_id": client_config.get("campaign_name")+"_"+lead_info_outreach.get("apollo_id"),
             "campaign_name": client_config.get("campaign_name"),

@@ -5,7 +5,7 @@ from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,PERPLEXITY_A
 import pinecone
 # from openai import OpenAI
 import json
-# from ai_modules.agents_guideline import generator_guideline
+from ai_modules.agents_guideline import generator_guideline
 from db.db_utils import retrieve_record,fetch_client_details,parse_people_info,unique_key_check_airtable,export_to_airtable,retrieve_client_tables,fetch_client_outreach_mappings,fetch_client_column
 from db.db_ops import db_manager
 
