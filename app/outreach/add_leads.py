@@ -1,8 +1,9 @@
 import requests
 from urllib.parse import urlencode
 from db.db_utils import retrieve_record
+from config import INSTANTLY_API_KEY,LEADSIN_API_KEY
 
-def add_lead_to_campaign(apollo_id,campaign_id,outreach_table_name):
+def add_lead_leadsin(apollo_id,campaign_id,outreach_table_name):
     try:
         primary_key_col = "apollo_id"
         primary_key_value = apollo_id
@@ -35,24 +36,47 @@ def add_lead_to_campaign(apollo_id,campaign_id,outreach_table_name):
         "message2": message2,
         "subject1": subject1,
         }
-        add_lead_leadsin(campaign_id,profile_details)
+        
+        url = f"https://api.multilead.io/api/open-api/v1/campaign/{campaign_id}/leads"
+
+        headers = {
+            'Authorization': LEADSIN_API_KEY,
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+
+        response = requests.post(url, headers=headers, data=urlencode(profile_details))
+        print(response.text)
         print("Successfully added the lead to the campaign")
         return True
     except Exception as e:
         print(f"Error occured while retrieving leads from the outreach table. Error: {e}")
         return False
 
-def add_lead_leadsin(campaign_id,payload):
+def add_lead_instantly(payload):
   try:
-    url = f"https://api.multilead.io/api/open-api/v1/campaign/{campaign_id}/leads"
-
+    url = "https://api.instantly.ai/api/v2/leads"
     headers = {
-        'Authorization': '23927b94-3ff1-48f2-a726-1730414bc27e',
-        'Content-Type': 'application/x-www-form-urlencoded'
+    "Content-Type": "application/json",
+    "Authorization": f"Bearer {INSTANTLY_API_KEY}"
     }
-
-    response = requests.post(url, headers=headers, data=urlencode(payload))
-    print(response.text)
+    response = requests.post(url, json=payload, headers=headers)
+    data = response.json()
+    print(data)
   except Exception as e:
-    print(f"Error occured while adding leads to the campaign for the lead: {payload} . Error: {e}")
+    print(f"Error occured while adding leads to the campaign in Instantly.ai for the lead: {payload}. Error: {e}")
 
+
+# def add_lead_leadsin_campaign(campaign_id,payload):
+#   try:
+#     url = f"https://api.multilead.io/api/open-api/v1/campaign/{campaign_id}/leads"
+
+#     headers = {
+#         'Authorization': LEADSIN_API_KEY,
+#         'Content-Type': 'application/x-www-form-urlencoded'
+#     }
+
+#     response = requests.post(url, headers=headers, data=urlencode(payload))
+#     print(response.text)
+    
+#   except Exception as e:
+#     print(f"Error occured while adding leads to the campaign for the lead: {payload} . Error: {e}")
