@@ -1,5 +1,5 @@
 import openai
-from openai import OpenAI
+# from openai import OpenAI
 import requests
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,PERPLEXITY_API_KEY,PINECONE_API_KEY,PINECONE_ENVIRONMENT,ANTHROPIC_API_KEY
 import pinecone

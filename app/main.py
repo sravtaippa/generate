@@ -25,15 +25,17 @@ from dashboard.dashboard_updation import process_whatsapp_data
 from dashboard.client_onboarding_update_form import update_client_onboarding
 from dashboard.client_configuration_form import update_client_configuration
 from dashboard.client_profile_picture import get_profile_picture
-from dashboard.recent_leads_gmail import fetch_recent_leads_from_db, fetch_metric_value, get_booking_count, email_sent_chart, get_campaign_details
+from dashboard.email_dashboard import fetch_recent_leads_from_db, fetch_metric_value, get_booking_count, email_sent_chart, get_campaign_details
 from dashboard.leads_email import generate_csv_and_send_email
 from dashboard.test_databse import run_database_test
 from pipelines.organization_list_enrichment import fetch_organization_domains
 # from pipelines.guideline_generate import generate_content_guideline
 from pipelines.data_sanitization_psql import sanitize_data
 from pipelines.guideline_generate import execute_generate_sequence
-from make.guideline_3_inkedIn_message_sent_tracker import linkedin_message_sent_tacker
-
+from make.linkedIn_message_sent_tracker import linkedin_message_sent_tacker
+from make.linkedIn_invite_sent_tracker import linkedin_invite_sent_tacker
+from make.linkedIn_invite_accepted_tracker import linkedin_invite_accepted_tacker
+from make.ai_response_module import linkedin_ai_response_tacker
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -571,8 +573,61 @@ def run_linkedin_message_sent_tacker():
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500
 
-    
+@app.route("/run_linkedin_invite_sent_tacker", methods=["GET"])
+def run_linkedin_invite_sent_tacker():
+    try:
+        # thread_id = request.args.get("thread_id", default=None)
+        # campaign_name = request.args.get("campaign_name", default=None)
+        # linkedin_profile_url = request.args.get("linkedin_profile_url", default=None)
+        # full_name = request.args.get("full_name", default=None)
+        # email = request.args.get("email", default=None)
+        # picture = request.args.get("picture", default=None)
+        # data = {
+        #     "thread_id": thread_id,
+        #     "campaign_name": campaign_name,
+        #     "linkedin_profile_url": linkedin_profile_url,
+        #     "full_name": full_name,
+        #     "email": email,
+        #     "picture": picture
+        # }
+        # linkedin_invite_sent_tacker(data)
+        linkedin_invite_sent_tacker()
+        return {"status": "success", "message": "Testing completed"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 500  
+     
+@app.route("/run_linkedin_invite_accepted_tacker", methods=["GET"])
+def run_linkedin_invite_accepted_tacker():
+    try:
+        # thread_id = request.args.get("thread_id", default=None)
+        # campaign_name = request.args.get("campaign_name", default=None)
+        # linkedin_profile_url = request.args.get("linkedin_profile_url", default=None)
+        # full_name = request.args.get("full_name", default=None)
+        # email = request.args.get("email", default=None)
+        # picture = request.args.get("picture", default=None)
+        # data = {
+        #     "thread_id": thread_id,
+        #     "campaign_name": campaign_name,
+        #     "linkedin_profile_url": linkedin_profile_url,
+        #     "full_name": full_name,
+        #     "email": email,
+        #     "picture": picture
+        # }
+        # linkedin_invite_accepted_tacker(data)
+        linkedin_invite_accepted_tacker()
+        return {"status": "success", "message": "Testing completed"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 500   
 
+@app.route("/run_linkedin_ai_response_tacker", methods=["GET"])
+def run_linkedin_ai_response_tacker():
+    try:
+        message= "Thanks for reaching out. I'd be happy to learn more. Can we set up a call?"
+        linkedin_ai_response_tacker(message)
+        return {"status": "success", "message": "Testing completed"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 500   
+      
 if __name__ == '__main__':
 #   app.run(debug=True,use_reloader=False)
 #   app.run(port=8001) 
