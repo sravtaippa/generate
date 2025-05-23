@@ -51,19 +51,19 @@ Return only one of the following labels:
 #     result = classify_linkedin_message(test_message)
 #     print("Classification:", result)
 
-def linkedin_ai_response_tacker(message):
+def linkedin_ai_response_tacker(data):
     try:
         
         sentiment= classify_linkedin_message(message)
         print("Classification:", sentiment)
-        data = {
-            "thread_id": "influencer_marketing_60d2165a8530680001f38bd8",
-            "campaign_name": "influencer_marketing",
-            "linkedin_profile_url": "http://www.linkedin.com/in/pj-leimgruber",
-            "full_name": "Magda Houalla",
-            "email": "magdaoualla@gmail.com",
-            "picture": "https://media.licdn.com/dms/image/v2/D5603AQHeEZ4rcWOAXg/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1728920716356?e=1750291200&v=beta&t=Xhuu3diZgNeydUQs0OE2zPQOwH5L3321gUHQVYSuwBo"
-        }
+        # data = {
+        #     "thread_id": "influencer_marketing_60d2165a8530680001f38bd8",
+        #     "campaign_name": "influencer_marketing",
+        #     "linkedin_profile_url": "http://www.linkedin.com/in/pj-leimgruber",
+        #     "full_name": "Magda Houalla",
+        #     "email": "magdaoualla@gmail.com",
+        #     "picture": "https://media.licdn.com/dms/image/v2/D5603AQHeEZ4rcWOAXg/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1728920716356?e=1750291200&v=beta&t=Xhuu3diZgNeydUQs0OE2zPQOwH5L3321gUHQVYSuwBo"
+        # }
         table_name = "leadsin_response_linkedin"
         column_name = "campaign_name"
         unique_value = "linkedin_profile_url"
@@ -72,7 +72,7 @@ def linkedin_ai_response_tacker(message):
         # i need to fetch thread_id also
         if duplicate is False and sentiment == "Positive":
             cols_list = ['campaign_name', 'linkedin_profile_url']
-            col_values = ['influencer_marketing', 'http://www.linkedin.com/in/carlybrower']
+            # col_values = ['influencer_marketing', 'http://www.linkedin.com/in/carlybrower']
             leadsrecords = db_manager.get_records_with_filter("linkedin_leads", cols_list, col_values, limit=1)
             if isinstance(leadsrecords, dict):
                 leadsrecords = [leadsrecords]
@@ -95,7 +95,8 @@ def linkedin_ai_response_tacker(message):
                     print("Completed linkedin response table updation")  
         if sentiment == "Negative":
             cols_list = ['campaign_name', 'linkedin_profile_url']
-            col_values = ['influencer_marketing', 'http://www.linkedin.com/in/carlybrower']
+            # col_values = ['influencer_marketing', 'http://www.linkedin.com/in/carlybrower']
+            col_values = [data["campaign_name"], data["linkedin_profile_url"]]
             leadsrecords = db_manager.get_records_with_filter("linkedin_leads", cols_list, col_values, limit=1)
             if isinstance(leadsrecords, dict):
                 leadsrecords = [leadsrecords]
