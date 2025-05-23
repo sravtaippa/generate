@@ -18,7 +18,7 @@ from lead_magnet.lead_magnet_pdf_generation import generate_lead_magnet_pdf,test
 from pipelines.data_sync import trigger_pipeline_custom,trigger_custom_pipeline
 from pipelines.lead_website_analysis import chroma_db_testing,web_analysis
 from pipelines.login_email_confirmation import login_email_sender
-from outreach.add_leads import add_lead_to_campaign
+from outreach.add_leads import add_lead_leadsin
 from outreach.campaign_metrics import update_linkedin_campaign_metrics
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS
 from dashboard.dashboard_updation import process_whatsapp_data
@@ -31,12 +31,25 @@ from pipelines.organization_list_enrichment import fetch_organization_domains
 # from pipelines.guideline_generate import generate_content_guideline
 # from pipelines.data_sanitization_psql import sanitize_data
 from pipelines.guideline_generate import execute_generate_sequence
+from pipelines.guideline_outreach import execute_outreach_sequence
 
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
 app = Flask(__name__)
+
+@app.route("/guideline_outreach", methods=["GET"])
+def guideline_outreach():
+    try:
+        start_time = time.time()  # Start timer
+        execute_outreach_sequence()
+        end_time = time.time()  # End timer
+        elapsed_minutes = (end_time - start_time) / 60  # Convert seconds to minutes
+        print(f"~~~~~~~~~ Execution Time: {elapsed_minutes:.2f} minutes ~~~~~~~~~~~~")
+        return {"Status":"Successfully executed outreach sequence"}
+    except Exception as e:
+        print(f"Error occured while generating the content for outreach: {e}")
 
 @app.route("/guideline_generate", methods=["GET"])
 def guideline_generate():
@@ -49,6 +62,7 @@ def guideline_generate():
         return {"Status":"Successfully fetched organization list"}
     except Exception as e:
         print(f"Error occured while generating the content for outreach: {e}")
+
 # @app.route("/guideline_generate", methods=["GET"])
 # def guideline_generate():
 #     try:
@@ -144,7 +158,7 @@ def linkedin_outreach():
         campaign_id = request.args.get('campaign_id', type=str)
         outreach_table_name = request.args.get('outreach_table_name', type=str)
         print(f"apollo_id: {apollo_id}, campaign_id: {campaign_id}, outreach_table_name: {outreach_table_name}")
-        status = add_lead_to_campaign(apollo_id,campaign_id,outreach_table_name)
+        status = add_lead_leadsin(apollo_id,campaign_id,outreach_table_name)
         return {"Status":str(status)} 
 
     except Exception as e:

@@ -219,7 +219,6 @@ def parse_contacts():
 
 import requests
 
-
 def construct_query_param(key, values):
     res = "&".join([f"{key}[]={value.replace(' ', '%20').replace(',', '%2C')}" for value in values])
     # print(res)
