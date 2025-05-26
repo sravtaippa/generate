@@ -70,7 +70,7 @@ def execute_outreach_sequence():
         filter_values = [client_config.get("campaign_name")+"_"+lead_info_outreach.get("apollo_id")]
         linkedin_leads_record = db_manager.get_record("linkedin_leads", "thread_id", client_config.get("campaign_name")+"_"+lead_info_outreach.get("apollo_id"))
         print(f"LinkedIn leads duplicate record found: {linkedin_leads_record}")
-        
+        linkedin_leads_data = None
         if linkedin_leads_record is None:
             linkedin_leads_data = {
                 "thread_id": client_config.get("campaign_name")+"_"+lead_info_outreach.get("apollo_id"),
@@ -99,7 +99,7 @@ def execute_outreach_sequence():
                     primary_key_col="client_id",
                     primary_key_value=lead_info_outreach.get("associated_client_id")
         )
-        return {"message": "Outreach sequence executed successfully."}
+        return {"updated_fields": linkedin_leads_data}
 
     except Exception as e:
         print(f"Error in execute_outreach_sequence: {e}")

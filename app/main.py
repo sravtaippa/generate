@@ -48,11 +48,11 @@ app = Flask(__name__)
 def guideline_outreach():
     try:
         start_time = time.time()  # Start timer
-        execute_outreach_sequence()
+        updated_fields = execute_outreach_sequence()
         end_time = time.time()  # End timer
         elapsed_minutes = (end_time - start_time) / 60  # Convert seconds to minutes
         print(f"~~~~~~~~~ Execution Time: {elapsed_minutes:.2f} minutes ~~~~~~~~~~~~")
-        return {"Status":"Successfully executed outreach sequence"}
+        return {"updated_fields":updated_fields}
     except Exception as e:
         print(f"Error occured while generating the content for outreach: {e}")
 
