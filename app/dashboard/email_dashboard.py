@@ -219,8 +219,7 @@ def get_campaign_details(username):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
-def get_recent_replies(username):
-    client_id = request.args.get('username')
+def get_recent_replies(client_id):  # now using client_id directly
     if not client_id:
         return jsonify({"error": "Missing 'client_id' in query parameters"}), 400
 
@@ -232,7 +231,7 @@ def get_recent_replies(username):
         cursor.execute("""
             SELECT campaign_id FROM client_info WHERE client_id = %s
         """, (client_id,))
-        campaign_ids = [row[0] for row in cursor.fetchall()]
+        campaign_ids = [row['campaign_id'] for row in cursor.fetchall()]
         if not campaign_ids:
             return jsonify({"error": "No campaigns found for the given client_id"}), 404
 
@@ -250,7 +249,11 @@ def get_recent_replies(username):
         profile_table = f"cleaned_table_{client_id}"
 
         for reply in replies:
-            reply_id, campaign_id, email, reply_text, created_time = reply
+            reply_id = reply['id']
+            campaign_id = reply['campaign_id']
+            email = reply['email']
+            reply_text = reply['reply']
+            created_time = reply['created_time']
 
             # Step 3: Fetch matching profile
             cursor.execute(f"""
@@ -261,7 +264,11 @@ def get_recent_replies(username):
             """, (email,))
             profile = cursor.fetchone()
             if profile:
-                name, title, company_name, domain, enriched_data = profile
+                name = profile['name']
+                title = profile['title']
+                company_name = profile['company_name']
+                domain = profile['domain']
+                enriched_data = profile['enriched_data']
             else:
                 name = title = company_name = domain = enriched_data = None
 
@@ -286,6 +293,7 @@ def get_recent_replies(username):
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
     
 if __name__ == '__main__':
     app.run(debug=True)
