@@ -225,8 +225,8 @@ def get_recent_replies():
         return jsonify({"error": "Missing 'client_id' in query parameters"}), 400
 
     try:
-        conn = db_manager.get_connection()
-        cursor = conn.cursor()
+        conn = connect_to_postgres()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
 
         # Step 1: Get all campaign IDs for the client
         cursor.execute("""
