@@ -577,7 +577,7 @@ def get_user_campaigns_dashboard():
         return {"error": str(e)}, 500
 
     
-@app.route("/get_campaign_metrics_dashboard", methods=["GET"])
+@app.route("/get_campaign_metrics_dashboard", methods=["POST"])
 def get_campaign_metrics_dashboard():
     campaign_id = request.args.get("campaign_id")
     if not campaign_id:
