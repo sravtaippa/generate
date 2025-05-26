@@ -644,6 +644,7 @@ def run_linkedin_ai_response_tacker():
         email = request.args.get("email", default=None)
         picture = request.args.get("picture", default=None)
         response_message = request.args.get("response_message", default=None)
+        sentiment = request.args.get("response_message", sentiment=None)
 
         data = {
             "thread_id": thread_id,
@@ -652,7 +653,8 @@ def run_linkedin_ai_response_tacker():
             "full_name": full_name,
             "email": email,
             "picture": picture,
-            "response_message": response_message
+            "response_message": response_message,
+            "sentiment": sentiment
         }
 
         linkedin_ai_response_tacker(data)
