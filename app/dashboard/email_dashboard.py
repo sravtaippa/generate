@@ -219,8 +219,8 @@ def get_campaign_details(username):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
-def get_recent_replies():
-    client_id = request.args.get('client_id')
+def get_recent_replies(username):
+    client_id = request.args.get('username')
     if not client_id:
         return jsonify({"error": "Missing 'client_id' in query parameters"}), 400
 
