@@ -3,6 +3,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime, timedelta
 from psycopg2 import errors
+from db.db_ops import db_manager
 app = Flask(__name__)
 
 def connect_to_postgres():
