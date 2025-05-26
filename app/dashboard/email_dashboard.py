@@ -315,11 +315,16 @@ def get_user_campaigns(client_id):
             photos = cur.fetchall()
             photo_urls = [p['photo_url'] if p['photo_url'] else 'https://taippa.com/wp-content/uploads/2025/05/avatar-e1747306750362.png' for p in photos]
 
+            if isinstance(created, str):
+                created_date = created  # already formatted
+            else:
+                created_date = created.strftime("%Y-%m-%d")
+
             campaign_list.append({
                 "campaign_id": campaign_id,
                 "campaign_name": name,
                 "status": status,
-                "created_date": created.strftime("%Y-%m-%d"),
+                "created_date": created_date,
                 "profile_pictures": photo_urls
             })
 
