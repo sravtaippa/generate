@@ -259,11 +259,15 @@ def fetch_leads():
         profiles = {}
         if emails:
             email_placeholders = ','.join(['%s'] * len(emails))
+
+            # ⚠️ Interpolating cleaned_table name carefully
+            sanitized_table = cleaned_table.strip().replace('"', '').replace(';', '')
             cur.execute(f"""
                 SELECT *
-                FROM {cleaned_table}
+                FROM {sanitized_table}
                 WHERE email IN ({email_placeholders})
             """, emails)
+
             profile_rows = cur.fetchall()
             profiles = {row['email']: row for row in profile_rows}
 
