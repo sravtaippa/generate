@@ -13,11 +13,10 @@ openai.api_key = OPENAI_API_KEY
 
 def execute_generate_sequence():
     try:
+        # Listing all the records with Inactive status
         lead_info = db_manager.get_record("outreach_guideline","status","Inactive")
-        # lead_info = retrieve_record("outreach_testing","status","Inactive")
-        # lead_info = 
         generator_guideline.lead_info = lead_info
-        # generator_guideline.lead_info = lead_info.get('fields')
+
         print(f"\n-------------------------Lead info--------------------------------\n {generator_guideline.lead_info}\n")
         generator_guideline.industry_type = generator_guideline.classify_company_vertical()
         print(f"\n-------------------------Industry type--------------------------------\n {generator_guideline.industry_type}\n")
@@ -131,6 +130,7 @@ def execute_generate_sequence():
         print(f"\n---------------------- LinkedIn Connection Message ----------------------------------\n {linkedin_connection_message}\n")
         update_fields = {
             "apollo_id": generator_guideline.lead_info.get("apollo_id"),
+            "industry_sector":generator_guideline.industry_type,
             "linkedin_message": linkedin_message,
             "linkedin_message_2": linkedin_message_follow_up,
             "email_message": email_1,
@@ -140,6 +140,7 @@ def execute_generate_sequence():
         }
         db_manager.update_multiple_fields("outreach_guideline", update_fields, "apollo_id")
         print(f"Outreach guideline table updated successfully")
+        return update_fields
     except Exception as e:
         print(f"Error occured at {__name__} while executing the generate sequence: {e}")
         return False
