@@ -99,8 +99,18 @@ def execute_outreach_sequence():
                     primary_key_col="client_id",
                     primary_key_value=lead_info_outreach.get("associated_client_id")
         )
-        return linkedin_leads_data
+        outreach_status = {
+            "status":"Success",
+            "message":"Successfully generated the outreach content",
+            "updated_fields": update_fields
+        }
 
     except Exception as e:
         print(f"Error in execute_outreach_sequence: {e}")
-        return {"message": f"Error occured in execute_outreach_sequence: {e}"}
+        outreach_status = {
+            "status": "Error",
+            "message": f"Error occured in execute_outreach_sequence: {e}",
+            "updated_fields": {}
+        }
+        
+    return outreach_status

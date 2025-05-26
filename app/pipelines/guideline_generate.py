@@ -163,8 +163,17 @@ def execute_generate_sequence():
         }
         db_manager.update_multiple_fields("outreach_guideline", update_fields, "apollo_id")
         print(f"Outreach guideline table updated successfully with the generated content")
+        generate_status = {
+            "status":"Success",
+            "message":"Successfully generated the outreach content",
+            "updated_fields": update_fields
+        }
         # Send the generated contnet to the client
-        return update_fields
     except Exception as e:
         print(f"Error occured at {__name__} while executing the generate sequence: {e}")
-        return False
+        generate_status = {
+            "status":"Error",
+            "message":f"Error occured while executing the generate sequence: {e}",
+            "updated_fields": {}
+        }
+    return generate_status
