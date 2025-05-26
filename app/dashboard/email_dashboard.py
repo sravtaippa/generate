@@ -249,10 +249,10 @@ def get_recent_replies(client_id):  # now using client_id directly
         profile_table = f"cleaned_table_{client_id}"
 
         for reply in replies:
-            reply_id = reply['id']
+            # reply_id = reply['id']
             campaign_id = reply['campaign_id']
             email = reply['email']
-            reply_text = reply['reply']
+            reply_text = reply['message']
             created_time = reply['created_time']
 
             # Step 3: Fetch matching profile
