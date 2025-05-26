@@ -549,11 +549,18 @@ def get_booking_count_dashboard():
 def get_email_sent_chart_dashboard(username):
     return email_sent_chart(username)
 
+
 @app.route("/get_recent_replies_dashboard", methods=["GET"])
 def get_recent_replies_dashboard():
-    username = request.args.get("username", default=None)
-    # pass the username into the request context if needed
-    return fetch_leads(username)
+    username = request.args.get("username")
+    if not username:
+        return {"error": "Username is required"}, 400
+    
+    try:
+        data = fetch_leads(username)
+        return {"data": data}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
 
 
 @app.route("/fetch_airtable_data_and_create_csv", methods=["GET"])
