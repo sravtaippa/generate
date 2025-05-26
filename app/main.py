@@ -549,10 +549,11 @@ def get_booking_count_dashboard():
 def get_email_sent_chart_dashboard(username):
     return email_sent_chart(username)
 
-@app.route("/get_recent_replies_dashboard/<username>", methods=["GET"])
-def get_recent_replies_dashboard(username):
+@app.route("/get_recent_replies_dashboard", methods=["GET"])
+def get_recent_replies_dashboard():
+    username = request.args.get("username", default=None)
     # pass the username into the request context if needed
-    return get_recent_replies()
+    return get_recent_replies(username))
 
 
 @app.route("/fetch_airtable_data_and_create_csv", methods=["GET"])
