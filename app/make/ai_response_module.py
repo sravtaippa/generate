@@ -54,7 +54,7 @@ Return only one of the following labels:
 def linkedin_ai_response_tacker(data):
     try:
         
-        sentiment= classify_linkedin_message(message)
+        sentiment = classify_linkedin_message(data["response_message"])
         print("Classification:", sentiment)
         # data = {
         #     "thread_id": "influencer_marketing_60d2165a8530680001f38bd8",
@@ -67,32 +67,45 @@ def linkedin_ai_response_tacker(data):
         table_name = "leadsin_response_linkedin"
         column_name = "campaign_name"
         unique_value = "linkedin_profile_url"
-        duplicate=db_manager.unique_key_check(column_name, unique_value, table_name)
-        # i need to print duplicated record if it is found
-        # i need to fetch thread_id also
-        if duplicate is False and sentiment == "Positive":
-            cols_list = ['campaign_name', 'linkedin_profile_url']
-            # col_values = ['influencer_marketing', 'http://www.linkedin.com/in/carlybrower']
-            leadsrecords = db_manager.get_records_with_filter("linkedin_leads", cols_list, col_values, limit=1)
-            if isinstance(leadsrecords, dict):
-                leadsrecords = [leadsrecords]
-            print(f"🔢 Matching Record Count in linkedin_leads: {len(leadsrecords)}")
+        duplicate_records = db_manager.get_records_with_filter(
+            table_name="leadsin_response_linkedin",
+            cols_list=["linkedin_profile_url","campaign_name" ],
+            col_values=[data["linkedin_profile_url"], data["campaign_name"]],
+            limit=1
+        )
 
-            if len(leadsrecords) == 1:
-                print(f"🛠 Only one matching record found in linkedin_leads. Updating status to Positive.")
-                if leadsrecords:
-                    record = leadsrecords[0]  # Pick the first one if available
-                    db_manager.update_single_field(
-                        table_name="linkedin_leads",
-                        column_name='status',
-                        column_value="Positive",
-                        primary_key_col='thread_id',
-                        primary_key_value=record['thread_id']
-                    )
-                    print(f"✅ Record updated status to {sentiment} successfully.")
+        if duplicate_records:
+            if isinstance(duplicate_records, dict):  
+                duplicate_records = [duplicate_records]
 
-                    db_manager.insert_data(table_name, data)
-                    print("Completed linkedin response table updation")  
+            print(f"⚠️ Duplicate found for {data['linkedin_profile_url']}")
+            for record in duplicate_records:
+                print(f"🔁 Duplicated Record: {record}")
+                print(f"🧵 thread_id: {record.get('thread_id')}")
+        else:
+            if sentiment == "Positive":                
+                cols_list = ['campaign_name', 'linkedin_profile_url']
+                # col_values = ['influencer_marketing', 'http://www.linkedin.com/in/carlybrower']
+                leadsrecords = db_manager.get_records_with_filter("linkedin_leads", cols_list, col_values, limit=1)
+                if isinstance(leadsrecords, dict):
+                    leadsrecords = [leadsrecords]
+                print(f"🔢 Matching Record Count in linkedin_leads: {len(leadsrecords)}")
+
+                if len(leadsrecords) == 1:
+                    print(f"🛠 Only one matching record found in linkedin_leads. Updating status to Positive.")
+                    if leadsrecords:
+                        record = leadsrecords[0]  # Pick the first one if available
+                        db_manager.update_single_field(
+                            table_name="linkedin_leads",
+                            column_name='status',
+                            column_value="Positive",
+                            primary_key_col='thread_id',
+                            primary_key_value=record['thread_id']
+                        )
+                        print(f"✅ Record updated status to {sentiment} successfully.")
+
+                        db_manager.insert_data(table_name, data)
+                        print("Completed linkedin response table updation")  
         if sentiment == "Negative":
             cols_list = ['campaign_name', 'linkedin_profile_url']
             # col_values = ['influencer_marketing', 'http://www.linkedin.com/in/carlybrower']
