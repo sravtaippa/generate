@@ -365,6 +365,33 @@ def get_campaign_metrics(campaign_id):
         raise Exception(f"Error fetching metrics: {str(e)}")
 
 
+def get_lead_details(username, lead_email):
+    # lead_email = request.args.get('lead_email')
+    # username = request.args.get('username')
+
+    conn = connect_to_postgres()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    # Get the cleaned_table for the user
+    cur.execute("SELECT cleaned_table FROM client_info WHERE client_id = %s", (username,))
+    result = cur.fetchone()
+    if not result:
+        return jsonify({'error': 'No campaign found'}), 404
+    cleaned_table = result[0]
+
+    # Fetch lead details from the dynamic table
+    query = f"SELECT * FROM {cleaned_table} WHERE email = %s LIMIT 1"
+    cur.execute(query, (lead_email,))
+    columns = [desc[0] for desc in cur.description]
+    lead = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    if lead:
+        return jsonify(dict(zip(columns, lead)))
+    else:
+        return jsonify({'error': 'No lead found'}), 404
     
 if __name__ == '__main__':
     app.run(debug=True)
