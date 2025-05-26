@@ -551,7 +551,9 @@ def get_email_sent_chart_dashboard(username):
 
 @app.route("/get_recent_replies_dashboard/<username>", methods=["GET"])
 def get_recent_replies_dashboard(username):
-    return get_recent_replies(username)
+    # pass the username into the request context if needed
+    return get_recent_replies()
+
 
 @app.route("/fetch_airtable_data_and_create_csv", methods=["GET"])
 def trigger_csv_generation():
