@@ -71,30 +71,53 @@ def execute_generate_sequence():
         print(f"\n---------------------- LinkedIn Connection Message Content ----------------------------------\n {generator_guideline.follow_up_linkedin_message_content}\n")
         generator_guideline.linkedin_connection_message = generator_guideline.generate_linkedin_connection_message()
         print(f"\n---------------------- LinkedIn Connection Message  ----------------------------------\n {generator_guideline.linkedin_connection_message}\n")
-        email_1 = f"""Hi {generator_guideline.lead_info.get('recipient_first_name')},
         
-        {generator_guideline.b2b_sales_content.get('ice_breaker',"")}
-
-        {generator_guideline.b2b_sales_content.get('client_value_proposition',"")}
-
-        {generator_guideline.b2b_sales_content.get('case_studies',"")}  
-
-        {generator_guideline.b2b_sales_content.get('call_to_action',"")}
-
-        Best,
-        Mag
+        email_1 = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Guideline Email</title>
+        </head>
+        <body>
+            <p>
+                Hi {generator_guideline.lead_info.get('recipient_first_name')},<br><br>
+                {generator_guideline.b2b_sales_content.get('ice_breaker',"")}
+            <br><br>
+                {generator_guideline.b2b_sales_content.get('client_value_proposition',"")}
+            <br><br>
+                {generator_guideline.b2b_sales_content.get('case_studies',"")} 
+            <br><br>
+                {generator_guideline.b2b_sales_content.get('call_to_action',"")}
+            <br><br>
+        Best,<br>
+        Team Guideline<br>
+        </p>
+        </body>
+        </html>
         """
 
-        email_2 = f"""Hi {generator_guideline.lead_info.get('recipient_first_name')},
-        
-        {generator_guideline.follow_up_email_content.get('ice_breaker_follow_up',"")}
-
-        {generator_guideline.follow_up_email_content.get('about_company_follow_up',"")}
-
-        {generator_guideline.follow_up_email_content.get('call_to_action_follow_up',"")}
-
-        Best,
-        Mag
+        email_2 = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Guideline Email</title>
+        </head>
+        <body>
+            <p>
+                Hi {generator_guideline.lead_info.get('recipient_first_name')},<br><br>
+                {generator_guideline.follow_up_email_content.get('ice_breaker_follow_up',"")}
+            <br><br>
+                {generator_guideline.follow_up_email_content.get('about_company_follow_up',"")}
+            <br><br>
+                {generator_guideline.follow_up_email_content.get('call_to_action_follow_up',"")} 
+            <br><br>
+        Best,<br>
+        Team Guideline<br>
+        </p>
+        </body>
+        </html>
         """
 
         linkedin_message = f"""Hi {generator_guideline.lead_info.get('recipient_first_name',"")},
@@ -106,7 +129,7 @@ def execute_generate_sequence():
         {generator_guideline.linkedin_message_content.get('call_to_action_linkedin',"")}
 
         Best,
-        Mag
+        Team Guideline
         """
 
         linkedin_message_follow_up = f"""Hi {generator_guideline.lead_info.get('recipient_first_name')},
@@ -118,7 +141,7 @@ def execute_generate_sequence():
         {generator_guideline.follow_up_linkedin_message_content.get('call_to_action_linkedin_follow_up',"")}
 
         Best,
-        Mag
+        Team Guideline
         """
 
         linkedin_connection_message = generator_guideline.linkedin_connection_message
@@ -139,7 +162,8 @@ def execute_generate_sequence():
             "status": "Approved"
         }
         db_manager.update_multiple_fields("outreach_guideline", update_fields, "apollo_id")
-        print(f"Outreach guideline table updated successfully")
+        print(f"Outreach guideline table updated successfully with the generated content")
+        # Send the generated contnet to the client
         return update_fields
     except Exception as e:
         print(f"Error occured at {__name__} while executing the generate sequence: {e}")
