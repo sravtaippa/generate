@@ -552,12 +552,12 @@ def get_email_sent_chart_dashboard(username):
 
 @app.route("/get_recent_replies_dashboard", methods=["GET"])
 def get_recent_replies_dashboard():
-    username = request.args.get("username")
-    if not username:
+    user_id = request.args.get("username")  # assuming username = client_id
+    if not user_id:
         return {"error": "Username is required"}, 400
-    
+
     try:
-        data = fetch_leads(username)
+        data = fetch_leads(user_id)  # Pass user_id to fetch_leads
         return {"data": data}, 200
     except Exception as e:
         return {"error": str(e)}, 500
