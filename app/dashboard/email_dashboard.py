@@ -219,80 +219,72 @@ def get_campaign_details(username):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
-def get_recent_replies(client_id):  # now using client_id directly
-    if not client_id:
-        return jsonify({"error": "Missing 'client_id' in query parameters"}), 400
+
+def fetch_leads():
+    user_id = request.args.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Missing user_id'}), 400
 
     try:
         conn = connect_to_postgres()
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cur = conn.cursor(cursor_factory=RealDictCursor)
 
-        # Step 1: Get all campaign IDs for the client
-        cursor.execute("""
-            SELECT instantly_campaign_id FROM client_info WHERE client_id = %s
-        """, (client_id,))
-        campaign_ids = [row['instantly_campaign_id'] for row in cursor.fetchall()]
-        if not campaign_ids:
-            return jsonify({"error": "No campaigns found for the given client_id"}), 404
+        # Step 1: Fetch campaign IDs and cleaned table
+        cur.execute("""
+            SELECT instantly_campaign_id, cleaned_table
+            FROM client_info
+            WHERE client_id = %s
+        """, (user_id,))
+        rows = cur.fetchall()
 
-        # Step 2: Get latest 5 replies for those campaign IDs
-        cursor.execute("""
-            SELECT campaign_id, email, message, created_time
+        campaign_ids = [row['instantly_campaign_id'] for row in rows if row['instantly_campaign_id']]
+        cleaned_table = next((row['cleaned_table'] for row in rows if row['cleaned_table']), None)
+
+        if not campaign_ids or not cleaned_table:
+            return jsonify({'error': 'Campaigns or cleaned_table not found'}), 404
+
+        # Step 2: Fetch replies
+        placeholders = ','.join(['%s'] * len(campaign_ids))
+        cur.execute(f"""
+            SELECT *
             FROM email_response_guideline
-            WHERE campaign_id = ANY(%s)
+            WHERE campaign_id IN ({placeholders})
             ORDER BY created_time DESC
-            LIMIT 5
-        """, (campaign_ids,))
-        replies = cursor.fetchall()
+            LIMIT 50
+        """, campaign_ids)
+        replies = cur.fetchall()
 
-        response_data = []
-        profile_table = f"cleaned_table_{client_id}"
+        # Step 3: Fetch profile data
+        emails = list(set([reply['email'] for reply in replies if reply.get('email')]))
+        profiles = {}
+        if emails:
+            email_placeholders = ','.join(['%s'] * len(emails))
+            cur.execute(f"""
+                SELECT *
+                FROM {cleaned_table}
+                WHERE email IN ({email_placeholders})
+            """, emails)
+            profile_rows = cur.fetchall()
+            profiles = {row['email']: row for row in profile_rows}
 
+        # Combine replies and profiles
+        combined = []
         for reply in replies:
-            # reply_id = reply['id']
-            campaign_id = reply['campaign_id']
-            email = reply['email']
-            reply_text = reply['message']
-            created_time = reply['created_time']
-
-            # Step 3: Fetch matching profile
-            cursor.execute(f"""
-                SELECT name, title, company_name, domain, enriched_data
-                FROM {profile_table}
-                WHERE email = %s
-                LIMIT 1
-            """, (email,))
-            profile = cursor.fetchone()
-            if profile:
-                name = profile['name']
-                title = profile['title']
-                company_name = profile['company_name']
-                domain = profile['domain']
-                enriched_data = profile['enriched_data']
-            else:
-                name = title = company_name = domain = enriched_data = None
-
-            response_data.append({
-                "reply_id": reply_id,
-                "campaign_id": campaign_id,
-                "email": email,
-                "reply_text": reply_text,
-                "created_time": created_time,
-                "profile": {
-                    "name": name,
-                    "title": title,
-                    "company_name": company_name,
-                    "domain": domain,
-                    "enriched_data": enriched_data
-                }
+            email = reply.get('email')
+            combined.append({
+                'reply': reply,
+                'profile': profiles.get(email, {})
             })
 
-        cursor.close()
-        conn.close()
-        return jsonify(response_data)
+        return jsonify(combined)
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({'error': str(e)}), 500
+
+    finally:
+        if conn:
+            cur.close()
+            conn.close()
 
     
 if __name__ == '__main__':
