@@ -220,11 +220,7 @@ def get_campaign_details(username):
         return jsonify({'error': str(e)}), 500
     
 
-def fetch_leads():
-    user_id = request.args.get('user_id')
-    if not user_id:
-        return jsonify({'error': 'Missing user_id'}), 400
-
+def fetch_leads(user_id):
     try:
         conn = connect_to_postgres()
         cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -241,7 +237,7 @@ def fetch_leads():
         cleaned_table = next((row['cleaned_table'] for row in rows if row['cleaned_table']), None)
 
         if not campaign_ids or not cleaned_table:
-            return jsonify({'error': 'Campaigns or cleaned_table not found'}), 404
+            return {'error': 'Campaigns or cleaned_table not found'}
 
         # Step 2: Fetch replies
         placeholders = ','.join(['%s'] * len(campaign_ids))
@@ -259,15 +255,13 @@ def fetch_leads():
         profiles = {}
         if emails:
             email_placeholders = ','.join(['%s'] * len(emails))
-
-            # ⚠️ Interpolating cleaned_table name carefully
             sanitized_table = cleaned_table.strip().replace('"', '').replace(';', '')
+
             cur.execute(f"""
                 SELECT *
                 FROM {sanitized_table}
                 WHERE email IN ({email_placeholders})
             """, emails)
-
             profile_rows = cur.fetchall()
             profiles = {row['email']: row for row in profile_rows}
 
@@ -280,16 +274,15 @@ def fetch_leads():
                 'profile': profiles.get(email, {})
             })
 
-        return jsonify(combined)
+        return combined
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return {'error': str(e)}
 
     finally:
         if conn:
             cur.close()
             conn.close()
-
     
 if __name__ == '__main__':
     app.run(debug=True)
