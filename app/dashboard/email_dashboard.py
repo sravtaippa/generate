@@ -366,32 +366,35 @@ def get_campaign_metrics(campaign_id):
 
 
 def get_lead_details(username, lead_email):
-    # lead_email = request.args.get('lead_email')
-    # username = request.args.get('username')
-
     conn = connect_to_postgres()
     cur = conn.cursor(cursor_factory=RealDictCursor)
 
-    # Get the cleaned_table for the user
-    cur.execute("SELECT cleaned_table FROM client_info WHERE client_id = %s", (username,))
-    result = cur.fetchone()
-    if not result:
-        return jsonify({'error': 'No campaign found'}), 404
-    cleaned_table = result[0]
+    try:
+        # Get the cleaned_table name
+        cur.execute("SELECT cleaned_table FROM client_info WHERE client_id = %s", (username,))
+        result = cur.fetchone()
+        if not result:
+            raise Exception('No campaign found for client_id: ' + username)
 
-    # Fetch lead details from the dynamic table
-    query = f"SELECT * FROM {cleaned_table} WHERE email = %s LIMIT 1"
-    cur.execute(query, (lead_email,))
-    columns = [desc[0] for desc in cur.description]
-    lead = cur.fetchone()
+        cleaned_table = result['cleaned_table']
 
-    cur.close()
-    conn.close()
+        # Fetch lead details
+        query = f"SELECT * FROM {cleaned_table} WHERE email = %s LIMIT 1"
+        cur.execute(query, (lead_email,))
+        lead = cur.fetchone()
 
-    if lead:
-        return jsonify(dict(zip(columns, lead)))
-    else:
-        return jsonify({'error': 'No lead found'}), 404
+        if not lead:
+            raise Exception('No lead found with email: ' + lead_email)
+
+        return dict(lead)
+
+    except Exception as e:
+        raise e
+
+    finally:
+        cur.close()
+        conn.close()
+
     
 if __name__ == '__main__':
     app.run(debug=True)

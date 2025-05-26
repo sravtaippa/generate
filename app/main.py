@@ -593,16 +593,18 @@ def get_campaign_metrics_dashboard():
 
 @app.route("/get_lead_details_dashboard", methods=["GET"])
 def get_lead_details_dashboard():
-    user_id = request.args.get("username")  # assuming username = client_id
+    user_id = request.args.get("username")
     email = request.args.get("email")
+
     if not user_id or not email:
         return {"error": "Username or Email is required"}, 400
 
     try:
-        data = get_lead_details(user_id, email)  # <-- Pass user_id explicitly
+        data = get_lead_details(user_id, email)
         return {"data": data}, 200
     except Exception as e:
         return {"error": str(e)}, 500
+
 
 @app.route("/fetch_airtable_data_and_create_csv", methods=["GET"])
 def trigger_csv_generation():
