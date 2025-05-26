@@ -283,6 +283,87 @@ def fetch_leads(user_id):
         if conn:
             cur.close()
             conn.close()
+
+#client_details_page on email dashboard
+def get_user_campaigns(client_id):
+    try:
+        conn = connect_to_postgres()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Fetch campaigns
+        cur.execute("""
+            SELECT instantly_campaign_id, campaign_name, status, created_date 
+            FROM campaign_details 
+            WHERE client_id = %s
+        """, (client_id,))
+        campaigns = cur.fetchall()
+
+        campaign_list = []
+        for campaign in campaigns:
+            campaign_id = campaign['instantly_campaign_id']
+            name = campaign['campaign_name']
+            status = campaign['status']
+            created = campaign['created_date']
+
+            # Fetch 5 recent email_response_guideline entries (photo_url)
+            cur.execute("""
+                SELECT photo_url FROM email_response_guideline
+                WHERE campaign_id = %s
+                ORDER BY created_time DESC
+                LIMIT 5
+            """, (campaign_id,))
+            photos = cur.fetchall()
+            photo_urls = [p['photo_url'] if p['photo_url'] else 'https://taippa.com/wp-content/uploads/2025/05/avatar-e1747306750362.png' for p in photos]
+
+            campaign_list.append({
+                "campaign_id": campaign_id,
+                "campaign_name": name,
+                "status": status,
+                "created_date": created.strftime("%Y-%m-%d"),
+                "profile_pictures": photo_urls
+            })
+
+        cur.close()
+        conn.close()
+        return campaign_list
+
+    except Exception as e:
+        raise Exception(f"Error fetching campaigns: {e}")
+
+
+def get_campaign_metrics():
+    data = request.json
+    campaign_id = data.get('campaign_id')
+    if not campaign_id:
+        return jsonify({"error": "Missing campaign_id"}), 400
+
+    try:
+        conn = connect_to_postgres()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        cur.execute("""
+            SELECT opened, clicked, sequence_started, replies_received
+            FROM metrics
+            WHERE campaign_id = %s
+        """, (campaign_id,))
+        result = cur.fetchone()
+
+        cur.close()
+        conn.close()
+
+        if result:
+            return jsonify({
+                "email_opened": result[0],
+                "email_clicked": result[1],
+                "sequence_started": result[2],
+                "replies_received": result[3]
+            })
+        else:
+            return jsonify({"error": "No data found"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
     
 if __name__ == '__main__':
     app.run(debug=True)
