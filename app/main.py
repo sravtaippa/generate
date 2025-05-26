@@ -25,7 +25,7 @@ from dashboard.dashboard_updation import process_whatsapp_data
 from dashboard.client_onboarding_update_form import update_client_onboarding
 from dashboard.client_configuration_form import update_client_configuration
 from dashboard.client_profile_picture import get_profile_picture
-from dashboard.email_dashboard import fetch_recent_leads_from_db, fetch_metric_value, get_booking_count, email_sent_chart, get_campaign_details, fetch_leads
+from dashboard.email_dashboard import fetch_recent_leads_from_db, fetch_metric_value, get_booking_count, email_sent_chart, get_campaign_details, fetch_leads, get_user_campaigns, get_campaign_metrics
 from dashboard.leads_email import generate_csv_and_send_email
 from dashboard.test_databse import run_database_test
 from pipelines.organization_list_enrichment import fetch_organization_domains
@@ -549,6 +549,7 @@ def get_booking_count_dashboard():
 def get_email_sent_chart_dashboard(username):
     return email_sent_chart(username)
 
+   
 
 @app.route("/get_recent_replies_dashboard", methods=["GET"])
 def get_recent_replies_dashboard():
@@ -561,7 +562,32 @@ def get_recent_replies_dashboard():
         return {"data": data}, 200
     except Exception as e:
         return {"error": str(e)}, 500
+    
 
+@app.route("/get_user_campaigns_dashboard", methods=["GET"])
+def get_user_campaigns_dashboard():
+    user_id = request.args.get("username")  # assuming username = client_id
+    if not user_id:
+        return {"error": "Username is required"}, 400
+
+    try:
+        data = get_user_campaigns(user_id)  # <-- Pass user_id explicitly
+        return {"data": data}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+    
+@app.route("/get_campaign_metrics_dashboard", methods=["GET"])
+def get_campaign_metrics_dashboard():
+    campaign_id = request.args.get("campaign_id")  # assuming username = client_id
+    if not campaign_id:
+        return {"error": "Campaign id is required"}, 400
+
+    try:
+        data = get_campaign_metrics(campaign_id)  # Pass user_id to fetch_leads
+        return {"data": data}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
 
 @app.route("/fetch_airtable_data_and_create_csv", methods=["GET"])
 def trigger_csv_generation():
