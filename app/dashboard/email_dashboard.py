@@ -237,7 +237,7 @@ def get_recent_replies(client_id):  # now using client_id directly
 
         # Step 2: Get latest 5 replies for those campaign IDs
         cursor.execute("""
-            SELECT campaign_id, email, reply, created_time
+            SELECT campaign_id, email, message, created_time
             FROM email_response_guideline
             WHERE campaign_id = ANY(%s)
             ORDER BY created_time DESC
