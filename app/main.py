@@ -579,15 +579,16 @@ def get_user_campaigns_dashboard():
     
 @app.route("/get_campaign_metrics_dashboard", methods=["GET"])
 def get_campaign_metrics_dashboard():
-    campaign_id = request.args.get("campaign_id")  # assuming username = client_id
+    campaign_id = request.args.get("campaign_id")
     if not campaign_id:
         return {"error": "Campaign id is required"}, 400
 
     try:
-        data = get_campaign_metrics(campaign_id)  # Pass user_id to fetch_leads
+        data = get_campaign_metrics(campaign_id)  # Pass campaign_id here
         return {"data": data}, 200
     except Exception as e:
-        return {"error": str(e)}, 500
+        return {"error": f"Error fetching campaign metrics: {str(e)}"}, 500
+
 
 @app.route("/fetch_airtable_data_and_create_csv", methods=["GET"])
 def trigger_csv_generation():

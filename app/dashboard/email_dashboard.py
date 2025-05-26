@@ -336,12 +336,7 @@ def get_user_campaigns(client_id):
         raise Exception(f"Error fetching campaigns: {e}")
 
 
-def get_campaign_metrics():
-    data = request.json
-    campaign_id = data.get('campaign_id')
-    if not campaign_id:
-        return jsonify({"error": "Missing campaign_id"}), 400
-
+def get_campaign_metrics(campaign_id):
     try:
         conn = connect_to_postgres()
         cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -357,17 +352,18 @@ def get_campaign_metrics():
         conn.close()
 
         if result:
-            return jsonify({
-                "email_opened": result[0],
-                "email_clicked": result[1],
-                "sequence_started": result[2],
-                "replies_received": result[3]
-            })
+            return {
+                "email_opened": result["opened"],
+                "email_clicked": result["clicked"],
+                "sequence_started": result["sequence_started"],
+                "replies_received": result["replies_received"]
+            }
         else:
-            return jsonify({"error": "No data found"}), 404
+            raise Exception("No data found")
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        raise Exception(f"Error fetching metrics: {str(e)}")
+
 
     
 if __name__ == '__main__':
