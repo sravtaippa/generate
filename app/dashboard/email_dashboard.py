@@ -3,6 +3,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime, timedelta
 from psycopg2 import errors
+from db.db_ops import db_manager
 app = Flask(__name__)
 
 def connect_to_postgres():
@@ -224,8 +225,8 @@ def get_recent_replies():
         return jsonify({"error": "Missing 'client_id' in query parameters"}), 400
 
     try:
-        conn = db_manager.get_connection()
-        cursor = conn.cursor()
+        conn = connect_to_postgres()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
 
         # Step 1: Get all campaign IDs for the client
         cursor.execute("""
