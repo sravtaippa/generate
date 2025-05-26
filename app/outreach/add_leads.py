@@ -1,6 +1,7 @@
 import requests
 from urllib.parse import urlencode
 from db.db_utils import retrieve_record
+from db.db_ops import db_manager
 from config import INSTANTLY_API_KEY,LEADSIN_API_KEY
 
 def add_lead_leadsin(apollo_id,campaign_id,outreach_table_name):
@@ -8,14 +9,24 @@ def add_lead_leadsin(apollo_id,campaign_id,outreach_table_name):
         primary_key_col = "apollo_id"
         primary_key_value = apollo_id
         record = retrieve_record(outreach_table_name,primary_key_col,primary_key_value)
-        profileUrl = record.get('fields').get("linkedin_profile_url","Not available")
-        email = record.get('fields').get("recipient_email","Not available")
-        first_name = record.get('fields').get("recipient_first_name","Not available")
-        last_name = record.get('fields').get("recipient_last_name","Not available")
-        message1 = record.get('fields').get("linkedin_message","Not available")
-        message2 = record.get('fields').get("linkedin_message_2","Not available")
-        subject1 = record.get('fields').get("linkedin_subject","Not available")
-        connection_message = record.get('fields').get("linkedin_connection_message","Not available")
+        record = db_manager.get_record(outreach_table_name,primary_key_col,primary_key_value)
+        # profileUrl = record.get('fields').get("linkedin_profile_url","Not available")
+        # email = record.get('fields').get("recipient_email","Not available")
+        # first_name = record.get('fields').get("recipient_first_name","Not available")
+        # last_name = record.get('fields').get("recipient_last_name","Not available")
+        # message1 = record.get('fields').get("linkedin_message","Not available")
+        # message2 = record.get('fields').get("linkedin_message_2","Not available")
+        # subject1 = record.get('fields').get("linkedin_subject","Not available")
+        # connection_message = record.get('fields').get("linkedin_connection_message","Not available")
+        profileUrl = record.get("linkedin_profile_url","Not available")
+        email = record.get("recipient_email","Not available")
+        first_name = record.get("recipient_first_name","Not available")
+        last_name = record.get("recipient_last_name","Not available")
+        message1 = record.get("linkedin_message","Not available")
+        message2 = record.get("linkedin_message_2","Not available")
+        subject1 = record.get("linkedin_subject","Not available")
+        connection_message = record.get("linkedin_connection_message","Not available")
+
         print(f"Profile URL: {profileUrl}")
         print(f"Email: {email}")
         print(f"First Name: {first_name}")
