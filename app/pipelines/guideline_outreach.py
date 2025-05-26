@@ -70,31 +70,35 @@ def execute_outreach_sequence():
         filter_values = [client_config.get("campaign_name")+"_"+lead_info_outreach.get("apollo_id")]
         linkedin_leads_record = db_manager.get_record("linkedin_leads", "thread_id", client_config.get("campaign_name")+"_"+lead_info_outreach.get("apollo_id"))
         print(f"LinkedIn leads duplicate record found: {linkedin_leads_record}")
-        update_fields = {
-            "thread_id": client_config.get("campaign_name")+"_"+lead_info_outreach.get("apollo_id"),
-            "campaign_name": client_config.get("campaign_name"),
-            "linkedin_profile_url": lead_info_outreach.get("linkedin_profile_url"),
-            "full_name": lead_info_curated.get("full_name"),
-            "email": lead_info_outreach.get("recipient_email"),
-            "picture": lead_info_curated.get("picture"),
-            "status": "Yet To Connect",
-            "company": lead_info_outreach.get("recipient_company"),
-            "message": lead_info_outreach.get("linkedin_message"),
-            "message_2": lead_info_outreach.get("linkedin_message_2"),
-            "connection_message": lead_info_outreach.get("linkedin_connection_message"),
-            "subject": lead_info_outreach.get("linkedin_subject"),
-        }
-
+        
+        if linkedin_leads_record is None:
+            linkedin_leads_data = {
+                "thread_id": client_config.get("campaign_name")+"_"+lead_info_outreach.get("apollo_id"),
+                "campaign_name": client_config.get("campaign_name"),
+                "apollo_id": lead_info_outreach.get("apollo_id"),
+                "linkedin_profile_url": lead_info_outreach.get("linkedin_profile_url"),
+                "full_name": lead_info_curated.get("full_name"),
+                "email": lead_info_outreach.get("recipient_email"),
+                "picture": lead_info_curated.get("picture"),
+                "status": "Yet To Connect",
+                "company": lead_info_outreach.get("recipient_company"),
+                "message": lead_info_outreach.get("linkedin_message"),
+                "message_2": lead_info_outreach.get("linkedin_message_2"),
+                "connection_message": lead_info_outreach.get("linkedin_connection_message"),
+                "subject": lead_info_outreach.get("linkedin_subject"),
+            }
+            db_manager.insert_data("linkedin_leads", linkedin_leads_data)
+            # db_manager.update_multiple_fields("linkedin_leads",update_fields,"thread_id")     
+            print(f"Added LinkedIn leads entry to the table successfully")
+        
         updated_outreach_index = outreach_index + 1 if outreach_index != 3 else 1
         update_column_value(
-                table_name="client_config", 
-                column_name="outreach_index",
-                column_value=str(updated_outreach_index),
-                primary_key_col="client_id",
-                primary_key_value=lead_info_outreach.get("associated_client_id")
+                    table_name="client_config", 
+                    column_name="outreach_index",
+                    column_value=str(updated_outreach_index),
+                    primary_key_col="client_id",
+                    primary_key_value=lead_info_outreach.get("associated_client_id")
         )
-        db_manager.update_multiple_fields("linkedin_leads",update_fields,"thread_id")     
-        print(f"LinkedIn leads table updated successfully")
         return {"message": "Outreach sequence executed successfully."}
 
     except Exception as e:
