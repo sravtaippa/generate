@@ -859,10 +859,10 @@ class GuidelineGenerate:
         - LinkedIn connection message content: {self.linkedin_connection_message_content}, recipient name: {self.lead_info.get('recipient_first_name')}
 
         Objective:
-        - Create a short, professional, and persuasive LinkedIn connection message that fits within LinkedIn’s 200-character limit.
+        - Create a short, professional, and persuasive LinkedIn connection message that fits within LinkedIn’s 120-character limit.
 
         Requirements:
-        - Strictly maximum 200 characters
+        - Strictly maximum 120 characters
         - Start with a greeting
         - Keep it brief, clear, and value-driven
         - Add a light, personable icebreaker
