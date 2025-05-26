@@ -643,7 +643,8 @@ def run_linkedin_ai_response_tacker():
         full_name = request.args.get("full_name", default=None)
         email = request.args.get("email", default=None)
         picture = request.args.get("picture", default=None)
-        message= request.args.get("message", default=None)
+        response_message = request.args.get("response_message", default=None)
+
         data = {
             "thread_id": thread_id,
             "campaign_name": campaign_name,
@@ -651,14 +652,16 @@ def run_linkedin_ai_response_tacker():
             "full_name": full_name,
             "email": email,
             "picture": picture,
-            "message": message
+            "response_message": response_message
         }
-        # message= "Thanks for reaching out. I'd be happy to learn more. Can we set up a call?"
+
         linkedin_ai_response_tacker(data)
         return {"status": "success", "message": "Testing completed"}
+
     except Exception as e:
-        return {"status": "error", "message": str(e)}, 500   
-      
+        return {"status": "error", "message": str(e)}, 500
+  
+    
 if __name__ == '__main__':
 #   app.run(debug=True,use_reloader=False)
 #   app.run(port=8001) 
