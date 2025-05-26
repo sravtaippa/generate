@@ -231,7 +231,7 @@ def get_recent_replies(client_id):  # now using client_id directly
         cursor.execute("""
             SELECT campaign_id FROM client_info WHERE client_id = %s
         """, (client_id,))
-        campaign_ids = [row['campaign_id'] for row in cursor.fetchall()]
+        campaign_ids = [row['instantly_campaign_id'] for row in cursor.fetchall()]
         if not campaign_ids:
             return jsonify({"error": "No campaigns found for the given client_id"}), 404
 
