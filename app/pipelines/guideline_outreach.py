@@ -99,7 +99,7 @@ def execute_outreach_sequence():
                     primary_key_col="client_id",
                     primary_key_value=lead_info_outreach.get("associated_client_id")
         )
-        return {"updated_fields": linkedin_leads_data}
+        return linkedin_leads_data
 
     except Exception as e:
         print(f"Error in execute_outreach_sequence: {e}")

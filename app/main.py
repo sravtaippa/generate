@@ -60,11 +60,11 @@ def guideline_outreach():
 def guideline_generate():
     try:
         start_time = time.time()  # Start timer
-        fields_updated = execute_generate_sequence()
+        updated_fields = execute_generate_sequence()
         end_time = time.time()  # End timer
         elapsed_minutes = (end_time - start_time) / 60  # Convert seconds to minutes
         print(f"~~~~~~~~~ Execution Time: {elapsed_minutes:.2f} minutes ~~~~~~~~~~~~")
-        return {"fields_updated":fields_updated}
+        return {"updated_fields":updated_fields}
     except Exception as e:
         print(f"Error occured while generating the content for outreach: {e}")
 
