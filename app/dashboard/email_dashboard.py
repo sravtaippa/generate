@@ -230,7 +230,7 @@ def get_recent_replies():
 
         # Step 1: Get all campaign IDs for the client
         cursor.execute("""
-            SELECT campaign_id FROM campaign_details WHERE client_id = %s
+            SELECT campaign_id FROM client_info WHERE client_id = %s
         """, (client_id,))
         campaign_ids = [row[0] for row in cursor.fetchall()]
         if not campaign_ids:
