@@ -89,7 +89,7 @@ def get_linkedin_campaign_details(username):
             try:
                 cursor.execute("""
                     SELECT photo_url
-                    FROM email_response_guideline
+                    FROM leadsin_response_linkedin
                     WHERE campaign_name = %s
                     ORDER BY created_time DESC
                     LIMIT 5
