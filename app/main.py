@@ -550,7 +550,10 @@ def get_booking_count_dashboard():
 def get_email_sent_chart_dashboard(username):
     return email_sent_chart(username)
 
-   
+@app.route("/get_campaign_details_dashboard/<username>", methods=["GET"])
+def get_campaign_details_dashboard(username):
+    return get_campaign_details(username)
+
 
 @app.route("/get_recent_replies_dashboard", methods=["GET"])
 def get_recent_replies_dashboard():
@@ -622,28 +625,29 @@ def linkedin_metrics_table_dashboard():
         # anything else = 500
         return jsonify({"error": str(e)}), 500
     
-@app.route("/linkedin_campaign_details_dashboard", methods=["GET"])
-def linkedin_campaign_details_dashboard():
-    username = request.args.get("username")
-    if not username:
-        return jsonify({"error": "username is required"}), 400
+# @app.route("/linkedin_campaign_details_dashboard", methods=["GET"])
+# def linkedin_campaign_details_dashboard():
+#     username = request.args.get("username")
+#     if not username:
+#         return jsonify({"error": "username is required"}), 400
 
-    try:
-        data = get_linkedin_campaign_details(username)
-        return jsonify({"data": data}), 200
-    except ValueError as ve:
-        return jsonify({"error": str(ve)}), 404
-    except Exception as e:
-        return jsonify({"error": "Internal server error"}), 500
+#     try:
+#         data = get_linkedin_campaign_details(username)
+#         return jsonify({"data": data}), 200
+#     except ValueError as ve:
+#         return jsonify({"error": str(ve)}), 404
+#     except Exception as e:
+#         return jsonify({"error": "Internal server error"}), 500
+@app.route("/linkedin_campaign_details_dashboard/<username>", methods=["GET"])
+def linkedin_campaign_details_dashboard(username):
+    return get_linkedin_campaign_details(username)
+
         
 @app.route("/fetch_airtable_data_and_create_csv", methods=["GET"])
 def trigger_csv_generation():
     return generate_csv_and_send_email()
 
 
-@app.route("/get_campaign_details_dashboard/<username>", methods=["GET"])
-def get_campaign_details_dashboard(username):
-    return get_campaign_details(username)
 
 @app.route("/test_db",methods=["GET"])
 def connect_db():
