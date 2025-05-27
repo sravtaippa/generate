@@ -28,7 +28,7 @@ from dashboard.client_profile_picture import get_profile_picture
 from dashboard.email_dashboard import fetch_recent_leads_from_db, fetch_metric_value, get_booking_count, email_sent_chart, get_campaign_details, fetch_leads, get_user_campaigns, get_campaign_metrics, get_lead_details
 from dashboard.leads_email import generate_csv_and_send_email
 from dashboard.test_databse import run_database_test
-from dashboard.linkedin_dashboard import get_linkedin_metrics, linkedin_campaign_details
+from dashboard.linkedin_dashboard import get_linkedin_metrics, get_linkedin_campaign_details
 from pipelines.organization_list_enrichment import fetch_organization_domains
 # from pipelines.guideline_generate import generate_content_guideline
 from pipelines.data_sanitization_psql import sanitize_data
@@ -624,12 +624,12 @@ def linkedin_metrics_table_dashboard():
     
 @app.route("/linkedin_campaign_details_dashboard", methods=["GET"])
 def linkedin_campaign_details_dashboard():
-    client_id = request.args.get("client_id")
-    if not client_id:
-        return jsonify({"error": "client_id is required"}), 400
+    username = request.args.get("username")
+    if not username:
+        return jsonify({"error": "username is required"}), 400
 
     try:
-        data = linkedin_campaign_details(client_id)
+        data = get_linkedin_campaign_details(username)
         return jsonify({"data": data}), 200
     except ValueError as ve:
         return jsonify({"error": str(ve)}), 404
