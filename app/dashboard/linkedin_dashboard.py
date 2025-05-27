@@ -62,65 +62,58 @@ def get_linkedin_metrics(client_id: str):
     return results
 
 
-def fetch_campaign_details(client_id: str):
-    """Return a list of campaigns (and lead pictures) for the given client_id.
-       Raise ValueError if none found."""
-    conn = connect_to_postgres()
-    cur  = conn.cursor()
+def linkedin_campaign_details(client_id):
+    conn = None
     try:
-        with conn:
-            with conn.cursor() as cur:
-                # 1️⃣ campaigns
-                cur.execute(
-                    """
-                    SELECT client_id,
-                           linkedin_campaign_name,
-                           linkedin_campaign_status,
-                           created_date
-                    FROM   campaign_details
-                    WHERE  client_id = %s
-                    """,
-                    (client_id,),
-                )
-                campaigns = cur.fetchall()
+        conn = connect_to_postgres()
+        cur = conn.cursor()
 
-                if not campaigns:
-                    raise ValueError("No campaigns found for this client_id.")
+        # Fetch campaigns for this client_id
+        cur.execute("""
+            SELECT * FROM campaign_details
+            WHERE client_id = %s
+        """, (client_id,))
+        campaigns = cur.fetchall()
 
-                # 2️⃣ attach the five newest profile pictures per campaign
-                result = []
-                for campaign in campaigns:
-                    campaign_name = campaign["linkedin_campaign_name"]
+        if not campaigns:
+            raise ValueError("No campaigns found for this user.")
 
-                    cur.execute(
-                        """
-                        SELECT picture
-                        FROM   leadsin_response_linkedin
-                        WHERE  campaign_name = %s
-                        ORDER  BY created_time DESC
-                        LIMIT  5
-                        """,
-                        (campaign_name,),
-                    )
-                    leads = cur.fetchall()
-                    pics  = [
-                        (lead["picture"] or "https://i.pravatar.cc/50")
-                        for lead in leads
-                    ]
+        campaign_data = []
+        for campaign in campaigns:
+            campaign_name = campaign.get('linkedin_campaign_name')
+            if not campaign_name:
+                continue
 
-                    result.append(
-                        {
-                            "created_date":            campaign["created_date"],
-                            "linkedin_campaign_name":  campaign_name,
-                            "linkedin_campaign_status": campaign["linkedin_campaign_status"],
-                            "profile_pictures":        pics,
-                        }
-                    )
+            # Get latest 5 profile pictures
+            cur.execute("""
+                SELECT picture
+                FROM leadsin_response_linkedin
+                WHERE campaign_name = %s
+                ORDER BY created_time DESC
+                LIMIT 5
+            """, (campaign_name,))
+            leads = cur.fetchall()
 
-        return result
+            profile_pictures = [
+                lead['picture'] if lead['picture'] else 'https://i.pravatar.cc/50'
+                for lead in leads
+            ]
 
+            campaign_data.append({
+                'created_date': campaign.get('created_date'),
+                'linkedin_campaign_status': campaign.get('linkedin_campaign_status'),
+                'linkedin_campaign_name': campaign_name,
+                'profile_pictures': profile_pictures
+            })
+
+        return campaign_data
+
+    except Exception as e:
+        print("Error:", e)
+        raise
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
     
 if __name__ == '__main__':
