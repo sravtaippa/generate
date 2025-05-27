@@ -88,14 +88,14 @@ def get_linkedin_campaign_details(username):
 
             try:
                 cursor.execute("""
-                    SELECT photo_url
+                    SELECT picture
                     FROM leadsin_response_linkedin
                     WHERE campaign_name = %s
                     ORDER BY created_time DESC
                     LIMIT 5
                 """, (campaign_name,))
                 replies = cursor.fetchall()
-                profile_pictures = [reply['photo_url'] for reply in replies]
+                profile_pictures = [reply['picture'] for reply in replies]
 
             except errors.UndefinedTable:
                 
