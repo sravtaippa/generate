@@ -806,17 +806,15 @@ def run_email_post_response_tracker():
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500
 
-@app.route("/run_booking_meeting_tracker", methods=["GET"])
+@app.route("/run_booking_meeting_tracker", methods=["POST"])
 def run_booking_meeting_tracker():
     try:
-        data = {
-            "Text_Content": request.args.get("Text Content", default=None)
-        }
+        data = request.get_json()
         booking_meeting_tracker(data)
         return {"status": "success", "message": "Testing completed"}
     except Exception as e:
-        return {"status": "error", "message": str(e)}, 500  
-    
+        return {"status": "error", "message": str(e)}, 500
+
 @app.route("/run_booking_meeting_form_tracker", methods=["POST"])
 def run_booking_meeting_form_tracker():
     try:
