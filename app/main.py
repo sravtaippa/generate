@@ -810,7 +810,7 @@ def run_email_post_response_tracker():
 def run_booking_meeting_tracker():
     try:
         data = {
-            "Text Content": request.args.get("Text Content", default=None)
+            "Text_Content": request.args.get("Text Content", default=None)
         }
         booking_meeting_tracker(data)
         return {"status": "success", "message": "Testing completed"}

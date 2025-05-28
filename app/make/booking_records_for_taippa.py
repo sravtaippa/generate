@@ -41,23 +41,23 @@ def extract_appointment_details(email_text):
 def booking_meeting_tracker(data):
     try:
         # data = {
-        #     "Text Content": """
-        #         Hi Urmi C,
+            # "Text Content": """
+            #     Hi Urmi C,
 
-        #         A new Schedule an Appointment with SHIBLA THADATHIL PARAMBIL has been scheduled for 2025-02-28 at 15:30 Europe/Paris
+            #     A new Schedule an Appointment with SHIBLA THADATHIL PARAMBIL has been scheduled for 2025-02-28 at 15:30 Europe/Paris
 
-        #         Event Details
+            #     Event Details
 
-        #         Email: shiblashilusaif@gmail.com
-        #         Phone: N/A
-        #         Country: N/A
-        #         Location: https://meet.google.com/yap-tuuv-mba
-        #         Password: N/A
-        #         Event description:
-        #         """
+            #     Email: shiblashilusaif@gmail.com
+            #     Phone: N/A
+            #     Country: N/A
+            #     Location: https://meet.google.com/yap-tuuv-mba
+            #     Password: N/A
+            #     Event description:
+            #     """
 
         # }
-        result = extract_appointment_details(data["Text Content"])
+        result = extract_appointment_details(data["Text_Content"])
         print("Result:", result)
         inbox_record = {
             
