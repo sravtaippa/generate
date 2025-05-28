@@ -99,7 +99,7 @@ Return only one of the following labels:
 #     result = classify_linkedin_message(test_message)
 #     print("Classification:", result)
 
-def linkedin_ai_response_tacker(data):
+def linkedin_ai_response_tracker(data):
     try:
         
         sentiment = classify_linkedin_message(data["response_message"])
