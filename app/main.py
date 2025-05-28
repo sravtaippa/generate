@@ -35,11 +35,15 @@ from pipelines.data_sanitization_psql import sanitize_data
 from pipelines.guideline_generate import execute_generate_sequence
 from pipelines.guideline_outreach import execute_outreach_sequence
 
-from make.linkedIn_message_sent_tracker import linkedin_message_sent_tacker
-from make.linkedIn_invite_sent_tracker import linkedin_invite_sent_tacker
-from make.linkedIn_invite_accepted_tracker import linkedin_invite_accepted_tacker
-from make.ai_response_module import linkedin_ai_response_tacker
+from make.linkedIn_message_sent_tracker import linkedin_message_sent_tracker
+from make.linkedIn_invite_sent_tracker import linkedin_invite_sent_tracker
+from make.linkedIn_invite_accepted_tracker import linkedin_invite_accepted_tracker
+from make.email_sent import email_sent_tracker
+from make.ai_response_module import linkedin_ai_response_tracker
 from email_module.generic_email_module import send_html_email
+from make.email_post_response import email_post_response_tracker
+from  make.booking_records_for_taippa import booking_meeting_tracker
+from make.booking_meeting_form_submition import booking_meeting_form_tracker
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -658,8 +662,8 @@ def connect_db():
         print(f"Error occured while testing connection")
 
 #Make Scenarios
-@app.route("/run_linkedin_message_sent_tacker", methods=["GET"])
-def run_linkedin_message_sent_tacker():
+@app.route("/run_linkedin_message_sent_tracker", methods=["GET"])
+def run_linkedin_message_sent_tracker():
     try:
         thread_id = request.args.get("thread_id", default=None)
         campaign_name = request.args.get("campaign_name", default=None)
@@ -675,13 +679,13 @@ def run_linkedin_message_sent_tacker():
             "email": email,
             "picture": picture
         }
-        linkedin_message_sent_tacker(data)
+        linkedin_message_sent_tracker(data)
         return {"status": "success", "message": "Testing completed"}
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500
 
-@app.route("/run_linkedin_invite_sent_tacker", methods=["GET"])
-def run_linkedin_invite_sent_tacker():
+@app.route("/run_linkedin_invite_sent_tracker", methods=["GET"])
+def run_linkedin_invite_sent_tracker():
     try:
         thread_id = request.args.get("thread_id", default=None)
         campaign_name = request.args.get("campaign_name", default=None)
@@ -697,14 +701,14 @@ def run_linkedin_invite_sent_tacker():
             "email": email,
             "picture": picture
         }
-        linkedin_invite_sent_tacker(data)
+        linkedin_invite_sent_tracker(data)
         # linkedin_invite_sent_tacker()
         return {"status": "success", "message": "Testing completed"}
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500  
      
-@app.route("/run_linkedin_invite_accepted_tacker", methods=["GET"])
-def run_linkedin_invite_accepted_tacker():
+@app.route("/run_linkedin_invite_accepted_tracker", methods=["GET"])
+def run_linkedin_invite_accepted_tracker():
     try:
         thread_id = request.args.get("thread_id", default=None)
         campaign_name = request.args.get("campaign_name", default=None)
@@ -720,14 +724,14 @@ def run_linkedin_invite_accepted_tacker():
             "email": email,
             "picture": picture
         }
-        linkedin_invite_accepted_tacker(data)
+        linkedin_invite_accepted_tracker(data)
         # linkedin_invite_accepted_tacker()
         return {"status": "success", "message": "Testing completed"}
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500   
 
-@app.route("/run_linkedin_ai_response_tacker", methods=["GET"])
-def run_linkedin_ai_response_tacker():
+@app.route("/run_linkedin_ai_response_tracker", methods=["GET"])
+def run_linkedin_ai_response_tracker():
     try:
         thread_id = request.args.get("thread_id", default=None)
         campaign_name = request.args.get("campaign_name", default=None)
@@ -749,7 +753,7 @@ def run_linkedin_ai_response_tacker():
             "sentiment": sentiment
         }
 
-        linkedin_ai_response_tacker(data)
+        linkedin_ai_response_tracker(data)
         return {"status": "success", "message": "Testing completed"}
 
     except Exception as e:
@@ -783,6 +787,42 @@ def send_generic_email():
 
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500
+    
+@app.route("/run_email_sent_tracker", methods=["GET"])
+def run_email_sent_tracker():
+    try:
+       
+        email_sent_tracker()
+        return {"status": "success", "message": "Testing completed"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 500
+    
+@app.route("/run_email_post_response_tracker", methods=["GET"])
+def run_email_post_response_tracker():
+    try:
+       
+        email_post_response_tracker()
+        return {"status": "success", "message": "Testing completed"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 500
+
+@app.route("/run_booking_meeting_tracker", methods=["GET"])
+def run_booking_meeting_tracker():
+    try:
+        data = {
+            "Text Content": request.args.get("Text Content", default=None)
+        }
+        booking_meeting_tracker(data)
+        return {"status": "success", "message": "Testing completed"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 500  
+    
+@app.route("/run_booking_meeting_form_tracker", methods=["POST"])
+def run_booking_meeting_form_tracker():
+    try:
+        return booking_meeting_form_tracker()
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
     
 if __name__ == '__main__':
 #   app.run(debug=True,use_reloader=False)
