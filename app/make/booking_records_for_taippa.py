@@ -57,10 +57,10 @@ def booking_meeting_tracker(data):
         #     raise ValueError("Missing 'Invitee_email' in extracted data.")
 
         inbox_record = {
-            "email": data["Invitee_email"],
-            "full_name": data["Invitee"],
-            "booking_date_time": data['Event_date'],
-            "event_type": data["Event_type"]
+            "email": data["email"],
+            "full_name": data["full_name"],
+            "booking_date_time": data['booking_date_time'],
+            "event_type": data["event_type"]
         }
 
         db_manager.insert_data("booking_records", inbox_record)

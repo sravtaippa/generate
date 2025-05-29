@@ -810,15 +810,13 @@ def run_email_post_response_tracker():
 def run_booking_meeting_tracker():
     try:
         # Text_Content = request.args.get("Text_Content", default=None),
-        email= request.args.get("Invitee_email", default=None),
-        
+        email= request.args.get("Invitee_email", default=None),        
         full_name= request.args.get("Invitee", default=None),
         booking_date_time= request.args.get("Event_date", default=None),
         event_type= request.args.get("event_type", default=None),
         
         data = {
-            "email": email,
-            
+            "email": email,            
             "full_name": full_name,
             "booking_date_time": booking_date_time,
             "event_type":event_type
