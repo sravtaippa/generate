@@ -6,7 +6,7 @@ from db.db_ops import db_manager
 
 
 # Create OpenAI client with API key (replace or use environment variable)
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY", "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"))
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 def extract_appointment_details(email_text):
     system_prompt = (
         "You are an AI that extracts structured event information from raw email text. "
