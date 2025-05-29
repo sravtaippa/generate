@@ -15,7 +15,8 @@ def booking_meeting_form_tracker():
         fields = contact_info.get("fields", {})
 
         email = contact_info.get("email")
-        name = fields.get("surname")
+        name = fields.get("firstname")
+        lastname = fields.get("lastname")
         phone = fields.get("phone_number")
 
         # Validate required fields
