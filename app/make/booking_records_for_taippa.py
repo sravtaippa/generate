@@ -58,7 +58,6 @@ def booking_meeting_tracker(data):
 
         inbox_record = {
             "email": data["Invitee_email"],
-            "client_id": "taippa_marketing",
             "full_name": data["Invitee"],
             "booking_date_time": data['Event_date'],
             "event_type": data["Event_type"]
