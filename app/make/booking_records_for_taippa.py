@@ -49,19 +49,19 @@ def booking_meeting_tracker(data):
         if not raw_text:
             raise ValueError("Text_Content is empty or missing.")
 
-        result = extract_appointment_details(raw_text)
-        print("✅ Extracted Result:", result)
+        # result = extract_appointment_details(raw_text)
+        # print("✅ Extracted Result:", result)
 
         # Basic validation
-        if not result.get("Invitee_email"):
-            raise ValueError("Missing 'Invitee_email' in extracted data.")
+        # if not result.get("Invitee_email"):
+        #     raise ValueError("Missing 'Invitee_email' in extracted data.")
 
         inbox_record = {
-            "email": result.get("Invitee_email"),
+            "email": data["Invitee_email"],
             "client_id": "taippa_marketing",
-            "full_name": result.get("Invitee"),
-            "booking_date_time": f"{result.get('Event_date')} {result.get('Event_time')}",
-            "event_type": result.get("Event_type"),
+            "full_name": data["Invitee"],
+            "booking_date_time": data['Event_date'],
+            "event_type": data["Event_type"]
         }
 
         db_manager.insert_data("booking_records", inbox_record)

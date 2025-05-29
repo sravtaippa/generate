@@ -809,9 +809,19 @@ def run_email_post_response_tracker():
 @app.route("/run_booking_meeting_tracker", methods=["GET"])
 def run_booking_meeting_tracker():
     try:
-        Text_Content = request.args.get("Text_Content", default=None)
+        # Text_Content = request.args.get("Text_Content", default=None),
+        email= request.args.get("Invitee_email", default=None),
+        client_id= request.args.get("client_id", default=None),
+        full_name= request.args.get("Invitee", default=None),
+        booking_date_time= request.args.get("Event_date", default=None),
+        event_type= request.args.get("event_type", default=None),
+        
         data = {
-            "Text_Content": Text_Content
+            "email": email,
+            "client_id": client_id,
+            "full_name": full_name,
+            "booking_date_time": booking_date_time,
+            "event_type":event_type
         }
 
         booking_meeting_tracker(data)
