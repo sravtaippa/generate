@@ -15,24 +15,27 @@ def booking_meeting_form_tracker():
         fields = contact_info.get("fields", {})
 
         email = contact_info.get("email")
-        name = fields.get("firstname")
-        lastname = fields.get("lastname")
+        name = fields.get("name")
         phone = fields.get("phone_number")
 
         # Validate required fields
         if not email or not name or not phone:
             return jsonify({"error": "Email, Name, and Phone are required"}), 400
 
-        # Construct record for database update
+        # ✅ Include 'email' (the primary key column) in the record
         inbox_record = {
             "email": email,
-            "client_id": 'taippa_marketing',
+            "client_id": "taippa_marketing",
             "full_name": name,
-            "phone": phone
+            "phone_number": phone
         }
 
         print(f"🔄 Updating record for: {email}")
-        db_manager.update_multiple_fields("booking_records", inbox_record, email)
+        db_manager.update_multiple_fields(
+            table_name="booking_records",
+            record=inbox_record,
+            primary_key_col="email"
+        )
 
         return jsonify({"status": "success", "message": "Booking data updated"}), 200
 
