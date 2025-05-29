@@ -34,7 +34,7 @@ def booking_meeting_form_tracker():
             "email": email,                  # must match the primary_key_col
             "client_id": client_id,
             "full_name": full_name,
-            "phone": phone
+            "phone_number": phone
         }
 
         print(f"🔄 Updating record for: {email}")
