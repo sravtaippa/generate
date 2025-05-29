@@ -45,9 +45,9 @@ def extract_appointment_details(email_text):
 
 def booking_meeting_tracker(data):
     try:
-        raw_text = data["Text_Content"]
-        if not raw_text:
-            raise ValueError("Text_Content is empty or missing.")
+        # raw_text = data["Text_Content"]
+        # if not raw_text:
+        #     raise ValueError("Text_Content is empty or missing.")
 
         # result = extract_appointment_details(raw_text)
         # print("✅ Extracted Result:", result)
