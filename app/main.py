@@ -811,7 +811,7 @@ def run_booking_meeting_tracker():
     try:
         # Text_Content = request.args.get("Text_Content", default=None),
         email= request.args.get("Invitee_email", default=None),
-        client_id= request.args.get("client_id", default=None),
+        
         full_name= request.args.get("Invitee", default=None),
         booking_date_time= request.args.get("Event_date", default=None),
         event_type= request.args.get("event_type", default=None),
