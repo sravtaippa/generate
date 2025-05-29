@@ -813,28 +813,12 @@ def run_booking_meeting_tracker():
         data = {
             "Text_Content": Text_Content
         }
-        # data = {
-        #     "Text_Content": """
-        #         Hi Urmi C,
 
-        #         A new Schedule an Appointment with SHIBLA THADATHIL PARAMBIL has been scheduled for 2025-02-28 at 15:30 Europe/Paris
-
-        #         Event Details
-
-        #         Email: shiblashilusaif@gmail.com
-        #         Phone: N/A
-        #         Country: N/A
-        #         Location: https://meet.google.com/yap-tuuv-mba
-        #         Password: N/A
-        #         Event description:
-        #         """
-
-        # }
         booking_meeting_tracker(data)
-        return {"status": "success", "message": "Testing completed"}
+        return {"status": "success", "message": "Booking tracker completed"}
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500
-
+    
 @app.route("/run_booking_meeting_form_tracker", methods=["POST"])
 def run_booking_meeting_form_tracker():
     try:
