@@ -10,24 +10,31 @@ def booking_meeting_form_tracker():
         if not data:
             return jsonify({"error": "No data received"}), 400
 
-        # Extract contact and custom field details
-        contact_info = data.get("data", {}).get("contact", {})
-        fields = contact_info.get("fields", {})
+        # Extract core info
+        contact = data.get("data", {}).get("contact", {})
+        fields = contact.get("fields", {})
+        funnel_info = data.get("data", {}).get("funnel_step", {})
+        funnel_name = funnel_info.get("funnel", {}).get("name", "")
 
-        email = contact_info.get("email")
-        name = fields.get("name")
+        # Parse required values
+        email = contact.get("email")
+        first_name = fields.get("first_name", "")
+        surname = fields.get("surname", "")
         phone = fields.get("phone_number")
 
-        # Validate required fields
-        if not email or not name or not phone:
-            return jsonify({"error": "Email, Name, and Phone are required"}), 400
+        full_name = f"{first_name} {surname}".strip()
+        client_id = funnel_name.lower().replace(" ", "_") or "taippa_marketing"
 
-        # ✅ Include 'email' (the primary key column) in the record
+        # Validate
+        if not email or not full_name or not phone:
+            return jsonify({"error": "Missing email, name, or phone"}), 400
+
+        # Prepare record for update
         inbox_record = {
-            "email": email,
-            "client_id": "taippa_marketing",
-            "full_name": name,
-            "phone_number": phone
+            "email": email,                  # must match the primary_key_col
+            "client_id": client_id,
+            "full_name": full_name,
+            "phone": phone
         }
 
         print(f"🔄 Updating record for: {email}")
