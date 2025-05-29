@@ -1,9 +1,11 @@
 import os
 import openai
 import json
-from db.db_ops import db_manager 
-
+from db.db_ops import db_manager
 from config import OPENAI_API_KEY
+from flask import Flask, request
+
+app = Flask(__name__)
 client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 def extract_appointment_details(email_text):
@@ -33,43 +35,40 @@ def extract_appointment_details(email_text):
         temperature=0
     )
 
-    json_string = response.choices[0].message.content.strip()
-    return json.loads(json_string)  # Convert to Python dict
+    raw_output = response.choices[0].message.content.strip()
+    print("🔍 Raw OpenAI response:", raw_output)
+
+    try:
+        return json.loads(raw_output)
+    except json.JSONDecodeError:
+        raise ValueError("OpenAI returned invalid JSON.")
 
 def booking_meeting_tracker(data):
     try:
-        # data = {
-            # "Text Content": """
-            #     Hi Urmi C,
+        raw_text = data["Text_Content"]
+        if not raw_text:
+            raise ValueError("Text_Content is empty or missing.")
 
-            #     A new Schedule an Appointment with SHIBLA THADATHIL PARAMBIL has been scheduled for 2025-02-28 at 15:30 Europe/Paris
+        result = extract_appointment_details(raw_text)
+        print("✅ Extracted Result:", result)
 
-            #     Event Details
+        # Basic validation
+        if not result.get("Invitee_email"):
+            raise ValueError("Missing 'Invitee_email' in extracted data.")
 
-            #     Email: shiblashilusaif@gmail.com
-            #     Phone: N/A
-            #     Country: N/A
-            #     Location: https://meet.google.com/yap-tuuv-mba
-            #     Password: N/A
-            #     Event description:
-            #     """
-
-        # }
-        result = extract_appointment_details(data["Text_Content"])
-        print("Result:", result)
         inbox_record = {
-            
             "email": result.get("Invitee_email"),
-            "client_id": 'taippa_marketing',
-            "full_name": result.get("name"),
-            "booking_date_time": result.get("Event_date"),
+            "client_id": "taippa_marketing",
+            "full_name": result.get("Invitee"),
+            "booking_date_time": f"{result.get('Event_date')} {result.get('Event_time')}",
             "event_type": result.get("Event_type"),
-            
-                 
         }
-        db_manager.insert_data("booking_records", inbox_record) 
-        
-        
+
+        db_manager.insert_data("booking_records", inbox_record)
+        print("📥 Data inserted into DB successfully.")
+
     except Exception as e:
-        print(f"❌ Error during DB test: {e}")
-        raise 
+        print(f"❌ Error during booking tracker: {e}")
+        raise
+
+
