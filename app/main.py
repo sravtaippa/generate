@@ -818,7 +818,7 @@ def run_booking_meeting_tracker():
         
         data = {
             "email": email,
-            "client_id": client_id,
+            
             "full_name": full_name,
             "booking_date_time": booking_date_time,
             "event_type":event_type
