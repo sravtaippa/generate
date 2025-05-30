@@ -113,28 +113,27 @@ def get_linkedin_campaign_details(username):
         return jsonify({'error': str(e)}), 500
     
 def get_linkedin_statistics(username, field):
-    # username = request.args.get('username')
-    # field = request.args.get('field')  # optional
-
     conn = connect_to_postgres()
     cur = conn.cursor()
 
     # Get campaign name
     cur.execute("SELECT linkedin_campaign_name FROM campaign_details WHERE client_id = %s LIMIT 1", (username,))
     row = cur.fetchone()
+
     if not row:
-        return jsonify({"error": "No campaigns found"}), 404
+        return None  # Let the route handler handle this case
 
     linkedin_campaign_name = row[0]
 
     if field:
         cur.execute(f"SELECT SUM(CAST({field} AS INTEGER)) FROM linkedin_campaign_metrics WHERE linkedin_campaign_name = %s", (linkedin_campaign_name,))
         total = cur.fetchone()[0] or 0
-        return jsonify({field: total})
+        return {field: total}
     else:
         cur.execute("SELECT COUNT(*) FROM linkedin_campaign_metrics WHERE linkedin_campaign_name = %s", (linkedin_campaign_name,))
         total = cur.fetchone()[0]
-        return jsonify({"total_records": total})
+        return {"total_records": total}
+
 
     
 if __name__ == '__main__':
