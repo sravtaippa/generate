@@ -112,36 +112,29 @@ def get_linkedin_campaign_details(username):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
-def get_linkedin_statistics(client_id, field):
+def get_linkedin_statistics(username, field):
+    # username = request.args.get('username')
+    # field = request.args.get('field')  # optional
+
     conn = connect_to_postgres()
     cur = conn.cursor()
 
-    # Step 1: Get campaign name
-    cur.execute("SELECT linkedin_campaign_name FROM campaign_details WHERE client_id = %s LIMIT 1", (client_id,))
-    result = cur.fetchone()
-    if not result:
-        return None  # No campaign found
+    # Get campaign name
+    cur.execute("SELECT linkedin_campaign_name FROM campaign_details WHERE client_id = %s LIMIT 1", (username,))
+    row = cur.fetchone()
+    if not row:
+        return jsonify({"error": "No campaigns found"}), 404
 
-    linkedin_campaign_name = result[0]
+    linkedin_campaign_name = row[0]
 
-    # Step 2: Get metrics
     if field:
-        cur.execute(f"""
-            SELECT SUM(COALESCE({field}, 0)) 
-            FROM linkedin_campaign_metrics 
-            WHERE linkedin_campaign_name = %s
-        """, (linkedin_campaign_name,))
-        metric = cur.fetchone()[0] or 0
-        return metric
+        cur.execute(f"SELECT SUM(CAST({field} AS INTEGER)) FROM linkedin_campaign_metrics WHERE linkedin_campaign_name = %s", (linkedin_campaign_name,))
+        total = cur.fetchone()[0] or 0
+        return jsonify({field: total})
     else:
-        cur.execute("""
-            SELECT COUNT(*) 
-            FROM linkedin_campaign_metrics 
-            WHERE linkedin_campaign_name = %s
-        """, (linkedin_campaign_name,))
-        count = cur.fetchone()[0]
-        return count
-
+        cur.execute("SELECT COUNT(*) FROM linkedin_campaign_metrics WHERE linkedin_campaign_name = %s", (linkedin_campaign_name,))
+        total = cur.fetchone()[0]
+        return jsonify({"total_records": total})
 
     
 if __name__ == '__main__':
