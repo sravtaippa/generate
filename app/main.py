@@ -660,19 +660,20 @@ def get_linkedin_statistics_dashboard():
         return jsonify({"error": "No campaign found for user"}), 404
 
     return jsonify(data), 200
+
 @app.route("/get_linkedin_replies_dashboard", methods=["GET"])
 def get_linkedin_replies_dashboard():
     username = request.args.get("username")
     
-    if not username :
+    if not username:
         return jsonify({"error": "Missing 'username' parameter"}), 400
 
     data = get_linkedin_replies(username)
 
     if data is None:
-        return jsonify({"error": "No campaign found for user"}), 404
+        return jsonify({"error": "Failed to fetch leads"}), 500
 
-    return jsonify(data), 200
+    return jsonify({"leads": data}), 200
 
 
 @app.route("/fetch_airtable_data_and_create_csv", methods=["GET"])
