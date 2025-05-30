@@ -134,6 +134,47 @@ def get_linkedin_statistics(username, field):
         total = cur.fetchone()[0]
         return {"total_records": total}
 
+def get_linkedin_replies(username):
+    # client_id = request.args.get('username')
+    # if not client_id:
+    #     return jsonify({'error': 'Username (client_id) is required'}), 400
+
+    try:
+        conn = connect_to_postgres()
+        cursor = conn.cursor()
+
+        # Step 1: Get campaign names for this user
+        cursor.execute("""
+            SELECT linkedin_campaign_name 
+            FROM campaign_details 
+            WHERE client_id = %s
+        """, (client_id,))
+        campaigns = [row['linkedin_campaign_name'] for row in cursor.fetchall() if row['linkedin_campaign_name']]
+
+        if not campaigns:
+            return jsonify({'leads': []})  # No campaigns found
+
+        # Step 2: Get leads from those campaigns
+        cursor.execute(f"""
+            SELECT 
+                full_name, email, phone, linkedin_profile_url, message, sentiment, created_time, picture 
+            FROM 
+                leadsin_response_linkedin
+            WHERE 
+                campaign_name = ANY(%s)
+        """, (campaigns,))
+        leads = cursor.fetchall()
+
+        return jsonify({'leads': leads})
+
+    except Exception as e:
+        print('Error fetching leads:', e)
+        return jsonify({'error': 'Failed to fetch leads'}), 500
+
+    finally:
+        if cursor: cursor.close()
+        if conn: conn.close()
+
 
     
 if __name__ == '__main__':
