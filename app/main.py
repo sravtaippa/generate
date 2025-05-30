@@ -664,7 +664,6 @@ def get_linkedin_statistics_dashboard():
 def get_linkedin_replies_dashboard():
     username = request.args.get("username")
     
-
     if not username :
         return jsonify({"error": "Missing 'username' parameter"}), 400
 

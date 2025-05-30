@@ -18,7 +18,7 @@ def connect_to_postgres():
 
 
 
-def get_linkedin_metrics(client_id: str):
+def get_linkedin_metrics(username: str):
     """Return LinkedIn-campaign metrics for the given client_id."""
     conn = connect_to_postgres()
     cur  = conn.cursor()
@@ -148,7 +148,7 @@ def get_linkedin_replies(username):
             SELECT linkedin_campaign_name 
             FROM campaign_details 
             WHERE client_id = %s
-        """, (client_id,))
+        """, (username,))
         campaigns = [row['linkedin_campaign_name'] for row in cursor.fetchall() if row['linkedin_campaign_name']]
 
         if not campaigns:
