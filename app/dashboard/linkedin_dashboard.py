@@ -136,40 +136,46 @@ def get_linkedin_statistics(username, field):
 
 def get_linkedin_replies(username):
     try:
+        print("[DEBUG] Connecting to DB")
         conn = connect_to_postgres()
         cursor = conn.cursor()
 
-        # Step 1: Get campaign names for this user
+        print(f"[DEBUG] Fetching campaigns for username: {username}")
         cursor.execute("""
             SELECT linkedin_campaign_name 
             FROM campaign_details 
             WHERE client_id = %s
         """, (username,))
-        campaigns = [row['linkedin_campaign_name'] for row in cursor.fetchall() if row['linkedin_campaign_name']]
+        rows = cursor.fetchall()
+        print("[DEBUG] Campaign rows:", rows)
+
+        campaigns = [row['linkedin_campaign_name'] for row in rows if row['linkedin_campaign_name']]
+        print("[DEBUG] Campaigns:", campaigns)
 
         if not campaigns:
-            return []  # Return empty list, not jsonify
+            return []
 
-        # Step 2: Get leads from those campaigns
+        print("[DEBUG] Fetching leads")
         cursor.execute("""
-            SELECT 
-                full_name, email, phone, linkedin_profile_url, message, sentiment, created_time, picture 
-            FROM 
-                leadsin_response_linkedin
-            WHERE 
-                campaign_name = ANY(%s)
+            SELECT full_name, email, phone, linkedin_profile_url, message, sentiment, created_time, picture 
+            FROM leadsin_response_linkedin
+            WHERE campaign_name = ANY(%s)
         """, (campaigns,))
         leads = cursor.fetchall()
+        print("[DEBUG] Leads fetched:", leads)
 
-        return leads  # Raw list of dicts
+        return leads
 
     except Exception as e:
-        print('Error fetching leads:', e)
-        return None  # Signal failure
+        print('[ERROR] Exception occurred:', e)
+        traceback.print_exc()
+        return None
 
     finally:
         if cursor: cursor.close()
         if conn: conn.close()
+
+   
 
     
 if __name__ == '__main__':
