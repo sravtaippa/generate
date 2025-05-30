@@ -138,7 +138,7 @@ def get_linkedin_replies(username):
     try:
         print("[DEBUG] Connecting to DB")
         conn = connect_to_postgres()
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
 
         print(f"[DEBUG] Fetching campaigns for username: {username}")
         cursor.execute("""
@@ -168,7 +168,7 @@ def get_linkedin_replies(username):
 
     except Exception as e:
         print('[ERROR] Exception occurred:', e)
-        traceback.print_exc()
+        # traceback.print_exc()
         return None
 
     finally:
