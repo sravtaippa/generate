@@ -654,12 +654,13 @@ def get_linkedin_statistics_dashboard():
     if not username or not field:
         return jsonify({"error": "Missing 'username' or 'field' parameter"}), 400
 
-    value = get_linkedin_statistics(username, field)
+    data = get_linkedin_statistics(username, field)
 
-    if value is None:
+    if data is None:
         return jsonify({"error": "No campaign found for user"}), 404
 
-    return jsonify({"value": value}), 200
+    return jsonify(data), 200
+
 
 @app.route("/fetch_airtable_data_and_create_csv", methods=["GET"])
 def trigger_csv_generation():
