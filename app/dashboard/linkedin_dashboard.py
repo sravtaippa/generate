@@ -175,7 +175,38 @@ def get_linkedin_replies(username):
         if cursor: cursor.close()
         if conn: conn.close()
 
-   
+
+def get_linkedin_leads_by_username(username):
+    if not username:
+        return {"error": "Username is required"}, 400
+
+    try:
+        conn = connect_to_postgres()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Step 1: Get campaign names
+        cursor.execute("SELECT linkedin_campaign_name FROM campaign_details WHERE client_id = %s", (username,))
+        campaigns = cursor.fetchall()
+        campaign_names = [c['linkedin_campaign_name'] for c in campaigns]
+
+        if not campaign_names:
+            return {"leads": []}, 200
+
+        # Step 2: Get all leads for those campaigns
+        cursor.execute(
+            "SELECT * FROM linkedin_leads WHERE campaign_name = ANY(%s)",
+            (campaign_names,)
+        )
+        leads = cursor.fetchall()
+
+        return {"leads": leads}, 200
+
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+    finally:
+        if conn:
+            conn.close()
 
     
 if __name__ == '__main__':

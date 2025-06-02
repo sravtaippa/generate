@@ -28,7 +28,7 @@ from dashboard.client_profile_picture import get_profile_picture
 from dashboard.email_dashboard import fetch_recent_leads_from_db, fetch_metric_value, get_booking_count, email_sent_chart, get_campaign_details, fetch_leads, get_user_campaigns, get_campaign_metrics, get_lead_details
 from dashboard.leads_email import generate_csv_and_send_email
 from dashboard.test_databse import run_database_test
-from dashboard.linkedin_dashboard import get_linkedin_metrics, get_linkedin_campaign_details, get_linkedin_statistics, get_linkedin_replies
+from dashboard.linkedin_dashboard import get_linkedin_metrics, get_linkedin_campaign_details, get_linkedin_statistics, get_linkedin_replies, get_linkedin_leads_by_username
 from pipelines.organization_list_enrichment import fetch_organization_domains
 # from pipelines.guideline_generate import generate_content_guideline
 from pipelines.data_sanitization_psql import sanitize_data
@@ -675,7 +675,17 @@ def get_linkedin_replies_dashboard():
 
     return jsonify({"leads": data}), 200
 
+@app.route("/get_linkedin_leads_dashboard", methods=["GET"])
+def get_linkedin_leads_dashboard():
+    username = request.args.get("username")
+    
+    if not username:
+        return jsonify({"error": "Missing 'username' parameter"}), 400
 
+    data, status = get_linkedin_leads_by_username(username)
+    return jsonify(data), status
+
+    return jsonify({"leads": data}), 200
 @app.route("/fetch_airtable_data_and_create_csv", methods=["GET"])
 def trigger_csv_generation():
     return generate_csv_and_send_email()
