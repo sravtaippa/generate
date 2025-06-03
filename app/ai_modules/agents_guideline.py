@@ -888,9 +888,9 @@ class GuidelineGenerate:
             )
 
             message = response.content[0].text.strip()
-            # print(f"connection message generated: {message}")
-            # if len(message) > 300:
-            #     raise ValueError("Generated message exceeds 300 characters.")
+            print(f"connection message generated: {message}")
+            if len(message) > 300:
+                raise ValueError("Generated message exceeds 300 characters.")
             return message
 
         except Exception as e:

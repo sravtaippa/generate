@@ -10,6 +10,7 @@ def add_lead_leadsin(apollo_id,campaign_id,outreach_table_name):
         primary_key_value = apollo_id
         # record = retrieve_record(outreach_table_name,primary_key_col,primary_key_value)
         record = db_manager.get_record(outreach_table_name,primary_key_col,primary_key_value)
+        print(f"Record retrieved: {record}")
         # profileUrl = record.get('fields').get("linkedin_profile_url","Not available")
         # email = record.get('fields').get("recipient_email","Not available")
         # first_name = record.get('fields').get("recipient_first_name","Not available")
@@ -47,6 +48,7 @@ def add_lead_leadsin(apollo_id,campaign_id,outreach_table_name):
         "message1": message1,
         "message2": message2,
         "subject1": subject1,
+        "removeDbDuplicates":"true",
         }
         
         url = f"https://api.multilead.io/api/open-api/v1/campaign/{campaign_id}/leads"
