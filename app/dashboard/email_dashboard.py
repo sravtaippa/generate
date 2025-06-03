@@ -283,6 +283,118 @@ def fetch_leads(user_id):
         if conn:
             cur.close()
             conn.close()
+
+#client_details_page on email dashboard
+def get_user_campaigns(client_id):
+    try:
+        conn = connect_to_postgres()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Fetch campaigns
+        cur.execute("""
+            SELECT instantly_campaign_id, campaign_name, status, created_date 
+            FROM campaign_details 
+            WHERE client_id = %s
+        """, (client_id,))
+        campaigns = cur.fetchall()
+
+        campaign_list = []
+        for campaign in campaigns:
+            campaign_id = campaign['instantly_campaign_id']
+            name = campaign['campaign_name']
+            status = campaign['status']
+            created = campaign['created_date']
+
+            # Fetch 5 recent email_response_guideline entries (photo_url)
+            cur.execute("""
+                SELECT photo_url FROM email_response_guideline
+                WHERE campaign_id = %s
+                ORDER BY created_time DESC
+                LIMIT 5
+            """, (campaign_id,))
+            photos = cur.fetchall()
+            photo_urls = [p['photo_url'] if p['photo_url'] else 'https://taippa.com/wp-content/uploads/2025/05/avatar-e1747306750362.png' for p in photos]
+
+            if isinstance(created, str):
+                created_date = created  # already formatted
+            else:
+                created_date = created.strftime("%Y-%m-%d")
+
+            campaign_list.append({
+                "campaign_id": campaign_id,
+                "campaign_name": name,
+                "status": status,
+                "created_date": created_date,
+                "profile_pictures": photo_urls
+            })
+
+        cur.close()
+        conn.close()
+        return campaign_list
+
+    except Exception as e:
+        raise Exception(f"Error fetching campaigns: {e}")
+
+
+def get_campaign_metrics(campaign_id):
+    try:
+        conn = connect_to_postgres()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        cur.execute("""
+            SELECT opened, clicked, sequence_started, replies_received
+            FROM metrics
+            WHERE campaign_id = %s
+        """, (campaign_id,))
+        result = cur.fetchone()
+
+        cur.close()
+        conn.close()
+
+        if result:
+            return {
+                "email_opened": result["opened"],
+                "email_clicked": result["clicked"],
+                "sequence_started": result["sequence_started"],
+                "replies_received": result["replies_received"]
+            }
+        else:
+            raise Exception("No data found")
+
+    except Exception as e:
+        raise Exception(f"Error fetching metrics: {str(e)}")
+
+
+def get_lead_details(username, lead_email):
+    conn = connect_to_postgres()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+
+    try:
+        # Get the cleaned_table name
+        cur.execute("SELECT cleaned_table FROM client_info WHERE client_id = %s", (username,))
+        result = cur.fetchone()
+        if not result:
+            raise Exception('No campaign found for client_id: ' + username)
+
+        cleaned_table = result['cleaned_table']
+
+        # Fetch lead details
+        query = f"SELECT * FROM {cleaned_table} WHERE email = %s LIMIT 1"
+        cur.execute(query, (lead_email,))
+        lead = cur.fetchone()
+
+        if not lead:
+            raise Exception('No lead found with email: ' + lead_email)
+
+        return dict(lead)
+
+    except Exception as e:
+        raise e
+
+    finally:
+        cur.close()
+        conn.close()
+
     
 if __name__ == '__main__':
     app.run(debug=True)

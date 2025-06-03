@@ -1,6 +1,6 @@
 from db.db_ops import db_manager
 
-def linkedin_message_sent_tacker(data):
+def linkedin_message_sent_tracker(data):
     try:
         # data = {
         #     "thread_id": "influencer_marketing_60d2165a8530680001f38bd8",
