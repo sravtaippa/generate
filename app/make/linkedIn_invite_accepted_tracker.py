@@ -1,6 +1,6 @@
 from db.db_ops import db_manager
 
-def linkedin_invite_accepted_tacker(data):
+def linkedin_invite_accepted_tracker(data):
     try:
         # data = {
         #     "thread_id": "influencer_marketing_60d2165a8530680001f38bd7",

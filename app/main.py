@@ -25,20 +25,25 @@ from dashboard.dashboard_updation import process_whatsapp_data
 from dashboard.client_onboarding_update_form import update_client_onboarding
 from dashboard.client_configuration_form import update_client_configuration
 from dashboard.client_profile_picture import get_profile_picture
-from dashboard.email_dashboard import fetch_recent_leads_from_db, fetch_metric_value, get_booking_count, email_sent_chart, get_campaign_details, fetch_leads
+from dashboard.email_dashboard import fetch_recent_leads_from_db, fetch_metric_value, get_booking_count, email_sent_chart, get_campaign_details, fetch_leads, get_user_campaigns, get_campaign_metrics, get_lead_details
 from dashboard.leads_email import generate_csv_and_send_email
 from dashboard.test_databse import run_database_test
+from dashboard.linkedin_dashboard import get_linkedin_metrics, get_linkedin_campaign_details, get_linkedin_statistics, get_linkedin_replies, get_linkedin_leads_by_username
 from pipelines.organization_list_enrichment import fetch_organization_domains
 # from pipelines.guideline_generate import generate_content_guideline
 from pipelines.data_sanitization_psql import sanitize_data
 from pipelines.guideline_generate import execute_generate_sequence
 from pipelines.guideline_outreach import execute_outreach_sequence
 
-from make.linkedIn_message_sent_tracker import linkedin_message_sent_tacker
-from make.linkedIn_invite_sent_tracker import linkedin_invite_sent_tacker
-from make.linkedIn_invite_accepted_tracker import linkedin_invite_accepted_tacker
-from make.ai_response_module import linkedin_ai_response_tacker
+from make.linkedIn_message_sent_tracker import linkedin_message_sent_tracker
+from make.linkedIn_invite_sent_tracker import linkedin_invite_sent_tracker
+from make.linkedIn_invite_accepted_tracker import linkedin_invite_accepted_tracker
+from make.email_sent import email_sent_tracker
+from make.ai_response_module import linkedin_ai_response_tracker
 from email_module.generic_email_module import send_html_email
+from make.email_post_response import email_post_response_tracker
+from  make.booking_records_for_taippa import booking_meeting_tracker
+from make.booking_meeting_form_submition import booking_meeting_form_tracker
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -511,7 +516,7 @@ def lead_magnet_generate():
     except Exception as e:
         print(f"Error occured while testing lead magnet: {e}")
 
-#dashboard 
+#Email dashboard 
 @app.route("/get_profile_picture_dashboard/<username>", methods=["GET"])
 def get_profile_picture_dashboard(username):
     # username = request.args.get('username', type=str)
@@ -549,6 +554,10 @@ def get_booking_count_dashboard():
 def get_email_sent_chart_dashboard(username):
     return email_sent_chart(username)
 
+@app.route("/get_campaign_details_dashboard/<username>", methods=["GET"])
+def get_campaign_details_dashboard(username):
+    return get_campaign_details(username)
+
 
 @app.route("/get_recent_replies_dashboard", methods=["GET"])
 def get_recent_replies_dashboard():
@@ -561,16 +570,127 @@ def get_recent_replies_dashboard():
         return {"data": data}, 200
     except Exception as e:
         return {"error": str(e)}, 500
+    
 
+@app.route("/get_user_campaigns_dashboard", methods=["GET"])
+def get_user_campaigns_dashboard():
+    user_id = request.args.get("username")  # assuming username = client_id
+    if not user_id:
+        return {"error": "Username is required"}, 400
 
+    try:
+        data = get_user_campaigns(user_id)  # <-- Pass user_id explicitly
+        return {"data": data}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+    
+@app.route("/get_campaign_metrics_dashboard", methods=["POST"])
+def get_campaign_metrics_dashboard():
+    data = request.get_json()
+    campaign_id = data.get("campaign_id")
+
+    if not campaign_id:
+        return {"error": "Campaign id is required"}, 400
+
+    try:
+        metrics = get_campaign_metrics(campaign_id)
+        return {"data": metrics}, 200
+    except Exception as e:
+        return {"error": f"Error fetching campaign metrics: {str(e)}"}, 500
+
+@app.route("/get_lead_details_dashboard", methods=["GET"])
+def get_lead_details_dashboard():
+    user_id = request.args.get("username")
+    email = request.args.get("email")
+
+    if not user_id or not email:
+        return {"error": "Username or Email is required"}, 400
+
+    try:
+        data = get_lead_details(user_id, email)
+        return {"data": data}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
+
+@app.route("/linkedin_metrics_table_dashboard", methods=["GET"])
+def linkedin_metrics_table_dashboard():
+    client_id = request.args.get("client_id")   # ← keep the name consistent
+    if not client_id:
+        return jsonify({"error": "client_id is required"}), 400
+
+    try:
+        data = get_linkedin_metrics(client_id)
+        return jsonify({"data": data}), 200
+    except ValueError as ve:
+        # custom “not found” error from helper
+        return jsonify({"error": str(ve)}), 404
+    except Exception as e:
+        # anything else = 500
+        return jsonify({"error": str(e)}), 500
+    
+# @app.route("/linkedin_campaign_details_dashboard", methods=["GET"])
+# def linkedin_campaign_details_dashboard():
+#     username = request.args.get("username")
+#     if not username:
+#         return jsonify({"error": "username is required"}), 400
+
+#     try:
+#         data = get_linkedin_campaign_details(username)
+#         return jsonify({"data": data}), 200
+#     except ValueError as ve:
+#         return jsonify({"error": str(ve)}), 404
+#     except Exception as e:
+#         return jsonify({"error": "Internal server error"}), 500
+@app.route("/linkedin_campaign_details_dashboard/<username>", methods=["GET"])
+def linkedin_campaign_details_dashboard(username):
+    return get_linkedin_campaign_details(username)
+
+@app.route("/get_linkedin_statistics_dashboard", methods=["GET"])
+def get_linkedin_statistics_dashboard():
+    username = request.args.get("username")
+    field = request.args.get("field")
+
+    if not username or not field:
+        return jsonify({"error": "Missing 'username' or 'field' parameter"}), 400
+
+    data = get_linkedin_statistics(username, field)
+
+    if data is None:
+        return jsonify({"error": "No campaign found for user"}), 404
+
+    return jsonify(data), 200
+
+@app.route("/get_linkedin_replies_dashboard", methods=["GET"])
+def get_linkedin_replies_dashboard():
+    username = request.args.get("username")
+    
+    if not username:
+        return jsonify({"error": "Missing 'username' parameter"}), 400
+
+    data = get_linkedin_replies(username)
+
+    if data is None:
+        return jsonify({"error": "Failed to fetch leads"}), 500
+
+    return jsonify({"leads": data}), 200
+
+@app.route("/get_linkedin_leads_dashboard", methods=["GET"])
+def get_linkedin_leads_dashboard():
+    username = request.args.get("username")
+    
+    if not username:
+        return jsonify({"error": "Missing 'username' parameter"}), 400
+
+    data, status = get_linkedin_leads_by_username(username)
+    return jsonify(data), status
+
+    return jsonify({"leads": data}), 200
 @app.route("/fetch_airtable_data_and_create_csv", methods=["GET"])
 def trigger_csv_generation():
     return generate_csv_and_send_email()
 
 
-@app.route("/get_campaign_details_dashboard/<username>", methods=["GET"])
-def get_campaign_details_dashboard(username):
-    return get_campaign_details(username)
 
 @app.route("/test_db",methods=["GET"])
 def connect_db():
@@ -580,8 +700,9 @@ def connect_db():
     except Exception as e:
         print(f"Error occured while testing connection")
 
-@app.route("/run_linkedin_message_sent_tacker", methods=["GET"])
-def run_linkedin_message_sent_tacker():
+#Make Scenarios
+@app.route("/run_linkedin_message_sent_tracker", methods=["GET"])
+def run_linkedin_message_sent_tracker():
     try:
         thread_id = request.args.get("thread_id", default=None)
         campaign_name = request.args.get("campaign_name", default=None)
@@ -597,13 +718,13 @@ def run_linkedin_message_sent_tacker():
             "email": email,
             "picture": picture
         }
-        linkedin_message_sent_tacker(data)
+        linkedin_message_sent_tracker(data)
         return {"status": "success", "message": "Testing completed"}
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500
 
-@app.route("/run_linkedin_invite_sent_tacker", methods=["GET"])
-def run_linkedin_invite_sent_tacker():
+@app.route("/run_linkedin_invite_sent_tracker", methods=["GET"])
+def run_linkedin_invite_sent_tracker():
     try:
         thread_id = request.args.get("thread_id", default=None)
         campaign_name = request.args.get("campaign_name", default=None)
@@ -619,14 +740,14 @@ def run_linkedin_invite_sent_tacker():
             "email": email,
             "picture": picture
         }
-        linkedin_invite_sent_tacker(data)
+        linkedin_invite_sent_tracker(data)
         # linkedin_invite_sent_tacker()
         return {"status": "success", "message": "Testing completed"}
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500  
      
-@app.route("/run_linkedin_invite_accepted_tacker", methods=["GET"])
-def run_linkedin_invite_accepted_tacker():
+@app.route("/run_linkedin_invite_accepted_tracker", methods=["GET"])
+def run_linkedin_invite_accepted_tracker():
     try:
         thread_id = request.args.get("thread_id", default=None)
         campaign_name = request.args.get("campaign_name", default=None)
@@ -642,14 +763,14 @@ def run_linkedin_invite_accepted_tacker():
             "email": email,
             "picture": picture
         }
-        linkedin_invite_accepted_tacker(data)
+        linkedin_invite_accepted_tracker(data)
         # linkedin_invite_accepted_tacker()
         return {"status": "success", "message": "Testing completed"}
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500   
 
-@app.route("/run_linkedin_ai_response_tacker", methods=["GET"])
-def run_linkedin_ai_response_tacker():
+@app.route("/run_linkedin_ai_response_tracker", methods=["GET"])
+def run_linkedin_ai_response_tracker():
     try:
         thread_id = request.args.get("thread_id", default=None)
         campaign_name = request.args.get("campaign_name", default=None)
@@ -671,7 +792,7 @@ def run_linkedin_ai_response_tacker():
             "sentiment": sentiment
         }
 
-        linkedin_ai_response_tacker(data)
+        linkedin_ai_response_tracker(data)
         return {"status": "success", "message": "Testing completed"}
 
     except Exception as e:
@@ -705,6 +826,52 @@ def send_generic_email():
 
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500
+    
+@app.route("/run_email_sent_tracker", methods=["GET"])
+def run_email_sent_tracker():
+    try:
+       
+        email_sent_tracker()
+        return {"status": "success", "message": "Testing completed"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 500
+    
+@app.route("/run_email_post_response_tracker", methods=["GET"])
+def run_email_post_response_tracker():
+    try:
+       
+        email_post_response_tracker()
+        return {"status": "success", "message": "Testing completed"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 500
+
+@app.route("/run_booking_meeting_tracker", methods=["GET"])
+def run_booking_meeting_tracker():
+    try:
+        # Text_Content = request.args.get("Text_Content", default=None),
+        email= request.args.get("Invitee_email", default=None),        
+        full_name= request.args.get("Invitee", default=None),
+        booking_date_time= request.args.get("Event_date", default=None),
+        event_type= request.args.get("event_type", default=None),
+        
+        data = {
+            "email": email,            
+            "full_name": full_name,
+            "booking_date_time": booking_date_time,
+            "event_type":event_type
+        }
+
+        booking_meeting_tracker(data)
+        return {"status": "success", "message": "Booking tracker completed"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 500
+    
+@app.route("/run_booking_meeting_form_tracker", methods=["POST"])
+def run_booking_meeting_form_tracker():
+    try:
+        return booking_meeting_form_tracker()
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
     
 if __name__ == '__main__':
 #   app.run(debug=True,use_reloader=False)

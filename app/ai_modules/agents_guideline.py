@@ -7,6 +7,8 @@ from openai import OpenAI
 import json
 from pinecone import Pinecone
 import anthropic
+from config import OPENAI_API_KEY
+client = openai.OpenAI(api_key=OPENAI_API_KEY)
 openai.api_key = OPENAI_API_KEY
 
 class GuidelineGenerate:
