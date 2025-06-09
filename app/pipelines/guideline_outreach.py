@@ -41,8 +41,8 @@ def execute_outreach_sequence():
         #     instantly_campaign_id = "2441391c-e88d-498d-86ce-f5e10e7018bf"
         #     linkedin_campaign_id = "333714"
         linkedin_campaign_id = "326358"
-        print(f"apollo_id: {apollo_id}, account_id: {account_id}, LinkedIn campaign_id: {linkedin_campaign_id}, cur_table_name: {cur_table_name}")
-        status = add_lead_leadsin(apollo_id,linkedin_campaign_id,cur_table_name)
+        print(f"apollo_id: {apollo_id}, account_id: {account_id}, LinkedIn campaign_id: {linkedin_campaign_id}, Outreach table: {outreach_table_name}")
+        status = add_lead_leadsin(apollo_id,linkedin_campaign_id,outreach_table_name)
         print(f"Lead added to LeadsIn campaign status: {status}")
         
         payload = {
