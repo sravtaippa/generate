@@ -71,7 +71,7 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
     if response.status_code == 200:
         print(f"\n ---------- Completed Persona Data Mining for client : {client_id} ----------")
         data = response.json()
-        print(f"Data collected: {data}")
+        print(f"Data collected: {data.keys()}")
         print(f"No of profiles collected : {len(data['people'])}")
         profiles_found = len(data['people'])
         enriched_profiles=0
