@@ -830,8 +830,25 @@ def send_generic_email():
 @app.route("/run_email_sent_tracker", methods=["GET"])
 def run_email_sent_tracker():
     try:
-       
-        email_sent_tracker()
+        
+        campaign_id = request.args.get("Campaign ID", default=None)
+        lead_email = request.args.get("linkedin_profile_url", default=None)
+        campaign_name = request.args.get("Campaign Name", default=None)
+        personalization = request.args.get("personalization", default=None)
+        FollowUpEmail = request.args.get("FollowUpEmail", default=None)
+        step = request.args.get("step", default=None)
+        
+
+        data = {
+            "Campaign ID": campaign_id,
+            "Lead Email": lead_email,
+            "Campaign Name": campaign_name, 
+            "personalization": personalization,
+            "FollowUpEmail" : FollowUpEmail,
+            "step": step, 
+        }
+
+        email_sent_tracker(data)
         return {"status": "success", "message": "Testing completed"}
     except Exception as e:
         return {"status": "error", "message": str(e)}, 500
