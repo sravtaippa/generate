@@ -1,15 +1,15 @@
 from db.db_ops import db_manager 
 
-def email_sent_tracker():
+def email_sent_tracker(data):
     try:
-        data = {
-            "Campaign ID": "8f863581-3c23-4e7b-ba28-f078afaf4578",
-            "Lead Email": "katie.hiatt@aspireiq.com",
-            "Campaign Name": "GuidelineInfluencer", 
-            "personalization": "Hi Taylor",
-            "FollowUpEmail" : "Hello Taylor",
-            "step": "2", 
-        }
+        # data = {
+        #     "Campaign ID": "8f863581-3c23-4e7b-ba28-f078afaf4578",
+        #     "Lead Email": "katie.hiatt@aspireiq.com",
+        #     "Campaign Name": "GuidelineInfluencer", 
+        #     "personalization": "Hi Taylor",
+        #     "FollowUpEmail" : "Hello Taylor",
+        #     "step": "2", 
+        # }
 
         # Step 1: Fetch client info using campaign ID
         cols_list = ['instantly_campaign_id']
