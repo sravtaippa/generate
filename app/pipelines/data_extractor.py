@@ -86,7 +86,7 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
         for contact in data['people']:
             print(f"\n---------- People Search Iteration {iteration} for client_id {client_id} ----------\n")
             iteration += 1
-            apollo_id = contact['id']    
+            apollo_id = contact['apollo_id']    
             print(f"------------Data ingestion started for record id :{apollo_id}, for client_id :{client_id} ------------")
             # raw_table,cleaned_table,outreach_table = retrieve_client_tables(client_id)
             info_details = db_manager.get_record(CLIENT_INFO_TABLE_NAME,"client_id",client_id)
