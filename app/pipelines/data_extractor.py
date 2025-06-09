@@ -115,7 +115,7 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
                 target_region = segregate_region(data.get('organization').get('country') if data.get('organization') else '')
                 timestamp = datetime.now()
                 data_dict = {
-                    'apollo_id': data.get('id'),
+                    'apollo_id': data.get('apollo_id'),
                     'first_name': data.get('first_name'),
                     'last_name': data.get('last_name'),
                     'name': data.get('name'),
