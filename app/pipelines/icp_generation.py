@@ -68,7 +68,8 @@ def generate_apollo_url(client_id,page_number=1,records_required=2,organization=
         query_params = [
                     construct_query_param("person_titles", icp_job_details),
                     construct_query_param("person_seniorities", icp_job_seniorities),
-                    construct_query_param("person_locations", icp_employee_range),
+                    # construct_query_param("person_locations", icp_employee_range),
+                    # construct_query_param("organization_num_employees_ranges", icp_employee_range),
                     construct_query_param("organization_locations", icp_locations),
                     construct_query_param("contact_email_status", email_status),
                     construct_query_param("q_organization_domains_list", organization_domains_new),
