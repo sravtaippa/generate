@@ -25,15 +25,28 @@
             color: #fff;
         }
 
-        .filters {
-            display: flex;
-            flex-wrap: nowrap; /* Prevent wrapping */
-            align-items: center;
-            gap: 15px;
-            overflow-x: auto;   /* Allow scrolling on small screens */
+        .filter-wrapper {
+            overflow-x: auto;
+            margin-bottom: 20px;
             padding-bottom: 20px;
         }
 
+        .filters {
+            display: inline-flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 15px;
+            min-width: max-content;
+        }
+
+        .filter-wrapper::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .filter-wrapper::-webkit-scrollbar-thumb {
+            background-color: #555;
+            border-radius: 4px;
+        }
 
             .filters > div {
                 display: flex;
