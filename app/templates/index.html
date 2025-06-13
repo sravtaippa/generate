@@ -180,7 +180,7 @@
     <table id="influencerTable" class="display nowrap" style="width:100%">
         <thead>
             <tr>
-                <th>Image</th>
+                <!-- <th>Image</th> -->
                 <th>Name</th>
                 <th>Username</th>
                 <th>Type</th>
@@ -258,11 +258,7 @@
                     table = $('#influencerTable').DataTable({
                         data: data,
                         columns: [
-                            {
-                                data: 'profile_image',
-                                render: (data) =>
-                                    `<img src="${data}" onclick="showImage('${data}')" />`,
-                            },
+                            
                             { data: 'full_name' },
                             { data: 'instagram_username' },
                             { data: 'influencer_type' },
@@ -306,6 +302,7 @@
                         ],
                         dom: 'Bfrtip',
                         buttons: ['csv'],
+                        pageLength: 25,
                         responsive: true,
                     });
 
