@@ -44,17 +44,16 @@ from email_module.generic_email_module import send_html_email
 from make.email_post_response import email_post_response_tracker
 from make.booking_records_for_taippa import booking_meeting_tracker
 from make.booking_meeting_form_submition import booking_meeting_form_tracker
-<<<<<<< HEAD
-from dashboard.influencer_data_view import index
-=======
+from dashboard.influencer_data_view import influencer_bp
+
 from pipelines.data_collection_influencers import data_collection
 
->>>>>>> 577276c4d764a5d5704d86a8bd2cce1d01bd46e5
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
 app = Flask(__name__)
+app.register_blueprint(influencer_bp)
 
 
 @app.route("/influencer_data_collection",methods=["GET"])
@@ -911,13 +910,14 @@ def run_booking_meeting_form_tracker():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
     
-   
-@app.route("/influencer_data_view", methods=["POST"])
-def run_influencer_data_view():
-    try:
-        return index()
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+# # Optional: Route to trigger index.html from a custom endpoint
+# @app.route("/influencer_data_view", methods=["GET"])
+# def run_influencer_data_view():
+#     try:
+#         return index()
+#     except Exception as e:
+#         return jsonify({"status": "error", "message": str(e)}), 500
+
     
 if __name__ == '__main__':
 #   app.run(debug=True,use_reloader=False)

@@ -1,16 +1,20 @@
-from flask import Flask, render_template, jsonify
+from flask import Blueprint, render_template, jsonify
 import requests
 
-app = Flask(__name__)
+influencer_bp = Blueprint('influencer', __name__, template_folder='../templates')
 
 AIRTABLE_API_KEY = 'patELEdV0LAx6Aba3.393bf0e41eb59b4b80de15b94a3d122eab50035c7c34189b53ec561de590dff3'
 BASE_ID = 'app5s8zl7DsUaDmtx'
 TABLE_NAME = 'src_influencer_data'
 
-def index():
-    return render_template('index.html')
+@influencer_bp.route("/influencer_data_view", methods=["GET"])
+def run_influencer_data_view():
+    try:
+        return render_template('index.html')
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
-
+@influencer_bp.route('/api/influencers', methods=["GET"])
 def get_influencer_data():
     airtable_url = f'https://api.airtable.com/v0/{BASE_ID}/{TABLE_NAME}'
     headers = {'Authorization': f'Bearer {AIRTABLE_API_KEY}'}
@@ -56,9 +60,7 @@ def get_influencer_data():
             'instagram_likes_counts': fields.get('instagram_likes_counts', 0),
             'instagram_comments_counts': fields.get('instagram_comments_counts', 0),
             'created_time': fields.get('created_time', ''),
-            'instagram_profile_pic': fields.get('instagram_profile_pic', ''),  # for profile image if needed
+            'profile_image': fields.get('instagram_profile_pic', ''),  # key used in JS
         })
 
     return jsonify(result)
-
-
