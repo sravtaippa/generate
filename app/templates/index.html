@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <title>Influencer Table - Dark Theme</title>
+    <title>Influencer Table</title>
 
     <!-- DataTables & Buttons -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
@@ -26,10 +26,33 @@
         }
 
         .filters {
-            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: nowrap; /* Prevent wrapping */
+            align-items: center;
+            gap: 15px;
+            overflow-x: auto;   /* Allow scrolling on small screens */
+            padding-bottom: 20px;
         }
 
-        .filters label,
+
+            .filters > div {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .filters label {
+                font-size: 14px;
+                color: #ddd;
+                background-color: transparent;
+                padding: 0;        /* Remove padding */
+                border: none;      /* Remove border */
+                border-radius: 0;
+                margin: 0;
+                user-select: none;
+            }
+
+       
         .filters select,
         .filters input {
             margin-right: 15px;
@@ -164,19 +187,32 @@
     <h2>Influencer Data</h2>
 
     <div class="filters">
-        <label for="typeFilter">Influencer Type:</label>
-        <select id="typeFilter" multiple="multiple"></select>
-
-        <label for="domainFilter">Targeted Domain:</label>
-        <select id="domainFilter" multiple="multiple"></select>
-
-        <label for="minFollowers">Min Followers:</label>
-        <input type="number" id="minFollowers" placeholder="0" min="0" />
-
-        <label for="maxFollowers">Max Followers:</label>
-        <input type="number" id="maxFollowers" placeholder="999999" min="0" />
+        <div>
+            <label for="typeFilter">Influencer Type:</label>
+            <select id="typeFilter" multiple="multiple"></select>
+        </div>
+        <div>
+            <label for="domainFilter">Targeted Domain:</label>
+            <select id="domainFilter" multiple="multiple"></select>
+        </div>
+        <div>
+            <label for="locationFilter">Influencer Location:</label>
+            <select id="locationFilter" multiple="multiple"></select>
+        </div>
+        <div>
+            <label for="audienceFilter">Targeted Audience:</label>
+            <select id="audienceFilter" multiple="multiple"></select>
+        </div>
+        <div>
+            <label for="minFollowers">Followers:</label>
+            <input type="number" id="minFollowers" placeholder="Min" min="0" />
+        </div>
+        <div>
+            <!-- <label for="maxFollowers">Followers:</label> -->
+            <input type="number" id="maxFollowers" placeholder="Max" min="0" />
+        </div>
     </div>
-
+    
     <table id="influencerTable" class="display nowrap" style="width:100%">
         <thead>
             <tr>
@@ -244,7 +280,7 @@
         }
 
         $(document).ready(function () {
-            $('#typeFilter, #domainFilter').select2({
+            $('#typeFilter, #domainFilter, #locationFilter, #audienceFilter').select2({
                 placeholder: 'Select...',
                 allowClear: true,
                 width: 'resolve'
@@ -258,7 +294,6 @@
                     table = $('#influencerTable').DataTable({
                         data: data,
                         columns: [
-                            
                             { data: 'full_name' },
                             { data: 'instagram_username' },
                             { data: 'influencer_type' },
@@ -282,7 +317,6 @@
                                 data: 'instagram_hashtags',
                                 render: (data) => createToggleSpan(data, '#aad4ff'),
                             },
-                            
                             { data: 'business_category_name' },
                             { data: 'influencer_location' },
                             { data: 'influencer_nationality' },
@@ -291,9 +325,7 @@
                             {
                                 data: 'created_time',
                                 render: (data) =>
-                                    data
-                                        ? new Date(data).toLocaleString()
-                                        : '',
+                                    data ? new Date(data).toLocaleString() : '',
                             },
                         ],
                         dom: 'Bfrtip',
@@ -302,7 +334,7 @@
                         responsive: true,
                     });
 
-                    $('#typeFilter, #domainFilter, #minFollowers, #maxFollowers').on(
+                    $('#typeFilter, #domainFilter, #locationFilter, #audienceFilter, #minFollowers, #maxFollowers').on(
                         'change keyup',
                         function () {
                             table.draw();
@@ -316,12 +348,16 @@
                     ) {
                         const selectedTypes = $('#typeFilter').val() || [];
                         const selectedDomains = $('#domainFilter').val() || [];
+                        const selectedLocations = $('#locationFilter').val() || [];
+                        const selectedAudiences = $('#audienceFilter').val() || [];
                         const min = parseInt($('#minFollowers').val(), 10) || 0;
                         const max = parseInt($('#maxFollowers').val(), 10) || Infinity;
 
-                        const rowType = (data[3] || '').toLowerCase();
-                        const rowDomain = (data[5] || '').toLowerCase();
-                        const followers = parseInt(data[7], 10) || 0;
+                        const rowType = (data[2] || '').toLowerCase();
+                        const rowAudience = (data[3] || '').toLowerCase();
+                        const rowDomain = (data[4] || '').toLowerCase();
+                        const rowLocation = (data[16] || '').toLowerCase();
+                        const followers = parseInt(data[6], 10) || 0;
 
                         const typeMatch =
                             selectedTypes.length === 0 ||
@@ -329,9 +365,21 @@
                         const domainMatch =
                             selectedDomains.length === 0 ||
                             selectedDomains.includes(rowDomain);
+                        const locationMatch =
+                            selectedLocations.length === 0 ||
+                            selectedLocations.includes(rowLocation);
+                        const audienceMatch =
+                            selectedAudiences.length === 0 ||
+                            selectedAudiences.includes(rowAudience);
                         const followersMatch = followers >= min && followers <= max;
 
-                        return typeMatch && domainMatch && followersMatch;
+                        return (
+                            typeMatch &&
+                            domainMatch &&
+                            locationMatch &&
+                            audienceMatch &&
+                            followersMatch
+                        );
                     });
                 });
         });
@@ -339,12 +387,18 @@
         function populateFilters(data) {
             const types = new Set();
             const domains = new Set();
+            const locations = new Set();
+            const audiences = new Set();
 
             data.forEach((row) => {
                 if (row.influencer_type)
                     types.add(row.influencer_type.toLowerCase());
                 if (row.targeted_domain)
                     domains.add(row.targeted_domain.toLowerCase());
+                if (row.influencer_location)
+                    locations.add(row.influencer_location.toLowerCase());
+                if (row.targeted_audience)
+                    audiences.add(row.targeted_audience.toLowerCase());
             });
 
             types.forEach((t) => {
@@ -353,6 +407,14 @@
 
             domains.forEach((d) => {
                 $('#domainFilter').append(`<option value="${d}">${d}</option>`);
+            });
+
+            locations.forEach((l) => {
+                $('#locationFilter').append(`<option value="${l}">${l}</option>`);
+            });
+
+            audiences.forEach((a) => {
+                $('#audienceFilter').append(`<option value="${a}">${a}</option>`);
             });
         }
 
