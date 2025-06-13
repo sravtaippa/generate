@@ -44,6 +44,7 @@ from email_module.generic_email_module import send_html_email
 from make.email_post_response import email_post_response_tracker
 from  make.booking_records_for_taippa import booking_meeting_tracker
 from make.booking_meeting_form_submition import booking_meeting_form_tracker
+from dashboard.influencer_data_view import index
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -887,6 +888,14 @@ def run_booking_meeting_tracker():
 def run_booking_meeting_form_tracker():
     try:
         return booking_meeting_form_tracker()
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+    
+   
+@app.route("/influencer_data_view", methods=["POST"])
+def run_influencer_data_view():
+    try:
+        return index()
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
     
