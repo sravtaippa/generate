@@ -42,14 +42,34 @@ from make.email_sent import email_sent_tracker
 from make.ai_response_module import linkedin_ai_response_tracker
 from email_module.generic_email_module import send_html_email
 from make.email_post_response import email_post_response_tracker
-from  make.booking_records_for_taippa import booking_meeting_tracker
+from make.booking_records_for_taippa import booking_meeting_tracker
 from make.booking_meeting_form_submition import booking_meeting_form_tracker
+<<<<<<< HEAD
 from dashboard.influencer_data_view import index
+=======
+from pipelines.data_collection_influencers import data_collection
+
+>>>>>>> 577276c4d764a5d5704d86a8bd2cce1d01bd46e5
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
 app = Flask(__name__)
+
+
+@app.route("/influencer_data_collection",methods=["GET"])
+def influencer_ingestion():
+    try:
+        instagram_username = request.args.get("instagram_username")
+        influencer_type = request.args.get("influencer_type")
+        influencer_location = request.args.get("influencer_location")
+        if instagram_username in ["",None]:
+            raise
+        data_collection(instagram_username,influencer_type,influencer_location)
+        return {"status":"successfully added data for influencers"}
+    except Exception as e:
+        print(f"Error occured while ingesting influencer data : {e}")
+        return {"status":f"Error occured while collecting data"}
 
 @app.route("/guideline_outreach", methods=["GET"])
 def guideline_outreach():
