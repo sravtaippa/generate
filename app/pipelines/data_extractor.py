@@ -103,7 +103,7 @@ def people_search_v2(search_url,client_id,qualify_leads,index_name):
             if enrichment_api_response.status_code == 200:
                 data = enrichment_api_response.json()
                 data=data['person']
-                print{f"Data Person:{data}"}
+                # print({f"Data Person:{data}"})
                 client = openai.OpenAI(api_key=OPENAI_API_KEY)
                 response = client.chat.completions.create(
                 model="gpt-4",
