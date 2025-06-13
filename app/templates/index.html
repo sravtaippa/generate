@@ -164,10 +164,10 @@
     <h2>Influencer Data</h2>
 
     <div class="filters">
-        <label for="typeFilter">Type:</label>
+        <label for="typeFilter">Influencer Type:</label>
         <select id="typeFilter" multiple="multiple"></select>
 
-        <label for="domainFilter">Domain:</label>
+        <label for="domainFilter">Targeted Domain:</label>
         <select id="domainFilter" multiple="multiple"></select>
 
         <label for="minFollowers">Min Followers:</label>
@@ -181,11 +181,11 @@
         <thead>
             <tr>
                 <!-- <th>Image</th> -->
-                <th>Name</th>
+                <th>Full Name</th>
                 <th>Username</th>
-                <th>Type</th>
-                <th>Audience</th>
-                <th>Domain</th>
+                <th>Influencer Type</th>
+                <th>Targeted Audience</th>
+                <th>Targeted Domain</th>
                 <th>Bio</th>
                 <th>Followers</th>
                 <th>Follows</th>
@@ -197,8 +197,8 @@
                 <th>Hashtags</th>
                 <th>Profile Link</th>
                 <th>Business Category</th>
-                <th>Location</th>
-                <th>Nationality</th>
+                <th>Influencer Location</th>
+                <th>Influencer Nationality</th>
                 <th>Likes</th>
                 <th>Comments</th>
                 <th>Created Time</th>
@@ -282,11 +282,7 @@
                                 data: 'instagram_hashtags',
                                 render: (data) => createToggleSpan(data, '#aad4ff'),
                             },
-                            {
-                                data: 'instagram_url',
-                                render: (data) =>
-                                    `<a href="${data}" target="_blank" style="color:#88c0d0;">Profile</a>`,
-                            },
+                            
                             { data: 'business_category_name' },
                             { data: 'influencer_location' },
                             { data: 'influencer_nationality' },
