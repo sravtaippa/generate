@@ -5,7 +5,7 @@ import os
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import unquote
 import time
-
+import asyncio
 from pipelines.data_sanitization import fetch_and_update_data, update_email_opens, test_sanitize
 from pipelines.data_sanitization import update_email_opens
 from pipelines.data_extractor import people_enrichment,test_run_pipeline,run_demo_pipeline
@@ -47,6 +47,7 @@ from make.booking_meeting_form_submition import booking_meeting_form_tracker
 from dashboard.influencer_data_view import influencer_bp
 
 from pipelines.data_collection_influencers import data_collection
+from pipelines.tiktok import scrape_multiple_profiles
 
 print(f"\n =============== Generate : Pipeline started  ===============")
 
@@ -55,7 +56,24 @@ print('Starting the app')
 app = Flask(__name__)
 app.register_blueprint(influencer_bp)
 
+@app.route('/scrape_tiktok', methods=['GET', 'POST'])
+def scrape_tiktok():
+    if request.method == 'POST':
+        data = request.get_json()
+        usernames = data.get("usernames", [])
+    else:  # GET method
+        usernames_param = request.args.get('usernames', '')
+        usernames = [u.strip() for u in usernames_param.split(',') if u.strip()]
 
+    if not usernames:
+        return jsonify({"error": "No usernames provided"}), 400
+
+    try:
+        results = asyncio.run(scrape_multiple_profiles(usernames))
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 @app.route("/influencer_data_collection",methods=["GET"])
 def influencer_ingestion():
     try:
