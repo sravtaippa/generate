@@ -44,7 +44,7 @@ from email_module.generic_email_module import send_html_email
 from make.email_post_response import email_post_response_tracker
 from make.booking_records_for_taippa import booking_meeting_tracker
 from make.booking_meeting_form_submition import booking_meeting_form_tracker
-from pipelines.data_collection_influencers import data_collection
+from pipelines.data_collection_influencers import data_collection,profile_scraper,post_scraper,add_influencer_to_db
 
 print(f"\n =============== Generate : Pipeline started  ===============")
 
@@ -52,6 +52,58 @@ print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__
 print('Starting the app')
 app = Flask(__name__)
 
+
+########## INFLUENCER MARKETING ROUTES ##########
+
+@app.route("/influencer_profile_scrape",methods=["GET"])
+def influencer_profile_scraper():
+    try:
+        instagram_username = request.args.get("instagram_username")
+        influencer_type = request.args.get("influencer_type")
+        influencer_location = request.args.get("influencer_location")
+        if instagram_username in ["",None]:
+            raise
+        return {"status":"passed","content":profile_scraper(instagram_username,influencer_type,influencer_location)}
+    except Exception as e:
+        print(f"Error occured while scraping influencer profile data : {e}")
+        return {"status":"failed","content":f"Error occured while scraping profile data"}
+
+@app.route("/influencer_post_scrape",methods=["GET"])
+def influencer_post_scraper():
+    try:
+        instagram_username = request.args.get("instagram_username")
+        posts_count = request.args.get("posts_count", type=int, default=10)
+        if instagram_username in ["",None]:
+            raise
+        return {"status":"passed","content":post_scraper(instagram_username,posts_count)}
+    except Exception as e:
+        print(f"Error occured while scraping influencer posts data : {e}")
+        return {"status":"failed","content":f"Error occured while scraping posts data"}
+
+@app.route("/combine_influencer_data",methods=["GET"])
+def combine_influencer_data():
+    try:
+        data1 = request.args.get("data1")
+        data2 = request.args.get("data2")
+        combined_influencer_data = data1 | data2
+        return {"status":"success","content":combined_influencer_data}
+    except Exception as e:
+        print(f"Error occured while combining influencer data : {e}")
+        return {"status":"failed","content":f"Error occured while combining influencer data"}
+
+
+@app.route("/add_influencer_to_db")
+def store_influencer_data():
+    try:
+        influencer_data = request.args.get("influencer_data")
+        if influencer_data in ["",None]:
+            raise
+        add_influencer_to_db(influencer_data)
+        return {"status":"success","content":"Successfully added influencer data to the database"}
+    except Exception as e:
+        print(f"Error occured while adding influencer data to the database : {e}")
+        return {"status":"failed","content":f"Error occured while adding influencer data to the database"}
+    
 
 @app.route("/influencer_data_collection",methods=["GET"])
 def influencer_ingestion():
@@ -66,6 +118,8 @@ def influencer_ingestion():
     except Exception as e:
         print(f"Error occured while ingesting influencer data : {e}")
         return {"status":f"Error occured while collecting data"}
+
+#######################################################
 
 @app.route("/guideline_outreach", methods=["GET"])
 def guideline_outreach():
