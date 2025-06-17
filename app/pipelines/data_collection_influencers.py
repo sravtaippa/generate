@@ -124,36 +124,36 @@ def data_collection(instagram_username,influencer_type,influencer_location):
     posts_count = 10
     influencer_post_data = post_scraper(instagram_username,posts_count,influencer_type,influencer_location)
     combined_influencer_data = influencer_basic_data | influencer_post_data
-    add_influencer_to_db(combined_influencer_data)
+    # add_influencer_to_db(combined_influencer_data)
 
 
-    # def unique_key_check_airtable(column_name,unique_value,table_name):
-    #     try:
-    #         api = Api(AIRTABLE_API_KEY)
-    #         airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
-    #         records = airtable_obj.all()
-    #         # print(f"\nCompleted unique key check")
-    #         return any(record['fields'].get(column_name) == unique_value for record in records) 
-    #     except Exception as e:
-    #         print(f"Error occured in {__name__} while performing unique value check in airtable. {e}")
+    def unique_key_check_airtable(column_name,unique_value,table_name):
+        try:
+            api = Api(AIRTABLE_API_KEY)
+            airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
+            records = airtable_obj.all()
+            # print(f"\nCompleted unique key check")
+            return any(record['fields'].get(column_name) == unique_value for record in records) 
+        except Exception as e:
+            print(f"Error occured in {__name__} while performing unique value check in airtable. {e}")
 
-    # # function to export data to Airtable
-    # def export_to_airtable(data,raw_table):
-    #     try:
-    #         # print(f"\nExporting results to Airtable")
-    #         api = Api(AIRTABLE_API_KEY)
-    #         airtable_obj = api.table(AIRTABLE_BASE_ID, raw_table)
-    #         response = airtable_obj.create(data)
-    #         if 'id' in response:
-    #             print("Record inserted successfully:", response['id'])
-    #         else:
-    #             print("Error inserting record:", response)
-    #     except Exception as e:
-    #         print(f"Error occured in {__name__} while exporting the data to Airtable. {e}")
+    # function to export data to Airtable
+    def export_to_airtable(data,raw_table):
+        try:
+            # print(f"\nExporting results to Airtable")
+            api = Api(AIRTABLE_API_KEY)
+            airtable_obj = api.table(AIRTABLE_BASE_ID, raw_table)
+            response = airtable_obj.create(data)
+            if 'id' in response:
+                print("Record inserted successfully:", response['id'])
+            else:
+                print("Error inserting record:", response)
+        except Exception as e:
+            print(f"Error occured in {__name__} while exporting the data to Airtable. {e}")
 
-    # record_exists = unique_key_check_airtable('instagram_url',combined_influencer_data["instagram_url"],"src_influencer_data")
-    # if not record_exists:
-    #     print(f"Record doesn't exist")
-    #     export_to_airtable(combined_influencer_data,"src_influencer_data")
-    # else:
-    #     print(f"Record Exists")
+    record_exists = unique_key_check_airtable('instagram_url',combined_influencer_data["instagram_url"],"src_influencer_data")
+    if not record_exists:
+        print(f"Record doesn't exist")
+        export_to_airtable(combined_influencer_data,"src_influencer_data")
+    else:
+        print(f"Record Exists")
