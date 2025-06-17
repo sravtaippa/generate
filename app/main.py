@@ -44,14 +44,11 @@ from email_module.generic_email_module import send_html_email
 from make.email_post_response import email_post_response_tracker
 from make.booking_records_for_taippa import booking_meeting_tracker
 from make.booking_meeting_form_submition import booking_meeting_form_tracker
-<<<<<<< HEAD
 from pipelines.data_collection_influencers import data_collection,profile_scraper,post_scraper,add_influencer_to_db
-=======
 from dashboard.influencer_data_view import influencer_bp
 
 from pipelines.data_collection_influencers import data_collection
 from pipelines.tiktok import scrape_multiple_profiles
->>>>>>> f0feb638089d04a79f9f23dd2e30b47c864e3ec0
 
 print(f"\n =============== Generate : Pipeline started  ===============")
 
@@ -69,7 +66,6 @@ def scrape_tiktok():
         usernames_param = request.args.get('usernames', '')
         usernames = [u.strip() for u in usernames_param.split(',') if u.strip()]
 
-<<<<<<< HEAD
 ########## INFLUENCER MARKETING ROUTES ##########
 
 @app.route("/influencer_profile_scrape",methods=["GET"])
@@ -122,17 +118,15 @@ def store_influencer_data():
         return {"status":"failed","content":f"Error occured while adding influencer data to the database"}
     
 
-=======
-    if not usernames:
-        return jsonify({"error": "No usernames provided"}), 400
+    # if not usernames:
+    #     return jsonify({"error": "No usernames provided"}), 400
 
-    try:
-        results = asyncio.run(scrape_multiple_profiles(usernames))
-        return jsonify(results)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    # try:
+    #     results = asyncio.run(scrape_multiple_profiles(usernames))
+    #     return jsonify(results)
+    # except Exception as e:
+    #     return jsonify({"error": str(e)}), 500
     
->>>>>>> f0feb638089d04a79f9f23dd2e30b47c864e3ec0
 @app.route("/influencer_data_collection",methods=["GET"])
 def influencer_ingestion():
     try:
