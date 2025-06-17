@@ -41,14 +41,15 @@ def profile_scraper(instagram_username,influencer_type,influencer_location):
             instagram_data["business_category_name"] = str(item.get("businessCategoryName"))
             instagram_data["instagram_profile_pic"] = str(item.get("profilePicUrl"))
             instagram_data["instagram_posts_count"] = str(item.get("postsCount"))
-
+        instagram_data["influencer_type"] = str(influencer_type)
+        instagram_data["influencer_location"] = str(influencer_location)
         # --------------------------- Post Scraper ---------------------------
         return instagram_data
     
     except Exception as e:
         print(f"Error occured while executing the profile scraper: {e}")
 
-def post_scraper(instagram_username,posts_count,influencer_type,influencer_location):
+def post_scraper(instagram_username,posts_count):
     try:
 
         input_object_posts = {
@@ -101,8 +102,6 @@ def post_scraper(instagram_username,posts_count,influencer_type,influencer_locat
         instagram_data["instagram_video_play_counts"] = str(video_play_counts)
         instagram_data["instagram_video_urls"] = str(video_urls)
         instagram_data["instagram_likes_counts"] = str(likes_counts)
-        instagram_data["influencer_type"] = str(influencer_type)
-        instagram_data["influencer_location"] = str(influencer_location)
         return instagram_data
     
     except Exception as e:
