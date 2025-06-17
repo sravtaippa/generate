@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Influencer Table</title>
 
     <!-- DataTables & Buttons -->
@@ -12,25 +13,18 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
     <style>
-        /* === Dark Theme Styles === */
-
         body {
             background-color: #121212;
             color: #e0e0e0;
             font-family: Arial, sans-serif;
             padding: 20px;
         }
-
-        h2 {
-            color: #fff;
-        }
-
+        h2 { color: #fff; }
         .filter-wrapper {
             overflow-x: auto;
             margin-bottom: 20px;
             padding-bottom: 20px;
         }
-
         .filters {
             display: inline-flex;
             flex-wrap: nowrap;
@@ -38,34 +32,21 @@
             gap: 15px;
             min-width: max-content;
         }
-
-        .filter-wrapper::-webkit-scrollbar {
-            height: 6px;
+        .filters > div {
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-
-        .filter-wrapper::-webkit-scrollbar-thumb {
-            background-color: #555;
-            border-radius: 4px;
+        .filters label {
+            font-size: 14px;
+            color: white;
+            background-color: transparent;
+            padding: 0;
+            border: none;
+            border-radius: 0;
+            margin: 0;
+            user-select: none;
         }
-
-            .filters > div {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-            }
-
-            .filters label {
-                font-size: 14px;
-                color: white;
-                background-color: transparent;
-                padding: 0;        /* Remove padding */
-                border: none;      /* Remove border */
-                border-radius: 0;
-                margin: 0;
-                user-select: none;
-            }
-
-       
         .filters select,
         .filters input {
             margin-right: 15px;
@@ -76,55 +57,33 @@
             padding: 5px 8px;
             border-radius: 4px;
         }
-
-        .filters label {
-            user-select: none;
-        }
-
-        /* Select2 dark mode */
+        .filters label { user-select: none; }
         .select2-container--default .select2-selection--multiple {
             background-color: #222;
             border: 1px solid #444;
             color: #eee;
         }
-
         .select2-container--default .select2-selection--multiple .select2-selection__choice {
             background-color: #444;
             color: #eee;
         }
-
         .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
             color: #bbb;
         }
-
         table.dataTable {
             border-collapse: collapse;
             width: 100%;
             background-color: #222;
             color: #eee;
         }
-
-        table.dataTable thead {
-            background-color: #333;
-        }
-
+        table.dataTable thead { background-color: #333; }
         table.dataTable thead th {
             color: #fff;
             border-bottom: 1px solid #444;
         }
-
-        table.dataTable tbody tr {
-            border-bottom: 1px solid #444;
-        }
-
-        table.dataTable tbody tr:hover {
-            background-color: #333;
-        }
-
-        table.dataTable tbody td {
-            color: #ddd;
-        }
-
+        table.dataTable tbody tr { border-bottom: 1px solid #444; }
+        table.dataTable tbody tr:hover { background-color: #333; }
+        table.dataTable tbody td { color: #ddd; }
         table.dataTable td img {
             width: 50px;
             height: 50px;
@@ -132,8 +91,6 @@
             cursor: pointer;
             border: 1px solid #555;
         }
-
-        /* DataTables buttons */
         .dt-button {
             background-color: #333 !important;
             color: #eee !important;
@@ -142,13 +99,10 @@
             padding: 5px 10px !important;
             cursor: pointer;
         }
-
         .dt-button:hover {
             background-color: #555 !important;
             color: #fff !important;
         }
-
-        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -160,7 +114,6 @@
             height: 100%;
             background-color: rgba(0, 0, 0, 0.9);
         }
-
         .modal-content {
             margin: auto;
             display: block;
@@ -169,7 +122,6 @@
             border: 3px solid #444;
             border-radius: 8px;
         }
-
         .close {
             position: absolute;
             right: 35px;
@@ -180,25 +132,71 @@
             cursor: pointer;
             user-select: none;
         }
-
-        .close:hover {
-            color: #fff;
-        }
-
-        .select2-container {
-            min-width: 200px;
-        }
-
+        .close:hover { color: #fff; }
+        .select2-container { min-width: 200px; }
         .hashtag-toggle {
             cursor: pointer;
             user-select: none;
             color: #aad4ff;
         }
+        /* DataTables toolbar alignment */
+        .dataTables_wrapper .dataTables_filter {
+            float: right;
+            text-align: right;
+        }
+        .dataTables_wrapper .dt-buttons {
+            float: right;
+            margin-right: 10px;
+        }
+        .dataTables_wrapper .top-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .dataTables_wrapper .dataTables_length {
+            margin-right: auto;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+                font-size: 14px;
+            }
+            h2 { font-size: 1.2em; }
+            .filters {
+                flex-direction: column;
+                gap: 10px;
+                width: 100%;
+                align-items: stretch;
+            }
+            .filters > div { width: 100%; }
+            table.dataTable { font-size: 12px; }
+            .dt-button {
+                padding: 3px 6px !important;
+                font-size: 12px !important;
+            }
+            .select2-container {
+                min-width: 100px;
+                width: 100% !important;
+            }
+            .modal-content { width: 95%; }
+            .dataTables_wrapper .top-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .dataTables_wrapper .dt-buttons,
+            .dataTables_wrapper .dataTables_filter,
+            .dataTables_wrapper .dataTables_length {
+                float: none;
+                margin: 5px 0;
+                text-align: left;
+            }
+        }
     </style>
 </head>
 <body>
     <h2>Influencer Data</h2>
-
     <div class="filters">
         <div>
             <label for="typeFilter">Influencer Type:</label>
@@ -221,15 +219,12 @@
             <input type="number" id="minFollowers" placeholder="Min" min="0" />
         </div>
         <div>
-            <!-- <label for="maxFollowers">Followers:</label> -->
             <input type="number" id="maxFollowers" placeholder="Max" min="0" />
         </div>
     </div>
-    
     <table id="influencerTable" class="display nowrap" style="width:100%">
         <thead>
             <tr>
-                <!-- <th>Image</th> -->
                 <th>Full Name</th>
                 <th>Username</th>
                 <th>Influencer Type</th>
@@ -251,25 +246,22 @@
                 <th>Likes</th>
                 <th>Comments</th>
                 <th>Created Time</th>
+                <th>Estimated Reach</th>
+                <th>Engagement Rate (%)</th>
             </tr>
         </thead>
         <tbody></tbody>
     </table>
-
     <div id="imgModal" class="modal">
         <span class="close" onclick="closeModal()">&times;</span>
         <img class="modal-content" id="modalImage" />
     </div>
-
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
-
-    <!-- Select2 -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
     <script>
         let table;
 
@@ -292,6 +284,32 @@
                     </span>`;
         }
 
+        // Utility: Sum array or comma-separated string, robust to bad data
+        function sumValues(val) {
+            if (Array.isArray(val)) {
+                return val
+                    .map(Number)
+                    .filter(n => !isNaN(n))
+                    .reduce((a, b) => a + b, 0);
+            } else if (typeof val === 'string') {
+                if (val.trim() === '') return 0;
+                if (val.indexOf(',') !== -1) {
+                    return val
+                        .split(',')
+                        .map(Number)
+                        .filter(n => !isNaN(n))
+                        .reduce((a, b) => a + b, 0);
+                }
+                return Number(val) || 0;
+            } else if (typeof val === 'number') {
+                return isNaN(val) ? 0 : val;
+            } else {
+                return 0;
+            }
+        }
+
+
+
         $(document).ready(function () {
             $('#typeFilter, #domainFilter, #locationFilter, #audienceFilter').select2({
                 placeholder: 'Select...',
@@ -303,7 +321,6 @@
                 .then((res) => res.json())
                 .then((data) => {
                     populateFilters(data);
-
                     table = $('#influencerTable').DataTable({
                         data: data,
                         columns: [
@@ -330,8 +347,8 @@
                                 data: 'instagram_hashtags',
                                 render: (data) => createToggleSpan(data, '#aad4ff'),
                             },
-                            {data: 'business_category_name'},
-                            { data: 'instagram_url' },
+                            {data : 'instagram_url'},
+                            { data: 'business_category_name' },
                             { data: 'influencer_location' },
                             { data: 'influencer_nationality' },
                             { data: 'instagram_likes_counts' },
@@ -341,8 +358,58 @@
                                 render: (data) =>
                                     data ? new Date(data).toLocaleString() : '',
                             },
+                            // Estimated Reach
+                            {
+                                data: null,
+                                render: function (data, type, row) {
+                                    const followers = parseInt(row.instagram_followers_count) || 0;
+                                    return Math.round(followers * 0.3).toLocaleString();
+                                }
+                            },
+                            
+                            {
+                                data: null,
+                                render: function (data, type, row) {
+                                    const followers = parseInt(row.instagram_followers_count) || 0;
+
+                                    // Parse likes and comments as arrays (handle string or array)
+                                    let likesArr = [];
+                                    let commentsArr = [];
+                                    if (Array.isArray(row.instagram_likes_counts)) {
+                                        likesArr = row.instagram_likes_counts;
+                                    } else if (typeof row.instagram_likes_counts === 'string' && row.instagram_likes_counts.indexOf(',') !== -1) {
+                                        likesArr = row.instagram_likes_counts.split(',');
+                                    } else if (typeof row.instagram_likes_counts === 'string' && row.instagram_likes_counts.trim() !== '') {
+                                        likesArr = [row.instagram_likes_counts];
+                                    }
+
+                                    if (Array.isArray(row.instagram_comments_counts)) {
+                                        commentsArr = row.instagram_comments_counts;
+                                    } else if (typeof row.instagram_comments_counts === 'string' && row.instagram_comments_counts.indexOf(',') !== -1) {
+                                        commentsArr = row.instagram_comments_counts.split(',');
+                                    } else if (typeof row.instagram_comments_counts === 'string' && row.instagram_comments_counts.trim() !== '') {
+                                        commentsArr = [row.instagram_comments_counts];
+                                    }
+
+                                    // Always use the last 5 posts (or fewer if less data is available)
+                                    const last5Likes = likesArr.slice(-5);
+                                    const last5Comments = commentsArr.slice(-5);
+
+                                    const likes = sumValues(last5Likes);
+                                    const comments = sumValues(last5Comments);
+                                    const numPosts = Math.max(last5Likes.length, last5Comments.length, 1);
+
+                                    const avgEngagement = (likes + comments) / numPosts;
+                                    if (followers === 0) return '0%';
+                                    const rate = (avgEngagement / followers) * 100;
+                                    return isNaN(rate) ? '0%' : rate.toFixed(2) + '%';
+                                }
+                            }
+
                         ],
-                        dom: 'Bfrtip',
+                        dom: "<'top-row'<'dataTables_length'l><'dt-buttons'B><'dataTables_filter'f>>" +
+                             "<'row'<'col-sm-12'tr>>" +
+                             "<'row'<'col-sm-5'i><'col-sm-7'p>>",
                         buttons: ['csv'],
                         pageLength: 25,
                         responsive: true,
