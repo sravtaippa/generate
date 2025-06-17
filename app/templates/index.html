@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Influencer Table</title>
+
+    <!-- DataTables & Buttons -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css" />
+
+    <!-- Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <style>
+        /* === Dark Theme Styles === */
+
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        h2 {
+            color: #fff;
+        }
+
+        .filter-wrapper {
+            overflow-x: auto;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+        }
+
+        .filters {
+            display: inline-flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            gap: 15px;
+            min-width: max-content;
+        }
+
+        .filter-wrapper::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .filter-wrapper::-webkit-scrollbar-thumb {
+            background-color: #555;
+            border-radius: 4px;
+        }
+
+            .filters > div {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .filters label {
+                font-size: 14px;
+                color: white;
+                background-color: transparent;
+                padding: 0;        /* Remove padding */
+                border: none;      /* Remove border */
+                border-radius: 0;
+                margin: 0;
+                user-select: none;
+            }
+
+       
+        .filters select,
+        .filters input {
+            margin-right: 15px;
+            font-size: 14px;
+            color: #ddd;
+            background-color: #222;
+            border: 1px solid #444;
+            padding: 5px 8px;
+            border-radius: 4px;
+        }
+
+        .filters label {
+            user-select: none;
+        }
+
+        /* Select2 dark mode */
+        .select2-container--default .select2-selection--multiple {
+            background-color: #222;
+            border: 1px solid #444;
+            color: #eee;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice {
+            background-color: #444;
+            color: #eee;
+        }
+
+        .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+            color: #bbb;
+        }
+
+        table.dataTable {
+            border-collapse: collapse;
+            width: 100%;
+            background-color: #222;
+            color: #eee;
+        }
+
+        table.dataTable thead {
+            background-color: #333;
+        }
+
+        table.dataTable thead th {
+            color: #fff;
+            border-bottom: 1px solid #444;
+        }
+
+        table.dataTable tbody tr {
+            border-bottom: 1px solid #444;
+        }
+
+        table.dataTable tbody tr:hover {
+            background-color: #333;
+        }
+
+        table.dataTable tbody td {
+            color: #ddd;
+        }
+
+        table.dataTable td img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 1px solid #555;
+        }
+
+        /* DataTables buttons */
+        .dt-button {
+            background-color: #333 !important;
+            color: #eee !important;
+            border: 1px solid #555 !important;
+            border-radius: 4px !important;
+            padding: 5px 10px !important;
+            cursor: pointer;
+        }
+
+        .dt-button:hover {
+            background-color: #555 !important;
+            color: #fff !important;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 999;
+            padding-top: 60px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .modal-content {
+            margin: auto;
+            display: block;
+            width: 60%;
+            max-width: 700px;
+            border: 3px solid #444;
+            border-radius: 8px;
+        }
+
+        .close {
+            position: absolute;
+            right: 35px;
+            top: 20px;
+            color: #ccc;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .close:hover {
+            color: #fff;
+        }
+
+        .select2-container {
+            min-width: 200px;
+        }
+
+        .hashtag-toggle {
+            cursor: pointer;
+            user-select: none;
+            color: #aad4ff;
+        }
+    </style>
+</head>
+<body>
+    <h2>Influencer Data</h2>
+
+    <div class="filters">
+        <div>
+            <label for="typeFilter">Influencer Type:</label>
+            <select id="typeFilter" multiple="multiple"></select>
+        </div>
+        <div>
+            <label for="domainFilter">Targeted Domain:</label>
+            <select id="domainFilter" multiple="multiple"></select>
+        </div>
+        <div>
+            <label for="locationFilter">Influencer Location:</label>
+            <select id="locationFilter" multiple="multiple"></select>
+        </div>
+        <div>
+            <label for="audienceFilter">Targeted Audience:</label>
+            <select id="audienceFilter" multiple="multiple"></select>
+        </div>
+        <div>
+            <label for="minFollowers">Followers:</label>
+            <input type="number" id="minFollowers" placeholder="Min" min="0" />
+        </div>
+        <div>
+            <!-- <label for="maxFollowers">Followers:</label> -->
+            <input type="number" id="maxFollowers" placeholder="Max" min="0" />
+        </div>
+    </div>
+    
+    <table id="influencerTable" class="display nowrap" style="width:100%">
+        <thead>
+            <tr>
+                <!-- <th>Image</th> -->
+                <th>Full Name</th>
+                <th>Username</th>
+                <th>Influencer Type</th>
+                <th>Targeted Audience</th>
+                <th>Targeted Domain</th>
+                <th>Bio</th>
+                <th>Followers</th>
+                <th>Follows</th>
+                <th>Posts</th>
+                <th>Captions</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Videos</th>
+                <th>Hashtags</th>
+                <th>Profile Link</th>
+                <th>Business Category</th>
+                <th>Influencer Location</th>
+                <th>Influencer Nationality</th>
+                <th>Likes</th>
+                <th>Comments</th>
+                <th>Created Time</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <div id="imgModal" class="modal">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="modalImage" />
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+
+    <!-- Select2 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        let table;
+
+        function shortenText(text, maxLen = 40) {
+            if (!text) return '';
+            return text.length > maxLen ? text.slice(0, maxLen) + '...' : text;
+        }
+
+        function escapeHtml(text) {
+            return $('<div>').text(text).html();
+        }
+
+        function createToggleSpan(fullText, color = '#aad4ff') {
+            const shortText = shortenText(fullText);
+            const escapedFull = escapeHtml(fullText);
+            const escapedShort = escapeHtml(shortText);
+            return `<span class="hashtag-toggle" style="cursor:pointer; color:${color};" 
+                          data-full="${escapedFull}" data-short="${escapedShort}" onclick="toggleHashtag(this)">
+                        ${escapedShort}
+                    </span>`;
+        }
+
+        $(document).ready(function () {
+            $('#typeFilter, #domainFilter, #locationFilter, #audienceFilter').select2({
+                placeholder: 'Select...',
+                allowClear: true,
+                width: 'resolve'
+            });
+
+            fetch('/api/influencers')
+                .then((res) => res.json())
+                .then((data) => {
+                    populateFilters(data);
+
+                    table = $('#influencerTable').DataTable({
+                        data: data,
+                        columns: [
+                            { data: 'full_name' },
+                            { data: 'instagram_username' },
+                            { data: 'influencer_type' },
+                            { data: 'targeted_audience' },
+                            { data: 'targeted_domain' },
+                            { data: 'instagram_bio' },
+                            { data: 'instagram_followers_count' },
+                            { data: 'instagram_follows_count' },
+                            { data: 'instagram_posts_count' },
+                            {
+                                data: 'instagram_captions',
+                                render: (data) => createToggleSpan(data, '#aad4ff'),
+                            },
+                            { data: 'email_id' },
+                            { data: 'phone' },
+                            {
+                                data: 'instagram_video_urls',
+                                render: (data) => createToggleSpan(data, '#aad4ff'),
+                            },
+                            {
+                                data: 'instagram_hashtags',
+                                render: (data) => createToggleSpan(data, '#aad4ff'),
+                            },
+                            { data: 'business_category_name' },
+                            { data: 'influencer_location' },
+                            { data: 'influencer_nationality' },
+                            { data: 'instagram_likes_counts' },
+                            { data: 'instagram_comments_counts' },
+                            {
+                                data: 'created_time',
+                                render: (data) =>
+                                    data ? new Date(data).toLocaleString() : '',
+                            },
+                        ],
+                        dom: 'Bfrtip',
+                        buttons: ['csv'],
+                        pageLength: 25,
+                        responsive: true,
+                    });
+
+                    $('#typeFilter, #domainFilter, #locationFilter, #audienceFilter, #minFollowers, #maxFollowers').on(
+                        'change keyup',
+                        function () {
+                            table.draw();
+                        }
+                    );
+
+                    $.fn.dataTable.ext.search.push(function (
+                        settings,
+                        data,
+                        dataIndex
+                    ) {
+                        const selectedTypes = $('#typeFilter').val() || [];
+                        const selectedDomains = $('#domainFilter').val() || [];
+                        const selectedLocations = $('#locationFilter').val() || [];
+                        const selectedAudiences = $('#audienceFilter').val() || [];
+                        const min = parseInt($('#minFollowers').val(), 10) || 0;
+                        const max = parseInt($('#maxFollowers').val(), 10) || Infinity;
+
+                        const rowType = (data[2] || '').toLowerCase();
+                        const rowAudience = (data[3] || '').toLowerCase();
+                        const rowDomain = (data[4] || '').toLowerCase();
+                        const rowLocation = (data[16] || '').toLowerCase();
+                        const followers = parseInt(data[6], 10) || 0;
+
+                        const typeMatch =
+                            selectedTypes.length === 0 ||
+                            selectedTypes.includes(rowType);
+                        const domainMatch =
+                            selectedDomains.length === 0 ||
+                            selectedDomains.includes(rowDomain);
+                        const locationMatch =
+                            selectedLocations.length === 0 ||
+                            selectedLocations.includes(rowLocation);
+                        const audienceMatch =
+                            selectedAudiences.length === 0 ||
+                            selectedAudiences.includes(rowAudience);
+                        const followersMatch = followers >= min && followers <= max;
+
+                        return (
+                            typeMatch &&
+                            domainMatch &&
+                            locationMatch &&
+                            audienceMatch &&
+                            followersMatch
+                        );
+                    });
+                });
+        });
+
+        function populateFilters(data) {
+            const types = new Set();
+            const domains = new Set();
+            const locations = new Set();
+            const audiences = new Set();
+
+            data.forEach((row) => {
+                if (row.influencer_type)
+                    types.add(row.influencer_type.toLowerCase());
+                if (row.targeted_domain)
+                    domains.add(row.targeted_domain.toLowerCase());
+                if (row.influencer_location)
+                    locations.add(row.influencer_location.toLowerCase());
+                if (row.targeted_audience)
+                    audiences.add(row.targeted_audience.toLowerCase());
+            });
+
+            types.forEach((t) => {
+                $('#typeFilter').append(`<option value="${t}">${t}</option>`);
+            });
+
+            domains.forEach((d) => {
+                $('#domainFilter').append(`<option value="${d}">${d}</option>`);
+            });
+
+            locations.forEach((l) => {
+                $('#locationFilter').append(`<option value="${l}">${l}</option>`);
+            });
+
+            audiences.forEach((a) => {
+                $('#audienceFilter').append(`<option value="${a}">${a}</option>`);
+            });
+        }
+
+        function toggleHashtag(element) {
+            const $el = $(element);
+            const isShort = $el.text() === $el.data('short');
+            $el.text(isShort ? $el.data('full') : $el.data('short'));
+        }
+
+        function showImage(url) {
+            $('#modalImage').attr('src', url);
+            $('#imgModal').css('display', 'block');
+        }
+
+        function closeModal() {
+            $('#imgModal').css('display', 'none');
+        }
+    </script>
+</body>
+</html>

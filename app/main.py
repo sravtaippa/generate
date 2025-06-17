@@ -5,7 +5,7 @@ import os
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import unquote
 import time
-
+import asyncio
 from pipelines.data_sanitization import fetch_and_update_data, update_email_opens, test_sanitize
 from pipelines.data_sanitization import update_email_opens
 from pipelines.data_extractor import people_enrichment,test_run_pipeline,run_demo_pipeline
@@ -44,15 +44,32 @@ from email_module.generic_email_module import send_html_email
 from make.email_post_response import email_post_response_tracker
 from make.booking_records_for_taippa import booking_meeting_tracker
 from make.booking_meeting_form_submition import booking_meeting_form_tracker
+<<<<<<< HEAD
 from pipelines.data_collection_influencers import data_collection,profile_scraper,post_scraper,add_influencer_to_db
+=======
+from dashboard.influencer_data_view import influencer_bp
+
+from pipelines.data_collection_influencers import data_collection
+from pipelines.tiktok import scrape_multiple_profiles
+>>>>>>> f0feb638089d04a79f9f23dd2e30b47c864e3ec0
 
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
 app = Flask(__name__)
+app.register_blueprint(influencer_bp)
 
+@app.route('/scrape_tiktok', methods=['GET', 'POST'])
+def scrape_tiktok():
+    if request.method == 'POST':
+        data = request.get_json()
+        usernames = data.get("usernames", [])
+    else:  # GET method
+        usernames_param = request.args.get('usernames', '')
+        usernames = [u.strip() for u in usernames_param.split(',') if u.strip()]
 
+<<<<<<< HEAD
 ########## INFLUENCER MARKETING ROUTES ##########
 
 @app.route("/influencer_profile_scrape",methods=["GET"])
@@ -105,6 +122,17 @@ def store_influencer_data():
         return {"status":"failed","content":f"Error occured while adding influencer data to the database"}
     
 
+=======
+    if not usernames:
+        return jsonify({"error": "No usernames provided"}), 400
+
+    try:
+        results = asyncio.run(scrape_multiple_profiles(usernames))
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+>>>>>>> f0feb638089d04a79f9f23dd2e30b47c864e3ec0
 @app.route("/influencer_data_collection",methods=["GET"])
 def influencer_ingestion():
     try:
@@ -960,6 +988,15 @@ def run_booking_meeting_form_tracker():
         return booking_meeting_form_tracker()
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+    
+# # Optional: Route to trigger index.html from a custom endpoint
+# @app.route("/influencer_data_view", methods=["GET"])
+# def run_influencer_data_view():
+#     try:
+#         return index()
+#     except Exception as e:
+#         return jsonify({"status": "error", "message": str(e)}), 500
+
     
 if __name__ == '__main__':
 #   app.run(debug=True,use_reloader=False)
