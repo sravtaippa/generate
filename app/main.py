@@ -48,12 +48,15 @@ from pipelines.data_collection_influencers import data_collection,profile_scrape
 from dashboard.influencer_data_view import influencer_bp
 
 from pipelines.data_collection_influencers import data_collection
+<<<<<<< HEAD
 from pipelines.smart_query_engine import convert_text_to_sql,convert_text_to_sql_v2
 # from pipelines.tiktok import scrape_multiple_profiles
 
 from pipelines.data_collection_influencers_tiktok import scrape_tiktok_profile
 from pipelines.data_enrtichment_tiktok import scrape_and_store
 
+=======
+>>>>>>> 28396403caaa0ebb3a1cbf819e09ed0efdc35169
 from pipelines.data_collection_influencers_tiktok import scrape_tiktok_profile
 from pipelines.data_enrtichment_tiktok import scrape_and_store
 print(f"\n =============== Generate : Pipeline started  ===============")
