@@ -1,7 +1,7 @@
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import os
 
-os.environ["HF_TOKEN"] = "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"
+os.environ["HF_TOKEN"] = ""
 os.environ["HF_HUB_TIMEOUT"] = "1800"
 
 model_name = "Snowflake/Arctic-Text2SQL-R1-7B"
