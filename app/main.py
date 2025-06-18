@@ -48,8 +48,8 @@ from pipelines.data_collection_influencers import data_collection,profile_scrape
 from dashboard.influencer_data_view import influencer_bp
 
 from pipelines.data_collection_influencers import data_collection
-from pipelines.tiktok import scrape_multiple_profiles
-
+# from pipelines.data_collection_influencers_tiktok import run_apify_actor
+from pipelines.data_enrtichment_tiktok import scrape_and_store
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -57,14 +57,53 @@ print('Starting the app')
 app = Flask(__name__)
 app.register_blueprint(influencer_bp)
 
-@app.route('/scrape_tiktok', methods=['GET', 'POST'])
-def scrape_tiktok():
-    if request.method == 'POST':
-        data = request.get_json()
-        usernames = data.get("usernames", [])
-    else:  # GET method
-        usernames_param = request.args.get('usernames', '')
-        usernames = [u.strip() for u in usernames_param.split(',') if u.strip()]
+@app.route('/tiktok_posts_to_airtable', methods=['GET'])
+def influencer_post_scraper_tiktok():
+    try:
+        tiktok_username = request.args.get("username")
+        posts_count = request.args.get("posts_count", type=int, default=10)
+        if not tiktok_username:
+            return jsonify({"status": "failed", "content": "Missing 'tiktok_username' parameter"})
+        result = scrape_and_store(tiktok_username, posts_count)
+        if result["status"] == "failed":
+            return jsonify({"status": "failed", "content": result.get("error", "Unknown error")})
+        return jsonify({"status": "passed", "content": result})
+    except Exception as e:
+        print(f"Error occurred while scraping influencer posts data : {e}")
+        return jsonify({"status": "failed", "content": "Error occurred while scraping posts data"})
+
+# @app.route('/scrape_tiktok_profile', methods=['GET'])
+# def scrape_tiktok_profile_endpoint():
+#     try:
+#         username = request.args.get('username')
+#         if not username:
+#             return jsonify({"error": "Missing 'username' query parameter"}), 400
+
+#         data = run_apify_actor(username)
+#         if not data:
+#             return jsonify({"error": "No data found"}), 404
+
+#         profile = data[0]
+
+#         result = {
+#             "username": profile.get("username"),
+#             "followers_count": profile.get("followersCount"),
+#             "following_count": profile.get("followingCount"),
+#             "likes_count": profile.get("likesCount"),
+#             "video_count": profile.get("videoCount"),
+#             "full_name": profile.get("fullName"),
+#             "bio": profile.get("bio"),
+#             "profile_url": profile.get("shareUrl"),
+#             "profile_pic": profile.get("profilePicUrl"),
+#             "is_verified": profile.get("isVerified"),
+#             "region": profile.get("region"),
+#         }
+
+#         return jsonify(result)
+
+#     except Exception as e:
+#         return jsonify({"error": str(e)}), 500
+
 
 ########## INFLUENCER MARKETING ROUTES ##########
 
