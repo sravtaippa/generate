@@ -48,7 +48,7 @@ from pipelines.data_collection_influencers import data_collection,profile_scrape
 from dashboard.influencer_data_view import influencer_bp
 
 from pipelines.data_collection_influencers import data_collection
-# from pipelines.data_collection_influencers_tiktok import run_apify_actor
+from pipelines.data_collection_influencers_tiktok import scrape_tiktok_profile
 from pipelines.data_enrtichment_tiktok import scrape_and_store
 print(f"\n =============== Generate : Pipeline started  ===============")
 
@@ -71,6 +71,23 @@ def influencer_post_scraper_tiktok():
     except Exception as e:
         print(f"Error occurred while scraping influencer posts data : {e}")
         return jsonify({"status": "failed", "content": "Error occurred while scraping posts data"})
+    
+
+@app.route('/scrape_tiktok_profile', methods=['GET'])
+def scrape_tiktok_profile_endpoint():
+    try:
+        tiktok_username = request.args.get("username")
+        
+        if not tiktok_username:
+            return jsonify({"status": "failed", "content": "Missing 'tiktok_username' parameter"})
+        result = scrape_tiktok_profile(tiktok_username)
+        if result["status"] == "failed":
+            return jsonify({"status": "failed", "content": result.get("error", "Unknown error")})
+        return jsonify({"status": "passed", "content": result})
+    except Exception as e:
+        print(f"Error occurred : {e}")
+        return jsonify({"status": "failed", "content": "Error occurred "})
+
 
 # @app.route('/scrape_tiktok_profile', methods=['GET'])
 # def scrape_tiktok_profile_endpoint():
