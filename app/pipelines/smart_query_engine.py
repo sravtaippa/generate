@@ -1,6 +1,6 @@
-import torch
+# import torch
 import os
-from transformers import AutoModelForCausalLM, AutoTokenizer
+# from transformers import AutoModelForCausalLM, AutoTokenizer
 import time
 import openai
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,PERPLEXITY_API_KEY
@@ -61,24 +61,13 @@ def convert_text_to_sql_v2(query_text):
         response = client.chat.completions.create(
             model="gpt-4-turbo",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that converts natural language to SQL."},
+                {"role": "system", "content": "You are a helpful assistant that converts natural language to SQL. Just return SQL string without any explanation and shouldnt contain anything like this ```sql ``` "},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.0
         )
-        # response = client.chat.completions.create(
-        #     model="gpt-4",
-        #     messages=[
-        #         {"role": "system", "content": "You are an expert in geography. Respond only with one of the following tags: europe, asia, north_america, south_america, australia, or other."},
-        #         {"role": "user", "content": f"Classify the region '{region}' into one of the following: europe, middle_east, asia, africa, north_america, australia, or other. Respond with only the tag."}
-        #     ],
-        #     temperature=0,
-        # )
-        # return response.choices[0].message.content
-        # Extract the SQL query
-        # sql_query = response['choices'][0]['message']['content']
         sql_query = response.choices[0].message.content
-
+        
         print("Generated SQL Query:")
         print(sql_query)
     
