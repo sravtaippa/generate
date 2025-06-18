@@ -61,7 +61,7 @@ app.register_blueprint(influencer_bp)
 def influencer_post_scraper_tiktok():
     try:
         tiktok_username = request.args.get("username")
-        posts_count = request.args.get("posts_count", type=int, default=10)
+        posts_count = request.args.get("posts_count", type=int, default=5)
         if not tiktok_username:
             return jsonify({"status": "failed", "content": "Missing 'tiktok_username' parameter"})
         result = scrape_and_store(tiktok_username, posts_count)
