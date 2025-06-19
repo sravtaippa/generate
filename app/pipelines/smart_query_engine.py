@@ -13,7 +13,7 @@ def convert_text_to_sql_v2(query_text):
         schema_context = """"
 
         Database schema with column descriptions:
-        Table: influencers (
+        Table: src_influencer_data (
         id                          character varying(100000) -- Unique identifier for the influencer
         instagram_url               character varying(100000) -- URL of the influencer's Instagram profile
         instagram_followers_count   character varying(100000) -- Number of followers on Instagram
