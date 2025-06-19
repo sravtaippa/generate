@@ -33,3 +33,4 @@ Flask-SQLAlchemy
 psycopg2-binary
 sshtunnel
 anthropic
+torch

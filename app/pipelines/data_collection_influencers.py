@@ -118,14 +118,13 @@ def add_influencer_to_db(combined_influencer_data):
         print(f"Error occured while adding influencer data to the database: {e}")
         return False
 
-def data_collection(instagram_username,influencer_type,influencer_location):
+def data_collection(instagram_username,influencer_type,influencer_location,posts_count):
     # --------------------------- Profile Scraper ---------------------------
     influencer_basic_data = profile_scraper(instagram_username,influencer_type,influencer_location)
-    posts_count = 10
+    # posts_count = 1
     influencer_post_data = post_scraper(instagram_username,posts_count)
     combined_influencer_data = influencer_basic_data | influencer_post_data
     # add_influencer_to_db(combined_influencer_data)
-
 
     def unique_key_check_airtable(column_name,unique_value,table_name):
         try:
