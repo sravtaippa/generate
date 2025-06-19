@@ -16,13 +16,14 @@ def classify_vertical(instagram_bio, influencer_location, trimmed_instagram_capt
         You are a smart assistant programmed to analyze social media profiles of users. Based on the provided information, classify the user into the following categories and return a valid JSON string as output.
 
         - The "targeted_domain" must be one of: ["food", "fashion", "fitness", "gaming", "education", "automotive", "finance", "art"].
-        - The "targeted_audience" must be one of: ["gen-z", "gen-y", "gen-x"], based on user's age or inferred clues. Use:
-        - gen-z: born between 1997–2012
-        - gen-y: born between 1981–1996
-        - gen-x: born between 1965–1980
+        - The "targeted_audience" must be one of: ["gen-z", "gen-y", "gen-x"], based on user's content and who the targeted audience can be. Use this information to determine the targeted audience:
+           1. gen-z: born between 1997–2012 (mostly teens and young adults)
+           2. gen-y: born between 1981–1996 (millennials, young professionals)
+           3. gen-x: born between 1965–1980 (older adults, parents)
+
         - The "influencer_nationality" should be inferred from the bio and current location if possible. If not clear, set to "unknown".
 
-        Always return a JSON string object ONLY like this:
+        Always return a JSON string object ONLY like this, do not add any other text or markdown formatting:
         {
         "influencer_nationality": "",
         "targeted_audience": "",
@@ -44,18 +45,18 @@ def classify_vertical(instagram_bio, influencer_location, trimmed_instagram_capt
         Please analyze and classify the profile based on the above criteria and return a JSON object.
         """
 
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)
         # Call OpenAI API
-        response = openai.ChatCompletion.create(
-            model="gpt-4",  # You can use "gpt-3.5-turbo" if needed
+        response = client.chat.completions.create(
+            model="gpt-4",  # or "gpt-3.5-turbo"
             messages=[
                 {"role": "system", "content": system_prompt.strip()},
                 {"role": "user", "content": user_prompt.strip()}
             ],
-            temperature=0.2
+            temperature=0.0
         )
 
-        # Extract the response
-        result = response['choices'][0]['message']['content'].strip()
+        result = response.choices[0].message.content
 
         # Validate it's a JSON string (not markdown-formatted)
         try:
@@ -65,7 +66,7 @@ def classify_vertical(instagram_bio, influencer_location, trimmed_instagram_capt
         except json.JSONDecodeError:
             print("The response is not a valid JSON string. Here's the raw output:")
             print(result)
-
+        return result
     except Exception as e:
         print(f" Error during classification: {e}")
 
@@ -88,9 +89,10 @@ def classify_profile_type(instagram_bio,business_category_name):
         bio: {instagram_bio}, business_category_name: {business_category_name}
         """
 
-        # Send request to OpenAI
-        response = openai.ChatCompletion.create(
-            model="gpt-4",  # or use "gpt-3.5-turbo"
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        # Call OpenAI API
+        response = client.chat.completions.create(
+            model="gpt-4",  # or "gpt-3.5-turbo"
             messages=[
                 {"role": "system", "content": system_prompt.strip()},
                 {"role": "user", "content": user_prompt.strip()}
@@ -98,15 +100,16 @@ def classify_profile_type(instagram_bio,business_category_name):
             temperature=0.0
         )
 
-        # Extract the classification
-        profile_type = response['choices'][0]['message']['content'].strip()
+        # Extract and print result
+        profile_type = response.choices[0].message.content
 
         # Output result
         print("Profile type:", profile_type)  # Should be either "person" or "group"
-        return profile_type
-    
+        
     except Exception as e:
         print(f"Error during profile type classification: {e}")
+
+    return profile_type
 
 def scrape_personal_data(instagram_bio,instagram_url):
     try:
@@ -114,7 +117,7 @@ def scrape_personal_data(instagram_bio,instagram_url):
         system_prompt = """
         You are a smart assistant programmed to scrape social media bio and retrieve the following contact details if available: email, phone number, Snapchat ID, Twitter ID, Tiktok ID and LinkedIn ID. If any of these are not found, return the value 'NA'.
 
-        Your task is to return a JSON string in the following format and nothing else:
+        Your task is to return a JSON string in the following format and nothing else, don't add any other text or markdown formatting:
         {
         "email": "",
         "phone": "",
@@ -131,8 +134,9 @@ def scrape_personal_data(instagram_bio,instagram_url):
         bio: {instagram_bio}, instagram_url: {instagram_url}
         """
 
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)
         # Call OpenAI API
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4",  # or "gpt-3.5-turbo"
             messages=[
                 {"role": "system", "content": system_prompt.strip()},
@@ -142,7 +146,7 @@ def scrape_personal_data(instagram_bio,instagram_url):
         )
 
         # Extract and print result
-        result = response['choices'][0]['message']['content'].strip()
+        result = response.choices[0].message.content
 
         # Try parsing to validate JSON
         try:
@@ -155,22 +159,33 @@ def scrape_personal_data(instagram_bio,instagram_url):
     except Exception as e:
         print(f" Error during personal data scraping: {e}")
 
-def profile_intelligence_engine():
+    return result
+
+def profile_intelligence_engine(instagram_bio, influencer_location, trimmed_instagram_caption, instagram_url, business_category_name, trimmed_instagram_hashtags):
     try:
         # Example data
-        instagram_bio = "Fitness freak | NASM Certified | Helping you reach your goals 💪🇺🇸"
-        influencer_location = "Los Angeles, USA"
-        trimmed_instagram_caption = """
-        Crushed leg day today! 💥💯
-        Meal prep done for the week — gains incoming 🥗💪
-        Quick home workout for busy bees 🐝🏋️‍♀️
-        """
-        instagram_url = "https://www.instagram.com/fitness_trainer_example/"
-        business_category_name = "Fitness Trainer"
-        trimmed_instagram_hashtags = "#fitness #gym #workout #fitspo #healthyliving"
+        # instagram_bio = "Fitness freak | NASM Certified | Helping you reach your goals 💪🇺🇸"
+        # influencer_location = "Los Angeles, USA"
+        # trimmed_instagram_caption = """
+        # Crushed leg day today! 💥💯
+        # Meal prep done for the week — gains incoming 🥗💪
+        # Quick home workout for busy bees 🐝🏋️‍♀️
+        # """
+        # instagram_url = "https://www.instagram.com/fitness_trainer_example/"
+        # business_category_name = "Fitness Trainer"
+        # trimmed_instagram_hashtags = "#fitness #gym #workout #fitspo #healthyliving"
+
         vertical_seggregation = classify_vertical(instagram_bio, influencer_location, trimmed_instagram_caption, trimmed_instagram_hashtags)
         profile_type = classify_profile_type(instagram_bio,business_category_name)
         personal_data = scrape_personal_data(instagram_bio,instagram_url)
+        print(f"Vertical Segregation: {vertical_seggregation}")
+        print(f"Profile Type: {profile_type}")
+        print(f"Personal Data: {personal_data}")
+        vertical_seggregation = {
+            "vertical": vertical_seggregation,
+            "profile_type": profile_type,
+            "personal_data": personal_data
+        }
         return vertical_seggregation
     
     except Exception as e:

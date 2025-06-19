@@ -61,7 +61,9 @@ def convert_text_to_sql_v2(query_text):
         response = client.chat.completions.create(
             model="gpt-4-turbo",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant that converts natural language to SQL. Just return SQL string without any explanation and shouldnt contain anything like this ```sql ``` "},
+                {"role": "system", "content": """You are a helpful assistant that converts natural language to SQL.
+                                                 Just return SQL without any explanation and shouldnt contain anything like this ```sql ```
+                                                 Do not add any comments or explanations, just return the SQL query. Eg: SELECT * FROM influencers WHERE instagram_followers_count > 10000;"""},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.0
@@ -74,7 +76,6 @@ def convert_text_to_sql_v2(query_text):
     except Exception as e:
         print(f"Error during SQL generation: {e}")
         sql_query = None
-
     return sql_query
 
 
