@@ -168,12 +168,9 @@ def profile_intelligence_engine(instagram_bio, influencer_location, trimmed_inst
         print(f"Vertical Segregation: {vertical_seggregation}")
         print(f"Profile Type: {profile_type}")
         print(f"Personal Data: {personal_data}")
-        vertical_seggregation = {
-            "vertical": vertical_seggregation,
-            "profile_type": profile_type,
-            "personal_data": personal_data
-        }
-        return vertical_seggregation
+        influencer_data = vertical_seggregation | personal_data | {"profile_type": profile_type}
+        print(f"Final Influencer Data: {influencer_data}")
+        return influencer_data
     
     except Exception as e:
         print(f"Error in AI agent orchestrator: {e}")
