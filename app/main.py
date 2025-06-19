@@ -99,39 +99,6 @@ def scrape_tiktok_profile_endpoint():
         return jsonify({"status": "failed", "content": "Error occurred "})
 
 
-# @app.route('/scrape_tiktok_profile', methods=['GET'])
-# def scrape_tiktok_profile_endpoint():
-#     try:
-#         username = request.args.get('username')
-#         if not username:
-#             return jsonify({"error": "Missing 'username' query parameter"}), 400
-
-#         data = run_apify_actor(username)
-#         if not data:
-#             return jsonify({"error": "No data found"}), 404
-
-#         profile = data[0]
-
-#         result = {
-#             "username": profile.get("username"),
-#             "followers_count": profile.get("followersCount"),
-#             "following_count": profile.get("followingCount"),
-#             "likes_count": profile.get("likesCount"),
-#             "video_count": profile.get("videoCount"),
-#             "full_name": profile.get("fullName"),
-#             "bio": profile.get("bio"),
-#             "profile_url": profile.get("shareUrl"),
-#             "profile_pic": profile.get("profilePicUrl"),
-#             "is_verified": profile.get("isVerified"),
-#             "region": profile.get("region"),
-#         }
-
-#         return jsonify(result)
-
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
-
 ########## INFLUENCER MARKETING ROUTES ##########
 # http://127.0.0.1:5000/analyze_social_profile?instagram_bio=Hello%20World&influencer_location=Dubai&trimmed_instagram_caption=This%20is%20a%20test%20caption&instagram_url=https://www.instagram.com/testuser/&business_category_name=Influencer&trimmed_instagram_hashtags=fashion,food
 @app.route("/add_influencer_data", methods=["GET"])
@@ -209,7 +176,7 @@ def get_influencer_data_from_db():
 def initiate_smart_query_engine():
     try:
         user_query = request.args.get("user_query")
-        user_query = "Give me top 10 influencers in Dubai with more than 100k followers" 
+        # user_query = "Give me top 10 influencers in Dubai with more than 100k followers" 
         if user_query in ["", None]:
             print(f"Invalid information passed. user_query : {user_query}")
             return {"status": "failed","content":f"Invalid information passed. user_query : {user_query}"}
@@ -282,7 +249,7 @@ def store_influencer_data():
 def influencer_ingestion():
     try:
         instagram_username = request.args.get("instagram_username")
-        posts_count = request.args.get("posts_count", type=int, default=1)
+        posts_count = request.args.get("posts_count")
         influencer_type = request.args.get("influencer_type")
         influencer_location = request.args.get("influencer_location")
         if instagram_username in ["",None]:

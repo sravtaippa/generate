@@ -126,7 +126,6 @@ def data_collection(instagram_username,influencer_type,influencer_location,posts
     combined_influencer_data = influencer_basic_data | influencer_post_data
     # add_influencer_to_db(combined_influencer_data)
 
-
     def unique_key_check_airtable(column_name,unique_value,table_name):
         try:
             api = Api(AIRTABLE_API_KEY)
