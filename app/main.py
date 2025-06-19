@@ -282,11 +282,12 @@ def store_influencer_data():
 def influencer_ingestion():
     try:
         instagram_username = request.args.get("instagram_username")
+        posts_count = request.args.get("posts_count", type=int, default=1)
         influencer_type = request.args.get("influencer_type")
         influencer_location = request.args.get("influencer_location")
         if instagram_username in ["",None]:
             raise
-        data_collection(instagram_username,influencer_type,influencer_location)
+        data_collection(instagram_username,influencer_type,influencer_location,posts_count)
         return {"status":"successfully added data for influencers"}
     except Exception as e:
         print(f"Error occured while ingesting influencer data : {e}")
