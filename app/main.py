@@ -48,8 +48,18 @@ from pipelines.data_collection_influencers import data_collection,profile_scrape
 from dashboard.influencer_data_view import influencer_bp
 
 from pipelines.data_collection_influencers import data_collection
+
+from pipelines.smart_query_engine import convert_text_to_sql_v2
+# from pipelines.tiktok import scrape_multiple_profiles
+
 from pipelines.data_collection_influencers_tiktok import scrape_tiktok_profile
 from pipelines.data_enrtichment_tiktok import scrape_and_store
+
+from pipelines.data_collection_influencers_tiktok import scrape_tiktok_profile
+from pipelines.data_enrtichment_tiktok import scrape_and_store
+from pipelines.retrieve_influencer_data import retrieve_data_from_db
+from pipelines.profile_analyzer_engine import profile_intelligence_engine
+
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -89,40 +99,92 @@ def scrape_tiktok_profile_endpoint():
         return jsonify({"status": "failed", "content": "Error occurred "})
 
 
-# @app.route('/scrape_tiktok_profile', methods=['GET'])
-# def scrape_tiktok_profile_endpoint():
-#     try:
-#         username = request.args.get('username')
-#         if not username:
-#             return jsonify({"error": "Missing 'username' query parameter"}), 400
-
-#         data = run_apify_actor(username)
-#         if not data:
-#             return jsonify({"error": "No data found"}), 404
-
-#         profile = data[0]
-
-#         result = {
-#             "username": profile.get("username"),
-#             "followers_count": profile.get("followersCount"),
-#             "following_count": profile.get("followingCount"),
-#             "likes_count": profile.get("likesCount"),
-#             "video_count": profile.get("videoCount"),
-#             "full_name": profile.get("fullName"),
-#             "bio": profile.get("bio"),
-#             "profile_url": profile.get("shareUrl"),
-#             "profile_pic": profile.get("profilePicUrl"),
-#             "is_verified": profile.get("isVerified"),
-#             "region": profile.get("region"),
-#         }
-
-#         return jsonify(result)
-
-#     except Exception as e:
-#         return jsonify({"error": str(e)}), 500
-
-
 ########## INFLUENCER MARKETING ROUTES ##########
+# http://127.0.0.1:5000/analyze_social_profile?instagram_bio=Hello%20World&influencer_location=Dubai&trimmed_instagram_caption=This%20is%20a%20test%20caption&instagram_url=https://www.instagram.com/testuser/&business_category_name=Influencer&trimmed_instagram_hashtags=fashion,food
+@app.route("/add_influencer_data", methods=["GET"])
+def add_influencer_data_in_db():
+    try:
+        influencer_data = {
+            "instagram_url": request.args.get("instagram_url"),
+            "instagram_username": request.args.get("instagram_username"),
+            "full_name": request.args.get("full_name"),
+            "instagram_bio": request.args.get("instagram_bio"),
+            "external_urls": request.args.get("external_urls"),
+            "instagram_followers_count": request.args.get("instagram_followers_count"),
+            "instagram_follows_count": request.args.get("instagram_follows_count"),
+            "business_category_name": request.args.get("business_category_name"),
+            "instagram_profile_pic": request.args.get("instagram_profile_pic"),
+            "instagram_posts_count": request.args.get("instagram_posts_count"),
+            "influencer_location": request.args.get("influencer_location"),
+            "instagram_captions": request.args.get("trimmed_instagram_caption"),
+            "instagram_hashtags": request.args.get("trimmed_instagram_hashtags"),
+            "instagram_post_urls": request.args.get("instagram_post_urls"),
+            "instagram_comments_counts": request.args.get("instagram_comments_counts"),
+            "instagram_video_play_counts": request.args.get("instagram_video_play_counts"),
+            "instagram_video_urls": request.args.get("video_urls"),
+            "instagram_likes_counts": request.args.get("instagram_likes_counts"),
+            "influencer_type": request.args.get("influencer_type"),
+            "profile_type": request.args.get("profile_type"),
+            "email_id": request.args.get("email"),
+            "phone": request.args.get("phone"),
+            "snapchat_url": request.args.get("snapchat_id"),
+            "twitter_url": request.args.get("twitter_id"),
+            "tiktok_url": request.args.get("tiktok_id"),
+            "linkedin_url": request.args.get("linkedin_id"),
+            "influencer_nationality": request.args.get("influencer_nationality"),
+            "targeted_audience": request.args.get("targeted_audience"),
+            "targeted_domain": request.args.get("targeted_domain")
+        }    
+
+        # if user_query in ["", None]:
+        #     print(f"Invalid information passed. user_query : {user_query}")
+        #     return {"status": "failed", "content": f"Invalid information passed. user_query : {user_query}"}
+        # return {"status": "success", "content": retrieve_data_from_db(user_query)}
+    except Exception as e:
+        print(f"Error occurred while fetching influencer data from db: {e}")
+        return {"status": "failed", "content": f"Error occurred while fetching influencer data from db"}
+
+
+@app.route("/analyze_social_profile", methods=["GET"])
+def analyze_social_profile_data():
+    try:
+        instagram_bio = request.args.get("instagram_bio")
+        influencer_location = request.args.get("influencer_location")
+        trimmed_instagram_caption = request.args.get("trimmed_instagram_caption")
+        instagram_url = request.args.get("instagram_url")
+        business_category_name = request.args.get("business_category_name")
+        trimmed_instagram_hashtags = request.args.get("trimmed_instagram_hashtags")
+        return profile_intelligence_engine(instagram_bio, influencer_location, trimmed_instagram_caption, instagram_url, business_category_name, trimmed_instagram_hashtags)
+    except Exception as e:
+        print(f"Error occurred while analyzing the social profile: {e}")
+        return {"status": "failed", "content": f"Error occurred while analyzing the social profile: {e}"}
+
+@app.route("/get_influencer_data", methods=["GET"])
+def get_influencer_data_from_db():
+    try:
+        user_query = request.args.get("user_query")
+        # user_query = "select id,full_name,influencer_type from src_influencer_data limit 3"
+        if user_query in ["", None]:
+            print(f"Invalid information passed. user_query : {user_query}")
+            return {"status": "failed", "content": f"Invalid information passed. user_query : {user_query}"}
+        return {"status": "success", "content": retrieve_data_from_db(user_query)}
+    except Exception as e:
+        print(f"Error occurred while fetching influencer data from db: {e}")
+        return {"status": "failed", "content": f"Error occurred while fetching influencer data from db"}
+
+@app.route("/initiate_smart_query_engine", methods=["GET"])
+def initiate_smart_query_engine():
+    try:
+        user_query = request.args.get("user_query")
+        # user_query = "Give me top 10 influencers in Dubai with more than 100k followers" 
+        if user_query in ["", None]:
+            print(f"Invalid information passed. user_query : {user_query}")
+            return {"status": "failed","content":f"Invalid information passed. user_query : {user_query}"}
+        return convert_text_to_sql_v2(user_query)
+        
+    except Exception as e:
+        print(f"Error occured while initiating smart query engine: {e}")
+        return {"status":"failed","content":f"Error occured while initiating smart query engine"}
 
 @app.route("/influencer_profile_scrape",methods=["GET"])
 def influencer_profile_scraper():
@@ -187,11 +249,12 @@ def store_influencer_data():
 def influencer_ingestion():
     try:
         instagram_username = request.args.get("instagram_username")
+        posts_count = request.args.get("posts_count")
         influencer_type = request.args.get("influencer_type")
         influencer_location = request.args.get("influencer_location")
         if instagram_username in ["",None]:
             raise
-        data_collection(instagram_username,influencer_type,influencer_location)
+        data_collection(instagram_username,influencer_type,influencer_location,posts_count)
         return {"status":"successfully added data for influencers"}
     except Exception as e:
         print(f"Error occured while ingesting influencer data : {e}")
