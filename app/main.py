@@ -134,6 +134,50 @@ def scrape_tiktok_profile_endpoint():
 
 ########## INFLUENCER MARKETING ROUTES ##########
 # http://127.0.0.1:5000/analyze_social_profile?instagram_bio=Hello%20World&influencer_location=Dubai&trimmed_instagram_caption=This%20is%20a%20test%20caption&instagram_url=https://www.instagram.com/testuser/&business_category_name=Influencer&trimmed_instagram_hashtags=fashion,food
+@app.route("/add_influencer_data", methods=["GET"])
+def add_influencer_data_in_db():
+    try:
+        influencer_data = {
+            "instagram_url": request.args.get("instagram_url"),
+            "instagram_username": request.args.get("instagram_username"),
+            "full_name": request.args.get("full_name"),
+            "instagram_bio": request.args.get("instagram_bio"),
+            "external_urls": request.args.get("external_urls"),
+            "instagram_followers_count": request.args.get("instagram_followers_count"),
+            "instagram_follows_count": request.args.get("instagram_follows_count"),
+            "business_category_name": request.args.get("business_category_name"),
+            "instagram_profile_pic": request.args.get("instagram_profile_pic"),
+            "instagram_posts_count": request.args.get("instagram_posts_count"),
+            "influencer_location": request.args.get("influencer_location"),
+            "instagram_captions": request.args.get("trimmed_instagram_caption"),
+            "instagram_hashtags": request.args.get("trimmed_instagram_hashtags"),
+            "instagram_post_urls": request.args.get("instagram_post_urls"),
+            "instagram_comments_counts": request.args.get("instagram_comments_counts"),
+            "instagram_video_play_counts": request.args.get("instagram_video_play_counts"),
+            "instagram_video_urls": request.args.get("video_urls"),
+            "instagram_likes_counts": request.args.get("instagram_likes_counts"),
+            "influencer_type": request.args.get("influencer_type"),
+            "profile_type": request.args.get("profile_type"),
+            "email_id": request.args.get("email"),
+            "phone": request.args.get("phone"),
+            "snapchat_url": request.args.get("snapchat_id"),
+            "twitter_url": request.args.get("twitter_id"),
+            "tiktok_url": request.args.get("tiktok_id"),
+            "linkedin_url": request.args.get("linkedin_id"),
+            "influencer_nationality": request.args.get("influencer_nationality"),
+            "targeted_audience": request.args.get("targeted_audience"),
+            "targeted_domain": request.args.get("targeted_domain")
+        }    
+
+        # if user_query in ["", None]:
+        #     print(f"Invalid information passed. user_query : {user_query}")
+        #     return {"status": "failed", "content": f"Invalid information passed. user_query : {user_query}"}
+        # return {"status": "success", "content": retrieve_data_from_db(user_query)}
+    except Exception as e:
+        print(f"Error occurred while fetching influencer data from db: {e}")
+        return {"status": "failed", "content": f"Error occurred while fetching influencer data from db"}
+
+
 @app.route("/analyze_social_profile", methods=["GET"])
 def analyze_social_profile_data():
     try:

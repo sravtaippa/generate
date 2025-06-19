@@ -121,7 +121,7 @@ def add_influencer_to_db(combined_influencer_data):
 def data_collection(instagram_username,influencer_type,influencer_location):
     # --------------------------- Profile Scraper ---------------------------
     influencer_basic_data = profile_scraper(instagram_username,influencer_type,influencer_location)
-    posts_count = 10
+    posts_count = 1
     influencer_post_data = post_scraper(instagram_username,posts_count)
     combined_influencer_data = influencer_basic_data | influencer_post_data
     # add_influencer_to_db(combined_influencer_data)
