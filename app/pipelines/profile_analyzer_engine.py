@@ -13,17 +13,17 @@ def classify_vertical(instagram_bio, influencer_location, trimmed_instagram_capt
 
         # Define system + user messages
         system_prompt = """
-        You are a smart assistant programmed to analyze social media profiles of users. Based on the provided information, classify the user into the following categories and return a valid JSON string as output.
+        You are a an advanced AI assistant programmed to analyze social media profiles of users. Based on the provided information, classify the user into the following categories and return a valid JSON string as output.
 
         - The "targeted_domain" must be one of: ["food", "fashion", "fitness", "gaming", "education", "automotive", "finance", "art"].
-        - The "targeted_audience" must be one of: ["gen-z", "gen-y", "gen-x"], based on user's content and who the targeted audience can be. Use this information to determine the targeted audience:
+        - The "targeted_audience" must be ONLY one of: ["gen-z", "gen-y", "gen-x"] & cannot contain multiple values, based on user's content and who the targeted audience can be. Use this information to determine the closest targeted audience:
            1. gen-z: born between 1997–2012 (mostly teens and young adults)
            2. gen-y: born between 1981–1996 (millennials, young professionals)
            3. gen-x: born between 1965–1980 (older adults, parents)
 
         - The "influencer_nationality" should be inferred from the bio and current location if possible. If not clear, set to "unknown".
 
-        Always return a JSON string object ONLY like this, do not add any other text or markdown formatting:
+        Your output must be a valid JSON object **without** any markdown formatting, explanation, or additional commentary. Do **not** include code blocks, quotes, or descriptive text. Just the JSON string object in this format:
         {
         "influencer_nationality": "",
         "targeted_audience": "",
@@ -34,7 +34,7 @@ def classify_vertical(instagram_bio, influencer_location, trimmed_instagram_capt
         user_prompt = f"""
         These are the available details:
 
-        bio of user: {instagram_bio}
+        bio of user: {instagram_bio} 
         current_location of user: {influencer_location}
 
         trimmed captions used for different posts in instagram: {trimmed_instagram_caption}
@@ -42,7 +42,6 @@ def classify_vertical(instagram_bio, influencer_location, trimmed_instagram_capt
         trimmed instagram hashtags for different posts:
         {trimmed_instagram_hashtags}
 
-        Please analyze and classify the profile based on the above criteria and return a JSON object.
         """
 
         client = openai.OpenAI(api_key=OPENAI_API_KEY)
@@ -163,18 +162,6 @@ def scrape_personal_data(instagram_bio,instagram_url):
 
 def profile_intelligence_engine(instagram_bio, influencer_location, trimmed_instagram_caption, instagram_url, business_category_name, trimmed_instagram_hashtags):
     try:
-        # Example data
-        # instagram_bio = "Fitness freak | NASM Certified | Helping you reach your goals 💪🇺🇸"
-        # influencer_location = "Los Angeles, USA"
-        # trimmed_instagram_caption = """
-        # Crushed leg day today! 💥💯
-        # Meal prep done for the week — gains incoming 🥗💪
-        # Quick home workout for busy bees 🐝🏋️‍♀️
-        # """
-        # instagram_url = "https://www.instagram.com/fitness_trainer_example/"
-        # business_category_name = "Fitness Trainer"
-        # trimmed_instagram_hashtags = "#fitness #gym #workout #fitspo #healthyliving"
-
         vertical_seggregation = classify_vertical(instagram_bio, influencer_location, trimmed_instagram_caption, trimmed_instagram_hashtags)
         profile_type = classify_profile_type(instagram_bio,business_category_name)
         personal_data = scrape_personal_data(instagram_bio,instagram_url)
