@@ -226,20 +226,20 @@
         <thead>
             <tr>
                 <th>Full Name</th>
-                <th>Username</th>
+                <th>Instagram Username</th>
                 <th>Influencer Type</th>
                 <th>Targeted Audience</th>
                 <th>Targeted Domain</th>
-                <th>Bio</th>
-                <th>Followers</th>
-                <th>Follows</th>
-                <th>Posts</th>
-                <th>Captions</th>
+                <th>Instagram Bio</th>
+                <th>Instagram  Followers</th>
+                <th>Instagram Follows</th>
+                <th>Instagram Posts</th>
+                <th>Instagram Captions</th>
                 <th>Email</th>
                 <th>Phone</th>
-                <th>Videos</th>
-                <th>Hashtags</th>
-                <th>Profile Link</th>
+                <th>Instagram Videos</th>
+                <th>Instagram Hashtags</th>
+                <th>Instagram Profile Link</th>
                 <th>Business Category</th>
                 <th>Influencer Location</th>
                 <th>Influencer Nationality</th>
@@ -248,6 +248,28 @@
                 <th>Created Time</th>
                 <th>Estimated Reach</th>
                 <th>Engagement Rate (%)</th>
+                <th>Tiktok Url</th>
+                <th>Tiktok Username</th>
+                <th>Tiktok Bio</th>
+                <th>Tiktok Followers</th>
+                <th>Tiktok Follows</th>
+                <th>Tiktok Profile Pic</th>
+                <th>Tiktok likes</th>
+                <th>Tiktok Videos Count</th>
+                <th>Tiktok Videos</th>
+                <th>Tiktok Play Count</th>
+                <th>Tiktok Share Count</th>
+                <th>Tiktok Comments Count</th>
+                <th>Tiktok Text</th>
+                <th>Tiktok Niche</th>
+                <th>Tiktok Language used</th>
+                <th>Tiktok Content Type</th>
+                <th>Tiktok Content Style</th>
+                <th>Tiktok Suitable Brands</th>                
+                <th>Tiktok Summary</th>
+                
+                <th></th>
+
             </tr>
         </thead>
         <tbody></tbody>
@@ -358,6 +380,7 @@
                                 render: (data) =>
                                     data ? new Date(data).toLocaleString() : '',
                             },
+                           
                             // Estimated Reach
                             {
                                 data: null,
@@ -404,8 +427,40 @@
                                     const rate = (avgEngagement / followers) * 100;
                                     return isNaN(rate) ? '0%' : rate.toFixed(2) + '%';
                                 }
-                            }
-
+                            },
+                            { data: 'tiktok_url' },
+                            { data: 'tiktok_username' },
+                            { data: 'tiktok_bio' },
+                            { data: 'tiktok_followers_count' },
+                            { data: 'tiktok_follows_count' },
+                            { data: 'tiktok_profile_pic' },
+                            { data: 'tiktok_likes_count' },
+                            { data: 'tiktok_videos_count' },
+                            
+                            {
+                                data: 'tiktok_video_urls',
+                                render: (data) => createToggleSpan(data, '#aad4ff'),
+                            },
+                            { data: 'tiktok_play_count' },
+                            { data: 'tiktok_share_count' },
+                            { data: 'tiktok_comment_count' },
+                            
+                            {
+                                data: 'tiktok_text',
+                                render: (data) => createToggleSpan(data, '#aad4ff'),
+                            },
+                            { data: 'tiktok_niche' },
+                            { data: 'tiktok_language_used' },
+                            { data: 'tiktok_content_type' },
+                            { data: 'tiktok_audience_location' },
+                            { data: 'tiktok_content_style' },
+                            { data: 'tiktok_suitable_brands' },
+                            {
+                                data: 'tiktok_text',
+                                render: (data) => createToggleSpan(data, '#aad4ff'),
+                            },
+                            
+                            
                         ],
                         dom: "<'top-row'<'dataTables_length'l><'dt-buttons'B><'dataTables_filter'f>>" +
                              "<'row'<'col-sm-12'tr>>" +
