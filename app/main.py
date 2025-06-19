@@ -67,21 +67,34 @@ print('Starting the app')
 app = Flask(__name__)
 app.register_blueprint(influencer_bp)
 
-@app.route('/tiktok_posts_to_airtable', methods=['GET'])
-def influencer_post_scraper_tiktok():
-    try:
-        tiktok_username = request.args.get("username")
-        posts_count = request.args.get("posts_count", type=int, default=5)
-        if not tiktok_username:
-            return jsonify({"status": "failed", "content": "Missing 'tiktok_username' parameter"})
-        result = scrape_and_store(tiktok_username, posts_count)
-        if result["status"] == "failed":
-            return jsonify({"status": "failed", "content": result.get("error", "Unknown error")})
-        return jsonify({"status": "passed", "content": result})
-    except Exception as e:
-        print(f"Error occurred while scraping influencer posts data : {e}")
-        return jsonify({"status": "failed", "content": "Error occurred while scraping posts data"})
+# @app.route('/tiktok_posts_to_airtable', methods=['GET'])
+# def influencer_post_scraper_tiktok():
+#     try:
+#         tiktok_username = request.args.get("username")
+#         # posts_count = request.args.get("posts_count", type=int, default=5)
+#         posts_count = 5
+#         if not tiktok_username:
+#             return jsonify({"status": "failed", "content": "Missing 'tiktok_username' parameter"})
+#         result = scrape_and_store(tiktok_username, posts_count)
+#         if result["status"] == "failed":
+#             return jsonify({"status": "failed", "content": result.get("error", "Unknown error")})
+#         return jsonify({"status": "passed", "content": result})
+#     except Exception as e:
+#         print(f"Error occurred while scraping influencer posts data : {e}")
+#         return jsonify({"status": "failed", "content": "Error occurred while scraping posts data"})
     
+@app.route('/tiktok_posts_to_airtable', methods=['GET', 'POST'])
+def scrape_route():
+    if request.method == 'POST':
+        data = request.get_json()
+        username = data.get('username') if data else None
+    else:  # GET
+        username = request.args.get('username')
+    if not username:
+        return jsonify({"status": "failed", "error": "Username is required"}), 400
+    result = scrape_and_store(username)
+    return jsonify(result)
+
 
 @app.route('/scrape_tiktok_profile', methods=['GET'])
 def scrape_tiktok_profile_endpoint():
