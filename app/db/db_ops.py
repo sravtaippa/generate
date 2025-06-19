@@ -374,6 +374,37 @@ class DatabaseManager:
             print(f"An error occurred: {e}")
             return None
 
+    def get_records_from_query(self,sql_query):
+        try:
+            with sshtunnel.SSHTunnelForwarder(
+                ('ssh.pythonanywhere.com'),
+                ssh_username=self.ssh_username,
+                ssh_password=self.ssh_password,
+                remote_bind_address=(self.postgres_hostname, self.postgres_host_port)
+            ) as tunnel:
+
+                with psycopg2.connect(
+                    user=self.db_user,
+                    password=self.db_password,
+                    host='127.0.0.1',
+                    port=tunnel.local_bind_port,
+                    database=self.db_name,
+                ) as connection:
+
+                    with connection.cursor(cursor_factory=psycopg2.extras.DictCursor) as cursor:
+                        print("Executing query:", sql_query)
+                        cursor.execute(sql_query)
+                        records = cursor.fetchall()
+                        print(records)
+                        if records is None:
+                            print("No matching record found.")
+                            return None
+                        return records
+
+        except Exception as e:
+            print("Database operation failed:", e)
+            return None
+
     # def fetch_client_details(self, client_ids, client_details_field="client_id"): 
     #     try:
     #         with sshtunnel.SSHTunnelForwarder(

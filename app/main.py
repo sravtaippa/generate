@@ -57,6 +57,9 @@ from pipelines.data_enrtichment_tiktok import scrape_and_store
 
 from pipelines.data_collection_influencers_tiktok import scrape_tiktok_profile
 from pipelines.data_enrtichment_tiktok import scrape_and_store
+from pipelines.retrieve_influencer_data import retrieve_data_from_db
+from pipelines.profile_analyzer_engine import profile_intelligence_engine
+
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -130,6 +133,33 @@ def scrape_tiktok_profile_endpoint():
 
 
 ########## INFLUENCER MARKETING ROUTES ##########
+# http://127.0.0.1:5000/analyze_social_profile?instagram_bio=Hello%20World&influencer_location=Dubai&trimmed_instagram_caption=This%20is%20a%20test%20caption&instagram_url=https://www.instagram.com/testuser/&business_category_name=Influencer&trimmed_instagram_hashtags=fashion,food
+@app.route("/analyze_social_profile", methods=["GET"])
+def analyze_social_profile_data():
+    try:
+        instagram_bio = request.args.get("instagram_bio")
+        influencer_location = request.args.get("influencer_location")
+        trimmed_instagram_caption = request.args.get("trimmed_instagram_caption")
+        instagram_url = request.args.get("instagram_url")
+        business_category_name = request.args.get("business_category_name")
+        trimmed_instagram_hashtags = request.args.get("trimmed_instagram_hashtags")
+        return profile_intelligence_engine(instagram_bio, influencer_location, trimmed_instagram_caption, instagram_url, business_category_name, trimmed_instagram_hashtags)
+    except Exception as e:
+        print(f"Error occurred while analyzing the social profile: {e}")
+        return {"status": "failed", "content": f"Error occurred while analyzing the social profile: {e}"}
+
+@app.route("/get_influencer_data", methods=["GET"])
+def get_influencer_data_from_db():
+    try:
+        user_query = request.args.get("user_query")
+        user_query = "select id,full_name,influencer_type from src_influencer_data limit 3"
+        if user_query in ["", None]:
+            print(f"Invalid information passed. user_query : {user_query}")
+            return {"status": "failed", "content": f"Invalid information passed. user_query : {user_query}"}
+        return {"status": "success", "content": retrieve_data_from_db(user_query)}
+    except Exception as e:
+        print(f"Error occurred while fetching influencer data from db: {e}")
+        return {"status": "failed", "content": f"Error occurred while fetching influencer data from db"}
 
 @app.route("/initiate_smart_query_engine", methods=["GET"])
 def initiate_smart_query_engine():
