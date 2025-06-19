@@ -98,7 +98,9 @@ def scrape_tiktok_profile(username):
             "influencer_nationality": "",
             "influencer_location": "",
             "targeted_audience": "",
-            "targeted_domain": "",
+            "targeted_domain": ""
+            
+            
         }
 
         print("Prepared Airtable data:", airtable_data, flush=True)
