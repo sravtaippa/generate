@@ -110,6 +110,199 @@ def classify_profile_type(instagram_bio,business_category_name):
 
     return profile_type
 
+def get_phone(instagram_bio,instagram_url):
+    try:
+        # Define the system prompt
+        system_prompt = """
+        You are a smart assistant programmed to scrape social media bio and retrieve phone number if available. If not found, return the value 'NA'.
+        Output should be a plain text containing only the phone number or 'NA' if not found. Do not include any other text or markdown formatting or explanations.
+        """
+
+        # Define the user prompt
+        user_prompt = f"""
+        Provided info about the profile:
+        bio: {instagram_bio}, instagram_url: {instagram_url}
+        """
+
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        # Call OpenAI API
+        response = client.chat.completions.create(
+            model="gpt-4",  # or "gpt-3.5-turbo"
+            messages=[
+                {"role": "system", "content": system_prompt.strip()},
+                {"role": "user", "content": user_prompt.strip()}
+            ],
+            temperature=0.0
+        )
+        # Extract and print result
+        result = response.choices[0].message.content
+        
+    except Exception as e:
+        print(f" Error during personal data scraping: {e}")
+    return result
+
+def get_email(instagram_bio,instagram_url):
+    try:
+        # Define the system prompt
+        system_prompt = """
+        You are a smart assistant programmed to scrape social media bio and retrieve email ID if available. If not found, return the value 'NA'.
+        Output should be a plain text containing only the email ID or 'NA' if not found. Do not include any other text or markdown formatting or explanations.
+        """
+
+        # Define the user prompt
+        user_prompt = f"""
+        Provided info about the profile:
+        bio: {instagram_bio}, instagram_url: {instagram_url}
+        """
+
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        # Call OpenAI API
+        response = client.chat.completions.create(
+            model="gpt-4",  # or "gpt-3.5-turbo"
+            messages=[
+                {"role": "system", "content": system_prompt.strip()},
+                {"role": "user", "content": user_prompt.strip()}
+            ],
+            temperature=0.0
+        )
+
+        # Extract and print result
+        result = response.choices[0].message.content
+        
+    except Exception as e:
+        print(f" Error during personal data scraping: {e}")
+    return result
+
+def get_snapchat_id(instagram_bio,instagram_url):
+    try:
+        # Define the system prompt
+        system_prompt = """
+        You are a smart assistant programmed to scrape social media bio and retrieve Snapchat ID if available. If not found, return the value 'NA'.
+        Output should be a plain text containing only the Snapchat ID or 'NA' if not found. Do not include any other text or markdown formatting or explanations.
+        """
+
+        # Define the user prompt
+        user_prompt = f"""
+        Provided info about the profile:
+        bio: {instagram_bio}, instagram_url: {instagram_url}
+        """
+
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        # Call OpenAI API
+        response = client.chat.completions.create(
+            model="gpt-4",  # or "gpt-3.5-turbo"
+            messages=[
+                {"role": "system", "content": system_prompt.strip()},
+                {"role": "user", "content": user_prompt.strip()}
+            ],
+            temperature=0.0
+        )
+
+        # Extract and print result
+        result = response.choices[0].message.content
+        
+    except Exception as e:
+        print(f" Error during personal data scraping: {e}")
+    return result
+
+
+def get_linkedin_id(instagram_bio,instagram_url):
+    try:
+        # Define the system prompt
+        system_prompt = """
+        You are a smart assistant programmed to scrape social media bio and retrieve LinkedIn ID if available. If not found, return the value 'NA'.
+        Output should be a plain text containing only the LinkedIn ID or 'NA' if not found. Do not include any other text or markdown formatting or explanations.
+        """
+
+        # Define the user prompt
+        user_prompt = f"""
+        Provided info about the profile:
+        bio: {instagram_bio}, instagram_url: {instagram_url}
+        """
+
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        # Call OpenAI API
+        response = client.chat.completions.create(
+            model="gpt-4",  # or "gpt-3.5-turbo"
+            messages=[
+                {"role": "system", "content": system_prompt.strip()},
+                {"role": "user", "content": user_prompt.strip()}
+            ],
+            temperature=0.0
+        )
+
+        # Extract and print result
+        result = response.choices[0].message.content
+        
+    except Exception as e:
+        print(f" Error during personal data scraping: {e}")
+    return result
+
+def get_twitter_id(instagram_bio,instagram_url):
+    try:
+        # Define the system prompt
+        system_prompt = """
+        You are a smart assistant programmed to scrape social media bio and retrieve twitter ID if available. If not found, return the value 'NA'.
+        Output should be a plain text containing only the twitter ID or 'NA' if not found. Do not include any other text or markdown formatting or explanations.
+        """
+
+        # Define the user prompt
+        user_prompt = f"""
+        Provided info about the profile:
+        bio: {instagram_bio}, instagram_url: {instagram_url}
+        """
+
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        # Call OpenAI API
+        response = client.chat.completions.create(
+            model="gpt-4",  # or "gpt-3.5-turbo"
+            messages=[
+                {"role": "system", "content": system_prompt.strip()},
+                {"role": "user", "content": user_prompt.strip()}
+            ],
+            temperature=0.0
+        )
+
+        # Extract and print result
+        result = response.choices[0].message.content
+        
+    except Exception as e:
+        print(f" Error during personal data scraping: {e}")
+    return result
+
+def get_tiktok_id(instagram_bio,instagram_url):
+    try:
+        # Define the system prompt
+        system_prompt = """
+        You are a smart assistant programmed to scrape social media bio and retrieve tiktok ID if available. If not found, return the value 'NA'.
+        Output should be a plain text containing only the tiktok ID or 'NA' if not found. Do not include any other text or markdown formatting or explanations.
+        """
+
+        # Define the user prompt
+        user_prompt = f"""
+        Provided info about the profile:
+        bio: {instagram_bio}, instagram_url: {instagram_url}
+        """
+
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        # Call OpenAI API
+        response = client.chat.completions.create(
+            model="gpt-4",  # or "gpt-3.5-turbo"
+            messages=[
+                {"role": "system", "content": system_prompt.strip()},
+                {"role": "user", "content": user_prompt.strip()}
+            ],
+            temperature=0.0
+        )
+
+        # Extract and print result
+        result = response.choices[0].message.content
+        
+    except Exception as e:
+        print(f" Error during personal data scraping: {e}")
+    return result
+
+
 def scrape_personal_data(instagram_bio,instagram_url):
     try:
         # Define the system prompt
