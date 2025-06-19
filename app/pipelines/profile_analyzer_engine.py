@@ -168,7 +168,9 @@ def profile_intelligence_engine(instagram_bio, influencer_location, trimmed_inst
         print(f"Vertical Segregation: {vertical_seggregation}")
         print(f"Profile Type: {profile_type}")
         print(f"Personal Data: {personal_data}")
-        influencer_data = vertical_seggregation | personal_data | {"profile_type": profile_type}
+        vs_dict = json.loads(vertical_seggregation)
+        pd_dict = json.loads(personal_data)
+        influencer_data = vs_dict | pd_dict | {"profile_type": profile_type}
         print(f"Final Influencer Data: {influencer_data}")
         return influencer_data
     
