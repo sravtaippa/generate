@@ -62,14 +62,22 @@ def convert_text_to_sql_v2(query_text):
             model="gpt-4-turbo",
             messages=[
                 {"role": "system", "content": """You are a helpful assistant that converts natural language to SQL.
+                                                 ** Always limit the result to a maximum of 3 records. **
                                                  Just return SQL without any explanation and shouldnt contain anything like this ```sql ```
-                                                 Do not add any comments or explanations, just return the SQL query. Eg: SELECT * FROM influencers WHERE instagram_followers_count > 10000;"""},
+                                                 Do not add any comments or explanations, just return the SQL query. Eg: SELECT * FROM influencers WHERE instagram_followers_count > 10000 LIMIT 3;"""},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.0
         )
         sql_query = response.choices[0].message.content
-        
+
+        # Add LIMIT 3 if it's not already present
+        if "limit" not in sql_query.lower():
+            if ";" in sql_query:
+                sql_query = sql_query.rstrip(";") + " LIMIT 3;"
+            else:
+                sql_query += " LIMIT 3;"
+
         print("Generated SQL Query:")
         print(sql_query)
     
