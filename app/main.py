@@ -144,7 +144,6 @@ def add_influencer_data_in_db():
         print(f"Error occurred while fetching influencer data from db: {e}")
         return {"status": "failed", "content": f"Error occurred while fetching influencer data from db"}
 
-
 @app.route("/analyze_social_profile", methods=["GET"])
 def analyze_social_profile_data():
     try:
