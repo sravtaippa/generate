@@ -163,7 +163,7 @@ def analyze_social_profile_data():
 def get_influencer_data_from_db():
     try:
         user_query = request.args.get("user_query")
-        user_query = "select id,full_name,influencer_type from src_influencer_data limit 3"
+        # user_query = "select id,full_name,influencer_type from src_influencer_data limit 3"
         if user_query in ["", None]:
             print(f"Invalid information passed. user_query : {user_query}")
             return {"status": "failed", "content": f"Invalid information passed. user_query : {user_query}"}
