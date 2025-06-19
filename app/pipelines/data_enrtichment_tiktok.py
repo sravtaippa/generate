@@ -17,7 +17,7 @@ app = Flask(__name__)
 def scrape_and_store(username, post_count):
     try:
         # Call Apify Clockworks actor
-        payload = {"profiles": [username]}
+        payload = {"profiles": [username], "resultsLimit": 5}
         response = requests.post(CLOCKWORKS_URL, json=payload)
         if response.status_code not in (200, 201):
             return {"status": "failed", "error": f"Apify error: {response.text}"}
