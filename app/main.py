@@ -157,6 +157,16 @@ def add_influencer_data_in_db():
         print(f"Error occurred while fetching influencer data from db: {e}")
         return {"status": "failed", "content": f"Error occurred while fetching influencer data from db"}
 
+
+# @app.route("/add_filtered_influencer_data", methods=["GET"])
+# def add_filtered_influencer_data_in_db():
+#     try:
+#         data = request.args.get("influencer_data")
+
+#     except Exception as e:
+#         print(f"Error occurred while fetching influencer data from request: {e}")
+#         return {"status": "failed", "content": f"Error occurred while fetching influencer data from request"}
+
 @app.route("/analyze_social_profile", methods=["GET"])
 def analyze_social_profile_data():
     try:
@@ -175,11 +185,15 @@ def analyze_social_profile_data():
 def get_influencer_data_from_db():
     try:
         user_query = request.args.get("user_query")
-        # user_query = "select id,full_name,influencer_type from src_influencer_data limit 3"
-        if user_query in ["", None]:
+        brand_id = request.args.get("brand_id")
+        brand_brief = request.args.get("brand_brief")
+        # brand_id = "rayban"
+        # brand_brief = "looking for influencers in Dubai with more than 100k followers"
+        # user_query = "select * from src_influencer_data limit 3"
+        if user_query in ["", None] or brand_id in ["", None] or brand_brief in ["", None]:
             print(f"Invalid information passed. user_query : {user_query}")
             return {"status": "failed", "content": f"Invalid information passed. user_query : {user_query}"}
-        return {"status": "success", "content": retrieve_data_from_db(user_query)}
+        return {"status": "success", "content": retrieve_data_from_db(user_query,brand_id,brand_brief)}
     except Exception as e:
         print(f"Error occurred while fetching influencer data from db: {e}")
         return {"status": "failed", "content": f"Error occurred while fetching influencer data from db"}

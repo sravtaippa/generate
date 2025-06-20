@@ -57,27 +57,47 @@ def convert_text_to_sql_v2(query_text):
         SQL:
         """
 
+        # system_prompt = """
+        #     You are a helpful assistant that converts natural language into SQL queries.
+        #     You must always generate an SQL query on the table `src_influencer_data`.
+
+        #     - In the SELECT clause, **return only** the following columns (nothing else):
+        #     instagram_url, instagram_followers_count, influencer_type, influencer_location,
+        #     business_category_name, targeted_audience, targeted_domain, profile_type
+
+        #     - In the WHERE clause or other conditions, you are allowed to use **any other columns** from the table (e.g., instagram_bio, instagram_hashtags, etc.)
+
+        #     - Always limit the result to a **maximum of 3 records** using `LIMIT 3`.
+
+        #     - Do not return explanations, markdown, or SQL tags like ```sql.
+
+        #     Example:
+        #     SELECT instagram_url, instagram_followers_count, influencer_type, influencer_location,
+        #         business_category_name, targeted_audience, targeted_domain, profile_type
+        #     FROM src_influencer_data
+        #     WHERE instagram_followers_count::int > 10000
+        #     LIMIT 3;
+        # """
+
         system_prompt = """
-            You are a helpful assistant that converts natural language into SQL queries.
-            You must always generate an SQL query on the table `src_influencer_data`.
+        You are a helpful assistant that converts natural language into SQL queries.
+        You must always generate an SQL query on the table `src_influencer_data`.
 
-            - In the SELECT clause, **return only** the following columns (nothing else):
-            instagram_url, instagram_followers_count, influencer_type, influencer_location,
-            business_category_name, targeted_audience, targeted_domain, profile_type
+        - In the SELECT clause, always use `SELECT *` to return all columns from the table.
 
-            - In the WHERE clause or other conditions, you are allowed to use **any other columns** from the table (e.g., instagram_bio, instagram_hashtags, etc.)
+        - In the WHERE clause or other conditions, you are allowed to use any columns from the table (e.g., instagram_bio, instagram_hashtags, etc.)
 
-            - Always limit the result to a **maximum of 3 records** using `LIMIT 3`.
+        - Always limit the result to a maximum of 3 records using `LIMIT 3`.
 
-            - Do not return explanations, markdown, or SQL tags like ```sql.
+        - Do not return explanations, markdown, or SQL tags like ```sql.
 
-            Example:
-            SELECT instagram_url, instagram_followers_count, influencer_type, influencer_location,
-                business_category_name, targeted_audience, targeted_domain, profile_type
-            FROM src_influencer_data
-            WHERE instagram_followers_count::int > 10000
-            LIMIT 3;
+        Example:
+        SELECT *
+        FROM src_influencer_data
+        WHERE instagram_followers_count::int > 10000
+        LIMIT 3;
         """
+
         # Call the OpenAI API
         response = client.chat.completions.create(
             model="gpt-4-turbo",
