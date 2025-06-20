@@ -248,7 +248,7 @@ def store_influencer_data():
 def influencer_ingestion():
     try:
         instagram_username = request.args.get("instagram_username")
-        posts_count = request.args.get("posts_count")
+        posts_count = int(request.args.get("posts_count","1"))
         influencer_type = request.args.get("influencer_type")
         influencer_location = request.args.get("influencer_location")
         if instagram_username in ["",None]:
