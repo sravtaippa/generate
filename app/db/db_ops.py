@@ -405,6 +405,42 @@ class DatabaseManager:
             print("Database operation failed:", e)
             return None
 
+
+    def get_records_from_query_v2(self, sql_query):
+        try:
+            with sshtunnel.SSHTunnelForwarder(
+                ('ssh.pythonanywhere.com'),
+                ssh_username=self.ssh_username,
+                ssh_password=self.ssh_password,
+                remote_bind_address=(self.postgres_hostname, self.postgres_host_port)
+            ) as tunnel:
+
+                with psycopg2.connect(
+                    user=self.db_user,
+                    password=self.db_password,
+                    host='127.0.0.1',
+                    port=tunnel.local_bind_port,
+                    database=self.db_name,
+                ) as connection:
+
+                    with connection.cursor() as cursor:
+                        print("Executing query:", sql_query)
+                        cursor.execute(sql_query)
+                        column_names = [desc[0] for desc in cursor.description]  # 🔍 get column names dynamically
+                        rows = cursor.fetchall()
+
+                        if not rows:
+                            print("No matching record found.")
+                            return []
+
+                        # Convert each row (tuple) into a dictionary using the dynamic column names
+                        result = [dict(zip(column_names, row)) for row in rows]
+                        return result
+
+        except Exception as e:
+            print("Error during DB query:", str(e))
+            return []
+    
     # def fetch_client_details(self, client_ids, client_details_field="client_id"): 
     #     try:
     #         with sshtunnel.SSHTunnelForwarder(
