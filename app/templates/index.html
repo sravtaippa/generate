@@ -31,6 +31,7 @@
             align-items: center;
             gap: 15px;
             min-width: max-content;
+            margin-bottom: 20px;
         }
         .filters > div {
             display: flex;
@@ -65,11 +66,16 @@
         }
         .select2-container--default .select2-selection--multiple .select2-selection__choice {
             background-color: #444;
-            color: #eee;
+            color: black !important;
         }
         .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
             color: #bbb;
         }
+        .select2-container--default .select2-results > .select2-results__options {
+            background-color: #1e2a38;  /* Your new color */
+            color: #fff;
+        }
+
         table.dataTable {
             border-collapse: collapse;
             width: 100%;
@@ -221,6 +227,26 @@
         <div>
             <input type="number" id="maxFollowers" placeholder="Max" min="0" />
         </div>
+        
+    </div>
+    <div class="filters">
+        
+        <div>
+            <label for="tiktokUsernameFilter">TikTok Username:</label>
+            <select id="tiktokUsernameFilter" multiple="multiple"></select>
+        </div>
+        <div>
+            <label for="tiktokNicheFilter">TikTok Niche:</label>
+            <select id="tiktokNicheFilter" multiple="multiple"></select>
+        </div>
+        <div>
+            <label for="minTiktokFollowers">TikTok Followers:</label>
+            <input type="number" id="minTiktokFollowers" placeholder="Min" min="0" />
+        </div>
+        <div>
+            <input type="number" id="maxTiktokFollowers" placeholder="Max" min="0" />
+        </div>
+
     </div>
     <table id="influencerTable" class="display nowrap" style="width:100%">
         <thead>
@@ -476,6 +502,9 @@
                             table.draw();
                         }
                     );
+                    $('#tiktokUsernameFilter, #tiktokNicheFilter, #minTiktokFollowers, #maxTiktokFollowers').on('change keyup', function() {
+                        table.draw();
+                    });
 
                     $.fn.dataTable.ext.search.push(function (
                         settings,
@@ -517,11 +546,39 @@
                             followersMatch
                         );
                     });
+                    $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+                        // TikTok Followers filter
+                        const minTikTok = parseInt($('#minTiktokFollowers').val(), 10) || 0;
+                        const maxTikTok = parseInt($('#maxTiktokFollowers').val(), 10) || Infinity;
+                        const tiktokFollowers = parseInt(data[26], 10) || 0; // Adjust index as per your columns
+
+                        if (tiktokFollowers < minTikTok || tiktokFollowers > maxTikTok) {
+                            return false;
+                        }
+
+                        // TikTok Username filter
+                        const selectedUsernames = $('#tiktokUsernameFilter').val();
+                        if (selectedUsernames && selectedUsernames.length > 0) {
+                            if (!selectedUsernames.includes(data[24])) { // Adjust index as per your columns
+                                return false;
+                            }
+                        }
+
+                        // TikTok Niche filter
+                        const selectedNiches = $('#tiktokNicheFilter').val();
+                        if (selectedNiches && selectedNiches.length > 0) {
+                            if (!selectedNiches.includes(data[36])) { // Adjust index as per your columns
+                                return false;
+                            }
+                        }
+
+                        return true;
+                    });
+
                 });
         });
-
         function populateFilters(data) {
-            const types = new Set();
+        const types = new Set();
             const domains = new Set();
             const locations = new Set();
             const audiences = new Set();
@@ -552,7 +609,28 @@
             audiences.forEach((a) => {
                 $('#audienceFilter').append(`<option value="${a}">${a}</option>`);
             });
-        }
+
+        // TikTok Username
+        const tiktokUsernames = [...new Set(data.map(d => d.tiktok_username).filter(Boolean))];
+        tiktokUsernames.forEach(username => {
+            $('#tiktokUsernameFilter').append(new Option(username, username));
+        });
+
+        // TikTok Niche
+        const tiktokNiches = [...new Set(data.map(d => d.tiktok_niche).filter(Boolean))];
+        tiktokNiches.forEach(niche => {
+            $('#tiktokNicheFilter').append(new Option(niche, niche));
+        });
+
+        // Initialize Select2 for new filters
+        $('#tiktokUsernameFilter, #tiktokNicheFilter').select2({
+            placeholder: 'Select...',
+            allowClear: true,
+            width: 'resolve'
+        });
+    }
+
+        
 
         function toggleHashtag(element) {
             const $el = $(element);
