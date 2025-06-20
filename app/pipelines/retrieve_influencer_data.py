@@ -65,6 +65,7 @@ def retrieve_data_from_db(sql_query,brand_id,brand_brief):
         for data in filtered_data:
             output_data.append({
                 "instagram_url": data.get("instagram_url"),
+                "full_name": data.get("full_name"),
                 "instagram_followers_count": data.get("instagram_followers_count"),
                 "influencer_type": data.get("influencer_type"),
                 "influencer_location": data.get("influencer_location"),
