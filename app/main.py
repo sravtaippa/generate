@@ -187,9 +187,9 @@ def get_influencer_data_from_db():
         user_query = request.args.get("user_query")
         brand_id = request.args.get("brand_id")
         brand_brief = request.args.get("brand_brief")
-        # brand_id = "rayban"
-        # brand_brief = "looking for influencers in Dubai with more than 100k followers"
-        # user_query = "select * from src_influencer_data limit 3"
+        brand_id = "rayban"
+        brand_brief = "looking for influencers in Dubai with more than 100k followers"
+        user_query = "select * from src_influencer_data limit 3"
         if user_query in ["", None] or brand_id in ["", None] or brand_brief in ["", None]:
             print(f"Invalid information passed. user_query : {user_query}")
             return {"status": "failed", "content": f"Invalid information passed. user_query : {user_query}"}
@@ -261,15 +261,6 @@ def store_influencer_data():
         print(f"Error occured while adding influencer data to the database : {e}")
         return {"status":"failed","content":f"Error occured while adding influencer data to the database"}
     
-
-    # if not usernames:
-    #     return jsonify({"error": "No usernames provided"}), 400
-
-    # try:
-    #     results = asyncio.run(scrape_multiple_profiles(usernames))
-    #     return jsonify(results)
-    # except Exception as e:
-    #     return jsonify({"error": str(e)}), 500
     
 @app.route("/influencer_data_collection",methods=["GET"])
 def influencer_ingestion():
