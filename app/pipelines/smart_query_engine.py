@@ -19,7 +19,7 @@ def convert_text_to_sql_v2(query_text):
         instagram_followers_count   character varying(100000) -- Number of followers on Instagram
         instagram_username          character varying(100000) -- Instagram username/handle
         instagram_bio               character varying(100000) -- Bio text from the Instagram profile
-        influencer_type             character varying(100000) -- Type/category of influencer (e.g., fashion, tech)
+        influencer_type             character varying(100000) -- Type/category of influencer (fixed category values among this: [food_vlogger,fashion_vlogger,real_estate_influencers,business_vloggers,finance_vloggers,real_estate_influencers,beauty_vlogger,tech_vloggers])
         influencer_location         character varying(100000) -- Location of the influencer
         instagram_post_urls         character varying(100000) -- List of URLs to the influencer's Instagram posts
         business_category_name      character varying(100000) -- Main business category of the influencer (Tag provided by Instagram for Business profile Eg: "Personal blog","Digital creator","Reel creator" etc)
