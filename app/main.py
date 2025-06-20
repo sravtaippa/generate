@@ -187,9 +187,10 @@ def get_influencer_data_from_db():
         user_query = request.args.get("user_query")
         brand_id = request.args.get("brand_id")
         brand_brief = request.args.get("brand_brief")
-        brand_id = "rayban"
-        brand_brief = "looking for influencers in Dubai with more than 100k followers"
-        user_query = "select * from src_influencer_data limit 3"
+        # brand_id = "rayban"
+        # brand_brief = "looking for influencers in Dubai with more than 100k followers"
+        # user_query = "select * from src_influencer_data limit 3"
+        print(f"User Query: {user_query}, Brand ID: {brand_id}, Brand Brief: {brand_brief}")
         if user_query in ["", None] or brand_id in ["", None] or brand_brief in ["", None]:
             print(f"Invalid information passed. user_query : {user_query}")
             return {"status": "failed", "content": f"Invalid information passed. user_query : {user_query}"}
