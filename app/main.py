@@ -59,6 +59,7 @@ from pipelines.data_collection_influencers_tiktok import scrape_tiktok_profile
 from pipelines.data_enrtichment_tiktok import scrape_and_store
 from pipelines.retrieve_influencer_data import retrieve_data_from_db
 from pipelines.profile_analyzer_engine import profile_intelligence_engine
+from make.estimated_reach_engagement_rate import calculate_metrics
 
 print(f"\n =============== Generate : Pipeline started  ===============")
 
@@ -82,7 +83,29 @@ app.register_blueprint(influencer_bp)
 #     except Exception as e:
 #         print(f"Error occurred while scraping influencer posts data : {e}")
 #         return jsonify({"status": "failed", "content": "Error occurred while scraping posts data"})
-    
+
+
+@app.route('/calculate_metrics', methods=['GET', 'POST'])
+def calculate_metrics_instagram():
+    try:
+        if request.method == 'GET':
+            followers_count = int(request.args.get("followers_count", 0))
+            likes = request.args.getlist("likes", type=int)
+            comments = request.args.getlist("comments", type=int)
+            reach_rate = float(request.args.get("reach_rate", 0.20))
+        else:  # POST
+            data = request.get_json()
+            followers_count = int(data.get("followers_count", 0))
+            likes = data.get("likes", [])
+            comments = data.get("comments", [])
+            reach_rate = float(data.get("reach_rate", 0.20))
+
+        result = calculate_metrics(followers_count, likes, comments, reach_rate)
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({"status": "failed", "error": str(e)}), 500
+ 
 @app.route('/tiktok_posts_to_airtable', methods=['GET', 'POST'])
 def scrape_route():
     if request.method == 'POST':
