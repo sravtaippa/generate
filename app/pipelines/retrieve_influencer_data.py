@@ -32,10 +32,10 @@ def store_filtered_data(data_list,brand_id,brand_brief):
                     print("Error inserting record:", response)
             except Exception as e:
                 print(f"Error occured in {__name__} while exporting the data to Airtable. {e}")
-
+        filtered_data = []
         for data in data_list:
             print(f"Processing record: {data}")
-            if data.get("instagram_url") is None:
+            if data.get("instagram_url") is None or data.get("instagram_url") == "":
                 print(f"Skipping record as instagram_url is None")
                 continue
             record_exists = unique_key_check_airtable('instagram_url',data["instagram_url"],"filtered_influencer_data")
@@ -44,10 +44,12 @@ def store_filtered_data(data_list,brand_id,brand_brief):
                 data["brand_id"] = brand_id
                 data["brand_brief"] = brand_brief
                 data["created_time"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                filtered_data.append(data)
                 export_to_airtable(data,"filtered_influencer_data")
             else:
                 print(f"Record Exists")
-
+        return filtered_data
+    
     except Exception as e:
         print(f"Error storing data: {e}")
 
@@ -58,8 +60,21 @@ def retrieve_data_from_db(sql_query,brand_id,brand_brief):
         print("SQL query executed successfully.")
         print(results)
         print(f"Storing filtered data to Airtable")
-        store_filtered_data(results,brand_id,brand_brief)
-        return results
+        filtered_data = store_filtered_data(results,brand_id,brand_brief)
+        output_data = []
+        for data in filtered_data:
+            output_data.append({
+                "instagram_url": data.get("instagram_url"),
+                "full_name": data.get("full_name"),
+                "instagram_followers_count": data.get("instagram_followers_count"),
+                "influencer_type": data.get("influencer_type"),
+                "influencer_location": data.get("influencer_location"),
+                "business_category_name": data.get("business_category_name"),
+                "targeted_audience": data.get("targeted_audience"),
+                "targeted_domain": data.get("targeted_domain")
+            })
+
+        return output_data
     except Exception as e:
         print(f"Error executing SQL query: {e}")
         return None
