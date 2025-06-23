@@ -88,21 +88,19 @@ app.register_blueprint(influencer_bp)
 def scrape_through_google():
     if request.method == 'POST':
         data = request.get_json(force=True)
-        media = request.args.get('media', '').strip()
-        influencer_type = request.args.get('influencer_type', '').strip()
-        influencer_location = request.args.get('influencer_location', '').strip()
-        page = request.args.get("page", 1, type=int)
-    else:  # GET
+    else:
         data = None
-        media = request.args.get('media', '').strip()
-        influencer_type = request.args.get('influencer_type', '').strip()
-        influencer_location = request.args.get('influencer_location', '').strip()
+
+    media = request.args.get('media', '').strip()
+    influencer_type = request.args.get('influencer_type', '').strip()
+    influencer_location = request.args.get('influencer_location', '').strip()
+    page = request.args.get("page", 1, type=int)
 
     if not (media and influencer_type and influencer_location):
-        return jsonify({"status": "failed", "error": "Missing one or more required parameters: media, influencer_type, influencer_location"}), 400
+        return jsonify({"status": "failed", "error": "Missing required parameters"}), 400
 
-    result = scrape_influencers(data, media, influencer_type, influencer_location, page)
-    return result 
+    return scrape_influencers(data, media, influencer_type, influencer_location, page)
+
 
 @app.route('/calculate_metrics', methods=['GET', 'POST'])
 def calculate_metrics_instagram():
