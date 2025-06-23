@@ -21,6 +21,18 @@ def extract_username(url):
     match = re.search(r"instagram\.com/([^/?#]+)", url)
     return match.group(1) if match else None
 
+def is_duplicate(username):
+    filter_formula = f"{{instagram_username}} = '{username}'"
+    params = {"filterByFormula": filter_formula}
+
+    response = requests.get(AIRTABLE_URL, headers=HEADERS, params=params)
+    if response.status_code == 200:
+        records = response.json().get("records", [])
+        return len(records) > 0
+    else:
+        print(f"⚠️ Error checking duplicate for {username}: {response.text}")
+        return False
+
 def add_to_airtable(username, url, influencer_type, influencer_location):
     data = {
         "fields": {
@@ -43,7 +55,10 @@ def process_and_upload(results, influencer_type, influencer_location):
         username = extract_username(url)
         if username and username not in seen:
             seen.add(username)
-            add_to_airtable(username, url, influencer_type, influencer_location)
+            if not is_duplicate(username):
+                add_to_airtable(username, url, influencer_type, influencer_location)
+            else:
+                print(f"🔁 Skipped duplicate: {username}")
 
 def scrape_influencers(data, media, influencer_type, influencer_location, page):
     if not (media and influencer_type and influencer_location):
