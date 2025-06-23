@@ -49,8 +49,8 @@ def process_and_upload(results, influencer_type, influencer_location):
             seen.add(username)
             add_to_airtable(username, url, influencer_type, influencer_location)
 
-def scrape_influencers(data, media, influencer_type, influencer_location):
-    # Decide query based on method (GET vs POST)
+def scrape_influencers(data, media, influencer_type, influencer_location, page):
+    # Decide query and page based on method (GET vs POST)
     if request.method == 'GET':
         if not (media and influencer_type and influencer_location):
             return jsonify({
@@ -58,18 +58,22 @@ def scrape_influencers(data, media, influencer_type, influencer_location):
             }), 400
 
         search_query = f"{media} {influencer_type} in {influencer_location}"
-    else:
-        # data param comes from main.py POST route
+        
+
+    else:  # POST
         if not data:
-            return jsonify({"error": "Missing JSON body with 'query'"}), 400
+            return jsonify({"error": "Missing JSON body"}), 400
         search_query = data.get("query")
+        page = data.get("page", 1)
         if not search_query:
             return jsonify({"error": "Missing 'query' in request body"}), 400
 
-    print(f"📡 Triggering Apify scrape for query: {search_query}")
+    print(f"📡 Triggering Apify scrape for query: {search_query} (Page {page})")
+
     payload = {
         "language": "en",
-        "query": search_query
+        "query": search_query,
+        "page": page
     }
 
     response = requests.post(APIFY_API_URL, json=payload)
@@ -80,6 +84,7 @@ def scrape_influencers(data, media, influencer_type, influencer_location):
         return jsonify({
             "message": "Scraping complete, data uploaded to Airtable",
             "query": search_query,
+            "page": page,
             "results_count": len(results)
         }), 200
     else:
@@ -88,4 +93,3 @@ def scrape_influencers(data, media, influencer_type, influencer_location):
             "status": response.status_code,
             "details": response.text
         }), 500
-

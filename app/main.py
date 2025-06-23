@@ -91,6 +91,7 @@ def scrape_through_google():
         media = request.args.get('media', '').strip()
         influencer_type = request.args.get('influencer_type', '').strip()
         influencer_location = request.args.get('influencer_location', '').strip()
+        page = request.args.get("page", 1, type=int)
     else:  # GET
         data = None
         media = request.args.get('media', '').strip()
@@ -100,7 +101,7 @@ def scrape_through_google():
     if not (media and influencer_type and influencer_location):
         return jsonify({"status": "failed", "error": "Missing one or more required parameters: media, influencer_type, influencer_location"}), 400
 
-    result = scrape_influencers(data, media, influencer_type, influencer_location)
+    result = scrape_influencers(data, media, influencer_type, influencer_location, page)
     return result 
 
 @app.route('/calculate_metrics', methods=['GET', 'POST'])
