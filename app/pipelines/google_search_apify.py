@@ -18,11 +18,8 @@ HEADERS = {
 }
 
 def extract_username(url):
-    pattern = r"instagram\.com/([^/?#]+)"
-    match = re.search(pattern, url)
-    if match:
-        return match.group(1)
-    return None
+    match = re.search(r"instagram\.com/([^/?#]+)", url)
+    return match.group(1) if match else None
 
 def add_to_airtable(username, url, influencer_type, influencer_location):
     data = {
@@ -31,14 +28,13 @@ def add_to_airtable(username, url, influencer_type, influencer_location):
             "instagram_url": url,
             "influencer_type": influencer_type,
             "influencer_location": influencer_location
-
         }
     }
     response = requests.post(AIRTABLE_URL, headers=HEADERS, json=data)
     if response.status_code in [200, 201]:
-        print(f"Added to Airtable: {username}")
+        print(f"✅ Added to Airtable: {username}")
     else:
-        print(f"Failed to add {username}: {response.text}")
+        print(f"❌ Failed to add {username}: {response.text}")
 
 def process_and_upload(results, influencer_type, influencer_location):
     seen = set()
@@ -50,25 +46,19 @@ def process_and_upload(results, influencer_type, influencer_location):
             add_to_airtable(username, url, influencer_type, influencer_location)
 
 def scrape_influencers(data, media, influencer_type, influencer_location, page):
-    # Decide query and page based on method (GET vs POST)
+    if not (media and influencer_type and influencer_location):
+        return jsonify({"error": "Missing required params"}), 400
+
     if request.method == 'GET':
-        if not (media and influencer_type and influencer_location):
-            return jsonify({
-                "error": "Missing URL parameters. Required: media, influencer_type, influencer_location"
-            }), 400
-
         search_query = f"{media} {influencer_type} in {influencer_location}"
-        
-
-    else:  # POST
+    else:
         if not data:
             return jsonify({"error": "Missing JSON body"}), 400
         search_query = data.get("query")
-        page = data.get("page", 1)
         if not search_query:
             return jsonify({"error": "Missing 'query' in request body"}), 400
 
-    print(f"📡 Triggering Apify scrape for query: {search_query} (Page {page})")
+    print(f"📡 Triggering Apify scrape: {search_query} | Page {page}")
 
     payload = {
         "language": "en",
