@@ -24,11 +24,14 @@ def extract_username(url):
         return match.group(1)
     return None
 
-def add_to_airtable(username, url):
+def add_to_airtable(username, url, influencer_type, influencer_location):
     data = {
         "fields": {
             "instagram_username": username,
-            "instagram_url": url
+            "instagram_url": url,
+            "influencer_type": influencer_type,
+            "influencer_location": influencer_location
+
         }
     }
     response = requests.post(AIRTABLE_URL, headers=HEADERS, json=data)
@@ -37,14 +40,14 @@ def add_to_airtable(username, url):
     else:
         print(f"Failed to add {username}: {response.text}")
 
-def process_and_upload(results):
+def process_and_upload(results, influencer_type, influencer_location):
     seen = set()
     for item in results:
         url = item.get("url", "")
         username = extract_username(url)
         if username and username not in seen:
             seen.add(username)
-            add_to_airtable(username, url)
+            add_to_airtable(username, url, influencer_type, influencer_location)
 
 def scrape_influencers(data, media, influencer_type, influencer_location):
     # Decide query based on method (GET vs POST)
@@ -73,7 +76,7 @@ def scrape_influencers(data, media, influencer_type, influencer_location):
 
     if response.ok:
         results = response.json()
-        process_and_upload(results)
+        process_and_upload(results, influencer_type, influencer_location)
         return jsonify({
             "message": "Scraping complete, data uploaded to Airtable",
             "query": search_query,
