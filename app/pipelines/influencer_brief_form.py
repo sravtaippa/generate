@@ -7,7 +7,11 @@ from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from pyairtable import Api
-from config import AIRTABLE_API_KEY,AIRTABLE_BASE_ID
+# from config import AIRTABLE_API_KEY,AIRTABLE_BASE_ID
+
+
+AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY")
+AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
 
 # Get the directory where the script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -94,10 +98,10 @@ def upload_to_drive(local_path, file_name):
     return drive_url,file_id,drive_service
 
 # Streamlit UI
-st.title('📂 Upload Document for Brand')
-st.write('You can upload a Word, Excel, or PDF file. It will be saved locally and uploaded to Drive.')
+st.title('📂 Brand Influencer Brief')
+st.write('Upload Word, Excel, or PDF file')
 
-brand_id = st.text_input('Brand ID', placeholder='e.g. aark')
+brand_id = st.text_input('Brand ID', placeholder='e.g. rayban')
 uploaded_file = st.file_uploader(
     "Upload file (Excel, Word, or PDF):",
     type=['xlsx', 'xls', 'doc', 'docx', 'pdf']
