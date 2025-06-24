@@ -1165,12 +1165,15 @@ def run_booking_meeting_tracker():
         full_name= request.args.get("Invitee", default=None),
         booking_date_time= request.args.get("Event_date", default=None),
         event_type= request.args.get("event_type", default=None),
+        phone= request.args.get("phone", default=None),
+        
         
         data = {
             "email": email,            
             "full_name": full_name,
             "booking_date_time": booking_date_time,
-            "event_type":event_type
+            "event_type":event_type,
+            "phone": phone
         }
 
         booking_meeting_tracker(data)
