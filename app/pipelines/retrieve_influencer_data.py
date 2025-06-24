@@ -73,7 +73,6 @@ def retrieve_data_from_db(sql_query,brand_id,brand_brief):
                 "targeted_audience": data.get("targeted_audience"),
                 "targeted_domain": data.get("targeted_domain")
             })
-
         return output_data
     except Exception as e:
         print(f"Error executing SQL query: {e}")

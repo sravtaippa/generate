@@ -59,6 +59,7 @@ from pipelines.data_collection_influencers_tiktok import scrape_tiktok_profile
 from pipelines.data_enrtichment_tiktok import scrape_and_store
 from pipelines.retrieve_influencer_data import retrieve_data_from_db
 from pipelines.profile_analyzer_engine import profile_intelligence_engine
+from pipelines.smart_query_machine import influencer_brief_processing
 
 print(f"\n =============== Generate : Pipeline started  ===============")
 
@@ -113,6 +114,24 @@ def scrape_tiktok_profile_endpoint():
 
 
 ########## INFLUENCER MARKETING ROUTES ##########
+
+
+@app.route("/process_influencer_brief", methods=["GET"])
+def process_influencer_brief():
+    try:
+        drive_urls = request.args.get("drive_urls")
+        client_id = request.args.get("client_id")
+        drive_urls = """["https://drive.google.com/uc?id=1IoCxHQP8dKBgrGLjeUcDq75Y9Ip97dVf&export=download"]"""
+        client_id = "aarka"
+        print(drive_urls)
+        if drive_urls in ["", None] or client_id in ["", None]:
+            return {"status":"failed","content":"Missing input parameters"}
+        return {"status":"success","content":influencer_brief_processing(drive_urls,client_id)}
+    except Exception as e:
+        print(f"Error occurred while processing influencer brief: {e}")
+        return {"status":"failed","content":f"Error occurred while processing influencer brief: {e}"}
+
+
 # http://127.0.0.1:5000/analyze_social_profile?instagram_bio=Hello%20World&influencer_location=Dubai&trimmed_instagram_caption=This%20is%20a%20test%20caption&instagram_url=https://www.instagram.com/testuser/&business_category_name=Influencer&trimmed_instagram_hashtags=fashion,food
 @app.route("/add_influencer_data", methods=["GET"])
 def add_influencer_data_in_db():
