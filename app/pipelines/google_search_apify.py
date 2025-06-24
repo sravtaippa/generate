@@ -17,7 +17,7 @@ HEADERS = {
     'Content-Type': 'application/json'
 }
 
-# === Extract username from URL based on platform ===
+# === Extract username from URL for Instagram or TikTok ===
 def extract_username(url):
     if "instagram.com" in url:
         match = re.search(r"instagram\.com/([^/?#]+)", url)
@@ -27,9 +27,17 @@ def extract_username(url):
         return None
     return match.group(1) if match else None
 
-# === Check if Instagram username exists (can modify later for TikTok as well) ===
-def is_duplicate(username):
-    filter_formula = f"{{instagram_username}} = '{username}'"
+# === Check for duplicates based on media type ===
+def is_duplicate(media, username):
+    if media.lower() == "instagram":
+        field_name = "instagram_username"
+    elif media.lower() == "tiktok":
+        field_name = "tiktok_username"
+    else:
+        print(f"⚠️ Unknown media type for duplicate check: {media}")
+        return False
+
+    filter_formula = f"{{{field_name}}} = '{username}'"
     params = {"filterByFormula": filter_formula}
 
     response = requests.get(AIRTABLE_URL, headers=HEADERS, params=params)
@@ -40,7 +48,7 @@ def is_duplicate(username):
         print(f"⚠️ Error checking duplicate for {username}: {response.text}")
         return False
 
-# === Upload to Airtable dynamically by media type ===
+# === Add new record to Airtable with appropriate field names ===
 def add_to_airtable(media, username, url, influencer_type, influencer_location):
     fields = {
         "influencer_type": influencer_type,
@@ -65,7 +73,7 @@ def add_to_airtable(media, username, url, influencer_type, influencer_location):
     else:
         print(f"❌ Failed to add {username}: {response.text}")
 
-# === Process each result and upload if not duplicate ===
+# === Process scraped results and upload to Airtable ===
 def process_and_upload(results, media, influencer_type, influencer_location):
     seen = set()
     for item in results:
@@ -74,14 +82,14 @@ def process_and_upload(results, media, influencer_type, influencer_location):
 
         if username and username not in seen:
             seen.add(username)
-            if not is_duplicate(username):
+            if not is_duplicate(media, username):
                 add_to_airtable(media, username, url, influencer_type, influencer_location)
             else:
                 print(f"🔁 Skipped duplicate: {username}")
         else:
-            print(f"⚠️ Invalid or duplicate username: {username}")
+            print(f"⚠️ Invalid or already seen username: {username}")
 
-# === Main scraping logic triggered via API ===
+# === Flask route function to trigger scraping ===
 def scrape_influencers(data, media, influencer_type, influencer_location, page):
     if not (media and influencer_type and influencer_location):
         return jsonify({"error": "Missing required params"}), 400
