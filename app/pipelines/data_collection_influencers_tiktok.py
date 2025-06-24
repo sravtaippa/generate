@@ -11,7 +11,7 @@ ACTOR_RUN_URL = f"https://api.apify.com/v2/acts/direct_houseboat~tiktok-user-pro
 
 # AIRTABLE_API_KEY = 'patELEdV0LAx6Aba3.393bf0e41eb59b4b80de15b94a3d122eab50035c7c34189b53ec561de590dff3'
 # AIRTABLE_BASE_ID = 'app5s8zl7DsUaDmtx'
-AIRTABLE_TABLE_NAME = 'src_influencer_data'
+AIRTABLE_TABLE_NAME = 'src_influencer_data_demo'
 
 # Initialize Airtable API and table
 api = Api(AIRTABLE_API_KEY)
