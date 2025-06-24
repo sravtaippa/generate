@@ -5,7 +5,7 @@ import json
 import traceback
 from config import AIRTABLE_API_KEY, AIRTABLE_BASE_ID, APIFY_API_TOKEN
 
-AIRTABLE_TABLE_NAME = 'src_influencer_data_demo'
+AIRTABLE_TABLE_NAME = 'src_influencer_data'
 
 # Airtable setup
 api = Api(AIRTABLE_API_KEY)
