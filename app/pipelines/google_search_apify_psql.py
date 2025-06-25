@@ -1,33 +1,23 @@
-import requests 
 import re
 from flask import jsonify, request
+from db.db_ops import db_manager 
 
 # === Apify config ===
 APIFY_TOKEN = "apify_api_OzlpdlQM48B0bXW6gKThLiVYz5nIcS35jGvl"
 APIFY_API_URL = f"https://api.apify.com/v2/acts/tuningsearch~cheap-google-search-results-scraper/run-sync-get-dataset-items?token={APIFY_TOKEN}"
 
-# === Airtable config ===
-AIRTABLE_BASE_ID = 'app5s8zl7DsUaDmtx'
-AIRTABLE_TABLE_NAME = 'influencers'
-AIRTABLE_API_KEY = 'patELEdV0LAx6Aba3.393bf0e41eb59b4b80de15b94a3d122eab50035c7c34189b53ec561de590dff3'
-
-AIRTABLE_URL = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE_NAME}"
-HEADERS = {
-    'Authorization': f'Bearer {AIRTABLE_API_KEY}',
-    'Content-Type': 'application/json'
-}
 
 # === Extract username from URL for Instagram or TikTok ===
 def extract_username(url):
     if "instagram.com" in url:
         match = re.search(r"instagram\.com/([^/?#]+)", url)
-        
     elif "tiktok.com" in url:
         match = re.search(r"tiktok\.com/@([^/?#]+)", url)
     else:
         return None
     return match.group(1) if match else None
 
+# === Check for duplicates in PostgreSQL ===
 def is_duplicate(media, username):
     if media.lower() == "instagram":
         field_name = "instagram_username"
@@ -37,25 +27,15 @@ def is_duplicate(media, username):
         print(f"⚠️ Unknown media type for duplicate check: {media}")
         return False, username  # still return username for consistency
 
-    filter_formula = f"{{{field_name}}} = '{username}'"
-    params = {"filterByFormula": filter_formula}
+    exists = db_manager.unique_key_check(field_name, username, "influencers")
+    return exists, username
 
-    response = requests.get(AIRTABLE_URL, headers=HEADERS, params=params)
-    if response.status_code == 200:
-        records = response.json().get("records", [])
-        return len(records) > 0, username
-    else:
-        print(f"⚠️ Error checking duplicate for {username}: {response.text}")
-        return False, username
-
-
-# === Add new record to Airtable with appropriate field names ===
-def add_to_airtable(media, username, url, influencer_type, influencer_location):
+# === Add new record to PostgreSQL with appropriate field names ===
+def add_to_psql(media, username, url, influencer_type, influencer_location):
     fields = {
         "influencer_type": influencer_type,
         "influencer_location": influencer_location
     }
-
     if media.lower() == "instagram":
         fields["instagram_username"] = username
         fields["instagram_url"] = url
@@ -68,15 +48,10 @@ def add_to_airtable(media, username, url, influencer_type, influencer_location):
         print(f"⚠️ Unknown media type: {media}")
         return
 
-    data = {"fields": fields}
+    db_manager.insert_data("influencers", fields)
+    print(f"✅ Added to PostgreSQL: {username} ({media})")
 
-    response = requests.post(AIRTABLE_URL, headers=HEADERS, json=data)
-    if response.status_code in [200, 201]:
-        print(f"✅ Added to Airtable: {username} ({media})")
-    else:
-        print(f"❌ Failed to add {username}: {response.text}")
-
-# === Process scraped results and upload to Airtable ===
+# === Process scraped results and upload to PostgreSQL ===
 def process_and_upload(results, media, influencer_type, influencer_location):
     seen = set()
     for item in results:
@@ -87,12 +62,11 @@ def process_and_upload(results, media, influencer_type, influencer_location):
             seen.add(username)
             is_dup, extracted_username = is_duplicate(media, username)
             if not is_dup:
-                add_to_airtable(media, extracted_username, url, influencer_type, influencer_location)
+                add_to_psql(media, extracted_username, url, influencer_type, influencer_location)
             else:
                 print(f"🔁 Skipped duplicate: {extracted_username}")
         else:
             print(f"⚠️ Invalid or already seen username: {username}")
-
 
 # === Flask route function to trigger scraping ===
 def scrape_influencers(data, media, influencer_type, influencer_location, page):
@@ -116,6 +90,7 @@ def scrape_influencers(data, media, influencer_type, influencer_location, page):
         "page": page
     }
 
+    import requests  # Only needed for Apify API
     response = requests.post(APIFY_API_URL, json=payload)
 
     if response.ok:
@@ -123,7 +98,7 @@ def scrape_influencers(data, media, influencer_type, influencer_location, page):
         print(f"Scraped Url: {results}")
         process_and_upload(results, media, influencer_type, influencer_location)
         return jsonify({
-            "message": "Scraping complete, data uploaded to Airtable",
+            "message": "Scraping complete, data uploaded to PostgreSQL",
             "query": search_query,
             "page": page,
             "results_count": len(results)
