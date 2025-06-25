@@ -17,59 +17,38 @@ def extract_username(url):
         return None
     return match.group(1) if match else None
 
-# === Check for duplicates in PostgreSQL ===
-def is_duplicate(media, username):
-    if media.lower() == "instagram":
-        field_name = "instagram_username"
-    elif media.lower() == "tiktok":
-        field_name = "tiktok_username"
-    else:
-        print(f"⚠️ Unknown media type for duplicate check: {media}")
-        return False, username  # still return username for consistency
 
-    exists = db_manager.unique_key_check(field_name, username, "influencers")
-    return exists, username
-
-# === Add new record to PostgreSQL with appropriate field names ===
-def add_to_psql(media, username, url, influencer_type, influencer_location):
-    fields = {
-        "influencer_type": influencer_type,
-        "influencer_location": influencer_location
-    }
-    if media.lower() == "instagram":
-        fields["instagram_username"] = username
-        fields["instagram_url"] = url
-        fields["social_media_type"] = "instagram"
-    elif media.lower() == "tiktok":
-        fields["tiktok_username"] = username
-        fields["tiktok_url"] = url
-        fields["social_media_type"] = "tiktok"
-    else:
-        print(f"⚠️ Unknown media type: {media}")
-        return
-
-    db_manager.insert_data("influencers", fields)
-    print(f"✅ Added to PostgreSQL: {username} ({media})")
 
 # === Process scraped results and upload to PostgreSQL ===
-def process_and_upload(results, media, influencer_type, influencer_location):
+def process_and_upload(results, media, influencer_type, influencer_location, search_query):
     seen = set()
     for item in results:
         url = item.get("url", "")
         username = extract_username(url)
+        unique_profile_key = f"{media}_{username}"
 
-        if username and username not in seen:
-            seen.add(username)
-            is_dup, extracted_username = is_duplicate(media, username)
+        if username and unique_profile_key not in seen:
+            seen.add(unique_profile_key)
+            is_dup = db_manager.unique_key_check("unique_profile_key", unique_profile_key, "influencer_profile_urls")
             if not is_dup:
-                add_to_psql(media, extracted_username, url, influencer_type, influencer_location)
+                fields = {
+                    "unique_profile_key": unique_profile_key,
+                    "social_media_type": media,
+                    "username": username,
+                    "profile_url": url,
+                    "search_query": search_query,
+                    "influencer_type": influencer_type,
+                    "influencer_location": influencer_location
+                }
+                db_manager.insert_data("influencer_profile_urls", fields)
+                print(f"✅ Inserted: {username}")
             else:
-                print(f"🔁 Skipped duplicate: {extracted_username}")
+                print(f"🔁 Skipped duplicate: {username}")
         else:
             print(f"⚠️ Invalid or already seen username: {username}")
 
 # === Flask route function to trigger scraping ===
-def scrape_influencers(data, media, influencer_type, influencer_location, page):
+def scrape_influencers_psql(data, media, influencer_type, influencer_location, page):
     if not (media and influencer_type and influencer_location):
         return jsonify({"error": "Missing required params"}), 400
 
@@ -95,8 +74,8 @@ def scrape_influencers(data, media, influencer_type, influencer_location, page):
 
     if response.ok:
         results = response.json()
-        print(f"Scraped Url: {results}")
-        process_and_upload(results, media, influencer_type, influencer_location)
+        print(f"✅ Retrieved {len(results)} results from Apify")
+        process_and_upload(results, media, influencer_type, influencer_location, search_query)
         return jsonify({
             "message": "Scraping complete, data uploaded to PostgreSQL",
             "query": search_query,
