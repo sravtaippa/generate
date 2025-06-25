@@ -60,7 +60,8 @@ def booking_meeting_tracker(data):
             "email": data["email"],
             "full_name": data["full_name"],
             "booking_date_time": data['booking_date_time'],
-            "event_type": data["event_type"]
+            "event_type": data["event_type"],
+            "phone_number": data["phone"]
         }
 
         db_manager.insert_data("booking_records", inbox_record)
