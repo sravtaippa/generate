@@ -27,7 +27,6 @@ def extract_username(url):
         return None
     return match.group(1) if match else None
 
-# === Check for duplicates based on media type ===
 def is_duplicate(media, username):
     if media.lower() == "instagram":
         field_name = "instagram_username"
@@ -35,7 +34,7 @@ def is_duplicate(media, username):
         field_name = "tiktok_username"
     else:
         print(f"⚠️ Unknown media type for duplicate check: {media}")
-        return False
+        return False, username  # still return username for consistency
 
     filter_formula = f"{{{field_name}}} = '{username}'"
     params = {"filterByFormula": filter_formula}
@@ -43,10 +42,11 @@ def is_duplicate(media, username):
     response = requests.get(AIRTABLE_URL, headers=HEADERS, params=params)
     if response.status_code == 200:
         records = response.json().get("records", [])
-        return len(records) > 0
+        return len(records) > 0, username
     else:
         print(f"⚠️ Error checking duplicate for {username}: {response.text}")
-        return False
+        return False, username
+
 
 # === Add new record to Airtable with appropriate field names ===
 def add_to_airtable(media, username, url, influencer_type, influencer_location):
@@ -82,12 +82,14 @@ def process_and_upload(results, media, influencer_type, influencer_location):
 
         if username and username not in seen:
             seen.add(username)
-            if not is_duplicate(media, username):
-                add_to_airtable(media, username, url, influencer_type, influencer_location)
+            is_dup, extracted_username = is_duplicate(media, username)
+            if not is_dup:
+                add_to_airtable(media, extracted_username, url, influencer_type, influencer_location)
             else:
-                print(f"🔁 Skipped duplicate: {username}")
+                print(f"🔁 Skipped duplicate: {extracted_username}")
         else:
             print(f"⚠️ Invalid or already seen username: {username}")
+
 
 # === Flask route function to trigger scraping ===
 def scrape_influencers(data, media, influencer_type, influencer_location, page):
