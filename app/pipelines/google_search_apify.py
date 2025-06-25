@@ -45,29 +45,35 @@ def call_discover_scraper(hashtag):
         "shouldDownloadVideos": False
     }
 
-    run_response = requests.post(f"{DISCOVER_API_URL}?token={DISCOVER_TOKEN}", json=payload)
-    if not run_response.ok:
-        print("❌ Error running Discover actor:", run_response.text)
-        return []
+    try:
+        # Run the scraper
+        run_response = requests.post(f"{DISCOVER_API_URL}?token={DISCOVER_TOKEN}", json=payload)
+        if not run_response.ok:
+            print(f"❌ Discover run failed: {run_response.status_code} - {run_response.text}")
+            return []
 
-    run_data = run_response.json()
-    dataset_id = run_data.get("defaultDatasetId")
-    if not dataset_id:
-        print("❌ No dataset ID found in Discover run response.")
-        return []
+        run_data = run_response.json()
+        dataset_id = run_data.get("defaultDatasetId")
+        if not dataset_id:
+            print("❌ No dataset ID found in Discover run response.")
+            return []
 
-    dataset_url = f"https://api.apify.com/v2/datasets/{dataset_id}/items"
-    dataset_response = requests.get(dataset_url)
+        # Now get the dataset
+        dataset_url = f"https://api.apify.com/v2/datasets/{dataset_id}/items"
+        dataset_response = requests.get(dataset_url)
+        if not dataset_response.ok:
+            print(f"❌ Failed to fetch Discover dataset: {dataset_response.status_code}")
+            return []
 
-    if dataset_response.ok:
         try:
             return dataset_response.json()
         except Exception as e:
-            print("❌ Error decoding Discover results JSON:", e)
-            print(dataset_response.text)
+            print(f"❌ Error parsing dataset JSON: {e}")
+            print("Response content was:", dataset_response.text[:500])
             return []
-    else:
-        print("❌ Failed to fetch Discover dataset:", dataset_response.text)
+
+    except Exception as e:
+        print(f"❌ Unexpected error in Discover call: {e}")
         return []
 
 
