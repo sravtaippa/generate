@@ -21,6 +21,7 @@ HEADERS = {
 def extract_username(url):
     if "instagram.com" in url:
         match = re.search(r"instagram\.com/([^/?#]+)", url)
+        
     elif "tiktok.com" in url:
         match = re.search(r"tiktok\.com/@([^/?#]+)", url)
     else:
@@ -117,6 +118,7 @@ def scrape_influencers(data, media, influencer_type, influencer_location, page):
 
     if response.ok:
         results = response.json()
+        print(f"Scraped Url: {results}")
         process_and_upload(results, media, influencer_type, influencer_location)
         return jsonify({
             "message": "Scraping complete, data uploaded to Airtable",
