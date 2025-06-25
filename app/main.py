@@ -53,7 +53,9 @@ from pipelines.smart_query_engine import convert_text_to_sql_v2
 # from pipelines.tiktok import scrape_multiple_profiles
 
 from pipelines.data_collection_influencers_tiktok import scrape_tiktok_profile
+from pipelines.data_collection_influencers_tiktok_psql import scrape_tiktok_profile_psql
 from pipelines.data_enrtichment_tiktok import scrape_and_store
+from pipelines.data_enrtichment_tiktok_psql import scrape_and_store_psql
 
 from pipelines.data_collection_influencers_tiktok import scrape_tiktok_profile
 from pipelines.data_enrtichment_tiktok import scrape_and_store
@@ -62,7 +64,7 @@ from pipelines.profile_analyzer_engine import profile_intelligence_engine
 from pipelines.smart_query_machine import influencer_brief_processing
 from make.estimated_reach_engagement_rate import calculate_metrics
 from pipelines.google_search_apify import scrape_influencers
-
+from pipelines.google_search_apify_psql import scrape_influencers_psql
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -85,6 +87,29 @@ app.register_blueprint(influencer_bp)
 #     except Exception as e:
 #         print(f"Error occurred while scraping influencer posts data : {e}")
 #         return jsonify({"status": "failed", "content": "Error occurred while scraping posts data"})
+@app.route('/scrape_influencers_google_search_psql', methods=['GET', 'POST'])
+def scrape_through_google_psql():
+    if request.method == 'POST':
+        data = request.get_json(force=True)
+        media = request.args.get('media', '').strip()
+        influencer_type = request.args.get('influencer_type', '').strip()
+        influencer_location = request.args.get('influencer_location', '').strip()
+        page = request.args.get("page", 1, type=int)
+    else:  # GET
+        data = None
+        media = request.args.get('media', '').strip()
+        influencer_type = request.args.get('influencer_type', '').strip()
+        influencer_location = request.args.get('influencer_location', '').strip()
+        page = request.args.get("page", 1, type=int)
+
+    if not (media and influencer_type and influencer_location):
+        return jsonify({
+            "status": "failed",
+            "error": "Missing one or more required parameters: media, influencer_type, influencer_location"
+        }), 400
+
+    return scrape_influencers_psql(data, media, influencer_type, influencer_location, page)
+
 @app.route('/scrape_influencers_google_search', methods=['GET', 'POST'])
 def scrape_through_google():
     if request.method == 'POST':
@@ -129,7 +154,20 @@ def calculate_metrics_instagram():
 
     except Exception as e:
         return jsonify({"status": "failed", "error": str(e)}), 500
- 
+
+@app.route('/tiktok_posts_to_airtable_psql', methods=['GET', 'POST'])
+def scrape_route_psql():
+    if request.method == 'POST':
+        data = request.get_json()
+        username = data.get('username') if data else None
+    else:  # GET
+        username = request.args.get('username')
+    if not username:
+        return jsonify({"status": "failed", "error": "Username is required"}), 400
+    result = scrape_and_store_psql(username)
+    return jsonify(result)
+
+
 @app.route('/tiktok_posts_to_airtable', methods=['GET', 'POST'])
 def scrape_route():
     if request.method == 'POST':
@@ -142,7 +180,21 @@ def scrape_route():
     result = scrape_and_store(username)
     return jsonify(result)
 
-
+@app.route('/scrape_tiktok_profile_psql', methods=['GET'])
+def scrape_tiktok_profile_endpoint_psql():
+    try:
+        tiktok_username = request.args.get("username")
+        
+        if not tiktok_username:
+            return jsonify({"status": "failed", "content": "Missing 'tiktok_username' parameter"})
+        result = scrape_tiktok_profile_psql(tiktok_username)
+        if result["status"] == "failed":
+            return jsonify({"status": "failed", "content": result.get("error", "Unknown error")})
+        return jsonify({"status": "passed", "content": result})
+    except Exception as e:
+        print(f"Error occurred : {e}")
+        return jsonify({"status": "failed", "content": "Error occurred "})
+    
 @app.route('/scrape_tiktok_profile', methods=['GET'])
 def scrape_tiktok_profile_endpoint():
     try:
