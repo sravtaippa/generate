@@ -109,7 +109,6 @@ def add_to_airtable(media, username, url, influencer_type, influencer_location):
 
     data = {"fields": fields}
     response = requests.post(AIRTABLE_URL, headers=HEADERS, json=data)
-    print("Airtable POST response:", response.status_code, response.text)
     if response.status_code in [200, 201]:
         print(f"✅ Added to Airtable: {username} ({media})")
     else:
@@ -118,29 +117,18 @@ def add_to_airtable(media, username, url, influencer_type, influencer_location):
 
 def process_and_upload(results, media, influencer_type, influencer_location):
     seen = set()
+    discover_hashtags = set()
+
     for item in results:
         url = item.get("url", "")
-
-        hashtag = extract_discover_hashtag(url)
-        if hashtag:
-            print(f"🔄 Found Discover page. Scraping using hashtag: #{hashtag}")
-            discover_results = call_discover_scraper(hashtag)
-
-            print("🔍 Discover result count:", len(discover_results))
-            for video in discover_results:
-                username = video.get("authorMeta.name", "").strip().lower()
-                if not username:
-                    continue
-                author_url = f"https://www.tiktok.com/@{username}"
-
-                if username not in seen:
-                    seen.add(username)
-                    is_dup, extracted_username = is_duplicate("tiktok", username)
-                    if not is_dup:
-                        add_to_airtable("tiktok", extracted_username, author_url, influencer_type, influencer_location)
-                    else:
-                        print(f"🔁 Skipped duplicate from discover: {extracted_username}")
+        if not url:
             continue
+
+        if media.lower() == "tiktok" and "tiktok.com/discover/" in url:
+            hashtag = extract_discover_hashtag(url)
+            if hashtag:
+                discover_hashtags.add(hashtag)
+            continue  # skip for now
 
         username = extract_username(url)
         if username and username not in seen:
@@ -152,6 +140,23 @@ def process_and_upload(results, media, influencer_type, influencer_location):
                 print(f"🔁 Skipped duplicate: {extracted_username}")
         else:
             print(f"⚠️ Invalid or already seen username: {username}")
+
+    # === Handle discover hashtags AFTER ===
+    for hashtag in discover_hashtags:
+        print(f"🔄 Processing Discover hashtag: #{hashtag}")
+        discover_results = call_discover_scraper(hashtag)
+        print(f"🔍 {len(discover_results)} results from Discover for #{hashtag}")
+        for video in discover_results:
+            username = video.get("authorMeta.name", "").strip().lower()
+            if not username or username in seen:
+                continue
+            seen.add(username)
+            author_url = f"https://www.tiktok.com/@{username}"
+            is_dup, extracted_username = is_duplicate("tiktok", username)
+            if not is_dup:
+                add_to_airtable("tiktok", extracted_username, author_url, influencer_type, influencer_location)
+            else:
+                print(f"🔁 Skipped duplicate (discover): {extracted_username}")
 
 
 def scrape_influencers(data, media, influencer_type, influencer_location, page):
@@ -179,7 +184,7 @@ def scrape_influencers(data, media, influencer_type, influencer_location, page):
 
     if response.ok:
         results = response.json()
-        print(f"Scraped Urls: {results}")
+        print(f"✅ Scraped {len(results)} results.")
         process_and_upload(results, media, influencer_type, influencer_location)
         return jsonify({
             "message": "Scraping complete, data uploaded to Airtable",
