@@ -1,31 +1,21 @@
 from flask import Flask, request, jsonify
 import requests
-from pyairtable import Api
+from db.db_ops import db_manager 
+from config import APIFY_API_TOKEN
 import json
 import traceback
-from config import AIRTABLE_API_KEY, AIRTABLE_BASE_ID, APIFY_API_TOKEN
-api = Api(AIRTABLE_API_KEY)
 # Configurations
 # APIFY_API_TOKEN = "apify_api_M6WCO92denEYVsZHPSKXTq8X5rZ73r187vDN"
 ACTOR_RUN_URL = f"https://api.apify.com/v2/acts/direct_houseboat~tiktok-user-profile-scraper/run-sync-get-dataset-items?token={APIFY_API_TOKEN}"
+app = Flask(__name__) 
 
-# AIRTABLE_API_KEY = 'patELEdV0LAx6Aba3.393bf0e41eb59b4b80de15b94a3d122eab50035c7c34189b53ec561de590dff3'
-# AIRTABLE_BASE_ID = 'app5s8zl7DsUaDmtx'
-AIRTABLE_TABLE_NAME = 'src_influencer_data_demo'
-
-# Initialize Airtable API and table
-api = Api(AIRTABLE_API_KEY)
-airtable = api.table(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME)
-
-app = Flask(__name__)
-
-@app.route('/scrape_tiktok_profile', methods=['GET'])
-def scrape_tiktok_profile_endpoint():
+@app.route('/scrape_tiktok_profile_psql', methods=['GET'])
+def scrape_tiktok_profile_endpoint_psql():
     try:
         tiktok_username = request.args.get("username")
         if not tiktok_username:
             return jsonify({"status": "failed", "content": "Missing 'username' parameter"})
-        result = scrape_tiktok_profile(tiktok_username)
+        result = scrape_tiktok_profile_psql(tiktok_username)
         if result["status"] == "failed":
             return jsonify({"status": "failed", "content": result.get("error", "Unknown error")})
         return jsonify({"status": "passed", "content": result})
@@ -33,7 +23,7 @@ def scrape_tiktok_profile_endpoint():
         print(f"Error occurred : {e}")
         return jsonify({"status": "failed", "content": "Error occurred"})
 
-def scrape_tiktok_profile(username):
+def scrape_tiktok_profile_psql(username):
     try:
         # Call Apify Actor with username
         payload = {
@@ -75,7 +65,7 @@ def scrape_tiktok_profile(username):
         profile = data[0]  # This is your TikTok profile dict
         print("Profile to insert:", profile, flush=True)
 
-        airtable_data = {
+        data = {
             "tiktok_username": str(profile.get("username", "")),
             "tiktok_followers_count": str(profile.get("total_followers", "")),
             "tiktok_follows_count": str(profile.get("total_followings", "")),
@@ -103,25 +93,28 @@ def scrape_tiktok_profile(username):
             
         }
 
-        print("Prepared Airtable data:", airtable_data, flush=True)
+        print("Prepared PSQL data:", data, flush=True)
 
-        # Upsert logic: update if exists, else create
-        existing_records = airtable.all(formula=f"{{tiktok_username}}='{username}'")
-        if existing_records:
-            record_id = existing_records[0]['id']
-            record = airtable.update(record_id, airtable_data)
-            action = "updated"
-        else:
-            record = airtable.create(airtable_data)
-            action = "created"
+        # # Upsert logic: update if exists, else create
+        # existing_records = 
+        # if existing_records:
+        #     record_id = existing_records[0]['id']
+        #     record = airtable.update(record_id, airtable_data)
+        #     action = "updated"
+        # else:
+        #     record = airtable.create(airtable_data)
+        #     action = "created"
 
-        print(f"Airtable {action} response for {username}:", record, flush=True)
-        return {"status": "passed", "message": f"Profile data {action} successfully", "data": airtable_data}
+        # print(f"Airtable {action} response for {username}:", record, flush=True)
+        db_manager.insert_data("src_influencer_data_demo", data)
+        return {"status": "passed", "message": f"Profile data added successfully", "data": data}
 
     except Exception as e:
         print("Unexpected error:", e, flush=True)
         traceback.print_exc()
         return {"status": "failed", "error": f"Unexpected error: {str(e)}"}
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
