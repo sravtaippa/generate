@@ -21,7 +21,6 @@ HEADERS = {
 }
 
 
-# === Extract username from profile URL ===
 def extract_username(url):
     if "instagram.com" in url:
         match = re.search(r"instagram\.com/([^/?#]+)", url)
@@ -32,13 +31,11 @@ def extract_username(url):
     return match.group(1) if match else None
 
 
-# === Extract hashtag from discover URL ===
 def extract_discover_hashtag(url):
     match = re.search(r'tiktok\.com/discover/([^/?#]+)', url)
     return match.group(1) if match else None
 
 
-# === Call Apify TikTok Discover Scraper ===
 def call_discover_scraper(hashtag):
     payload = {
         "hashtags": [hashtag],
@@ -47,15 +44,33 @@ def call_discover_scraper(hashtag):
         "shouldDownloadSubtitles": False,
         "shouldDownloadVideos": False
     }
-    response = requests.post(f"{DISCOVER_API_URL}?token={DISCOVER_TOKEN}", json=payload)
-    if response.ok:
-        return response.json()
+
+    run_response = requests.post(f"{DISCOVER_API_URL}?token={DISCOVER_TOKEN}", json=payload)
+    if not run_response.ok:
+        print("❌ Error running Discover actor:", run_response.text)
+        return []
+
+    run_data = run_response.json()
+    dataset_id = run_data.get("defaultDatasetId")
+    if not dataset_id:
+        print("❌ No dataset ID found in Discover run response.")
+        return []
+
+    dataset_url = f"https://api.apify.com/v2/datasets/{dataset_id}/items"
+    dataset_response = requests.get(dataset_url)
+
+    if dataset_response.ok:
+        try:
+            return dataset_response.json()
+        except Exception as e:
+            print("❌ Error decoding Discover results JSON:", e)
+            print(dataset_response.text)
+            return []
     else:
-        print(f"❌ Discover scrape failed for #{hashtag}: {response.text}")
+        print("❌ Failed to fetch Discover dataset:", dataset_response.text)
         return []
 
 
-# === Check for duplicates ===
 def is_duplicate(media, username):
     if media.lower() == "instagram":
         field_name = "instagram_username"
@@ -76,7 +91,6 @@ def is_duplicate(media, username):
         return False, username
 
 
-# === Add to Airtable ===
 def add_to_airtable(media, username, url, influencer_type, influencer_location):
     fields = {
         "influencer_type": influencer_type,
@@ -95,28 +109,28 @@ def add_to_airtable(media, username, url, influencer_type, influencer_location):
 
     data = {"fields": fields}
     response = requests.post(AIRTABLE_URL, headers=HEADERS, json=data)
+    print("Airtable POST response:", response.status_code, response.text)
     if response.status_code in [200, 201]:
         print(f"✅ Added to Airtable: {username} ({media})")
     else:
         print(f"❌ Failed to add {username}: {response.text}")
 
 
-# === Process and Upload Results ===
 def process_and_upload(results, media, influencer_type, influencer_location):
     seen = set()
     for item in results:
         url = item.get("url", "")
 
-        # Handle TikTok Discover pages
         hashtag = extract_discover_hashtag(url)
         if hashtag:
             print(f"🔄 Found Discover page. Scraping using hashtag: #{hashtag}")
             discover_results = call_discover_scraper(hashtag)
+
+            print("🔍 Discover result count:", len(discover_results))
             for video in discover_results:
                 username = video.get("authorMeta.name", "").strip().lower()
                 if not username:
                     continue
-
                 author_url = f"https://www.tiktok.com/@{username}"
 
                 if username not in seen:
@@ -126,9 +140,8 @@ def process_and_upload(results, media, influencer_type, influencer_location):
                         add_to_airtable("tiktok", extracted_username, author_url, influencer_type, influencer_location)
                     else:
                         print(f"🔁 Skipped duplicate from discover: {extracted_username}")
-            continue  # skip to next original item
+            continue
 
-        # Regular influencer profile link
         username = extract_username(url)
         if username and username not in seen:
             seen.add(username)
@@ -141,7 +154,6 @@ def process_and_upload(results, media, influencer_type, influencer_location):
             print(f"⚠️ Invalid or already seen username: {username}")
 
 
-# === Flask route function ===
 def scrape_influencers(data, media, influencer_type, influencer_location, page):
     if not (media and influencer_type and influencer_location):
         return jsonify({"error": "Missing required params"}), 400
