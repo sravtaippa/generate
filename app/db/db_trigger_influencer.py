@@ -12,26 +12,26 @@ from datetime import datetime, timezone
 def influencer_table_trigger(campaign_id,social_media_type):
     try:
         campaign_id = "taippa"
-        influencer_table = "influencers_instagram"
+        influencer_profile_urls_table = "influencer_profile_urls"
         profile_checkpoint_table = "social_media_profile_checkpoint"
         query = ""
         if social_media_type.upper() == "INSTAGRAM":
             checkpoint_column_name= "last_processed_time_instagram"
             data_fetch_query = f"""SELECT *
-                        FROM {influencer_table}
+                        FROM {influencer_profile_urls_table}
                         WHERE created_time > (
                             SELECT last_processed_time_instagram
                             FROM {profile_checkpoint_table}
-                            WHERE campaign_id = '{campaign_id}') and social_media_type = 'instagram' LIMIT 3;
+                            WHERE campaign_id = '{campaign_id}') LIMIT 3;
                     """
         elif social_media_type.upper() == "TIKTOK":
             checkpoint_column_name= "last_processed_time_tiktok"
             data_fetch_query = f"""SELECT *
-                        FROM {influencer_table}
+                        FROM {influencer_profile_urls_table}
                         WHERE created_time > (
                             SELECT last_processed_time_tiktok
                             FROM {profile_checkpoint_table}
-                            WHERE campaign_id = '{campaign_id}') and social_media_type = 'tiktok' LIMIT 3;
+                            WHERE campaign_id = '{campaign_id}') LIMIT 3;
                     """
            
         if data_fetch_query:
