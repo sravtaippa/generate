@@ -298,6 +298,41 @@ def add_influencer_data_in_db():
             "phone": request.args.get("phone"),
             "tiktok_username": request.args.get("tiktok_id"),
         }
+        
+        # CREATE TABLE influencers_instagram (
+        # id SERIAL PRIMARY KEY,
+        # instagram_url TEXT,
+        # instagram_username TEXT,
+        # full_name TEXT,
+        # instagram_bio TEXT,
+        # external_urls TEXT,
+        # instagram_followers_count TEXT,
+        # instagram_follows_count TEXT,
+        # business_category_name TEXT,
+        # instagram_profile_pic TEXT,
+        # instagram_posts_count TEXT,
+        # instagram_captions TEXT,
+        # instagram_hashtags TEXT,
+        # instagram_post_urls TEXT,
+        # instagram_comments_counts TEXT,
+        # instagram_likes_counts TEXT,
+        # instagram_video_play_counts TEXT,
+        # instagram_video_urls TEXT,
+        # influencer_type TEXT,
+        # influencer_location TEXT,
+        # influencer_nationality TEXT,
+        # targeted_audience TEXT,
+        # targeted_domain TEXT,
+        # profile_type TEXT,
+        # email_id TEXT,
+        # twitter_url TEXT,
+        # snapchat_url TEXT,
+        # linkedin_url TEXT,
+        # phone TEXT,
+        # created_time TIMESTAMPTZ DEFAULT NOW(),
+        # updated_time TIMESTAMPTZ DEFAULT NOW()
+        # );
+
         export_influencer_data(influencer_data)
     except Exception as e:
         print(f"Error occurred while fetching influencer data from db: {e}")
