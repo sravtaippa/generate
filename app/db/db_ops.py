@@ -439,6 +439,40 @@ class DatabaseManager:
         except Exception as e:
             print("Error during DB query:", str(e))
             return []
+        
+    def execute_sql_query(self, sql_query):
+        try:
+            with sshtunnel.SSHTunnelForwarder(
+                ('ssh.pythonanywhere.com'),
+                ssh_username=self.ssh_username,
+                ssh_password=self.ssh_password,
+                remote_bind_address=(self.postgres_hostname, self.postgres_host_port)
+            ) as tunnel:
+
+                with psycopg2.connect(
+                    user=self.db_user,
+                    password=self.db_password,
+                    host='127.0.0.1',
+                    port=tunnel.local_bind_port,
+                    database=self.db_name,
+                ) as connection:
+
+                    with connection.cursor() as cursor:
+                        print("Executing query:", sql_query)
+                        cursor.execute(sql_query)
+                        
+                        if cursor.description:  # Means query returned rows (e.g. SELECT)
+                            column_names = [desc[0] for desc in cursor.description]
+                            rows = cursor.fetchall()
+                            result = [dict(zip(column_names, row)) for row in rows]
+                            return result
+                        else:
+                            connection.commit()  # Commit for UPDATE/DELETE/INSERT
+                            return {"status": "success", "rows_affected": cursor.rowcount}
+
+        except Exception as e:
+            print("Error during DB query:", str(e))
+            return []
 
 db_manager = DatabaseManager(
     ssh_username='magmostafa',
