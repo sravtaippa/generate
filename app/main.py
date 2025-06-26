@@ -65,6 +65,7 @@ from pipelines.smart_query_machine import influencer_brief_processing
 from make.estimated_reach_engagement_rate import calculate_metrics
 from pipelines.google_search_apify import scrape_influencers
 from pipelines.google_search_apify_psql import scrape_influencers_psql
+from pipelines.data_gpt_enritchement_psql import data_entrichment_using_gpt
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -87,6 +88,24 @@ app.register_blueprint(influencer_bp)
 #     except Exception as e:
 #         print(f"Error occurred while scraping influencer posts data : {e}")
 #         return jsonify({"status": "failed", "content": "Error occurred while scraping posts data"})
+@app.route('/data_entrichment_using_gpt_psql', methods=['GET'])
+def data_entrichment_using_gpt_psql():
+    try:
+        tiktok_username = request.args.get("username")
+        if not tiktok_username:
+            return jsonify({"status": "failed", "content": "Missing 'username' parameter"})
+        
+        result = data_entrichment_using_gpt(tiktok_username)
+
+        if result["status"] == "failed":
+            return jsonify({"status": "failed", "content": result.get("message", "Unknown error")})
+
+        return jsonify({"status": "passed", "content": result})
+
+    except Exception as e:
+        print(f"Error occurred : {e}")
+        return jsonify({"status": "failed", "content": "Error occurred "})
+    
 @app.route('/scrape_influencers_google_search_psql', methods=['GET', 'POST'])
 def scrape_through_google_psql():
     if request.method == 'POST':
