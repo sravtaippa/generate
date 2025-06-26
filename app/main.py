@@ -243,7 +243,7 @@ def duplicate_check_influencer_data():
         primary_key_value = request.args.get("primary_key_value")
         table_name = request.args.get("table_name")
         status = db_manager.unique_key_check(primary_key_column,primary_key_value,table_name)
-        return {"status":"success","content":"status"}
+        return {"status":"success","content":status}
     except Exception as e:
         return {"status":"failed","content":f"Error occurred during unique key check: {e}"}
 
