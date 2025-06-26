@@ -29,10 +29,11 @@ def scrape_tiktok_profile_psql(username):
         payload = {
             "usernames": [username]
         }
+
         response = requests.post(ACTOR_RUN_URL, json=payload)
         print("Apify HTTP status:", response.status_code, flush=True)
         print("Apify raw response:", response.text, flush=True)
-
+        table_name = "src_influencer_data_demo"
         if response.status_code not in (200, 201):
             return {"status": "failed", "error": f"Failed to run actor: {response.text}"}
 
@@ -94,7 +95,9 @@ def scrape_tiktok_profile_psql(username):
         }
 
         print("Prepared PSQL data:", data, flush=True)
-
+        cols_list = ["tiktok_username"]
+        col_values = [username]
+        existing = db_manager.get_records_with_filter(table_name, cols_list, col_values, limit=1)
         # # Upsert logic: update if exists, else create
         # existing_records = 
         # if existing_records:
@@ -106,7 +109,10 @@ def scrape_tiktok_profile_psql(username):
         #     action = "created"
 
         # print(f"Airtable {action} response for {username}:", record, flush=True)
-        db_manager.insert_data("src_influencer_data_demo", data)
+        if not existing:
+            db_manager.insert_data("src_influencer_data_demo", data)
+        else:
+            print(f"{username} already exist in {table_name}")
         return {"status": "passed", "message": f"Profile data added successfully", "data": data}
 
     except Exception as e:
