@@ -34,3 +34,8 @@ psycopg2-binary
 sshtunnel
 anthropic
 torch
+python-docx
+pdfplumber
+openpyxl
+pytesseract 
+pillow
