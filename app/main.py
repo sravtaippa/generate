@@ -66,6 +66,7 @@ from pipelines.smart_query_machine import influencer_brief_processing
 from make.estimated_reach_engagement_rate import calculate_metrics
 from pipelines.google_search_apify import scrape_influencers
 from db.db_trigger_influencer import export_influencer_data
+from db.db_ops import db_manager
 
 from pipelines.google_search_apify_psql import scrape_influencers_psql
 from pipelines.data_gpt_enritchement_psql import data_entrichment_using_gpt
@@ -235,6 +236,17 @@ def scrape_tiktok_profile_endpoint():
 
 ########## INFLUENCER MARKETING ROUTES ##########
 
+@app.route("/duplicate_check_influencer")
+def duplicate_check_influencer_data():
+    try:
+        primary_key_column = request.args.get("primary_key_column")
+        primary_key_value = request.args.get("primary_key_value")
+        table_name = request.args.get("table_name")
+        status = db_manager.unique_key_check(primary_key_column,primary_key_value,table_name)
+        return {"status":"success","content":"status"}
+    except Exception as e:
+        return {"status":"failed","content":f"Error occurred during unique key check: {e}"}
+
 @app.route("/influencer_table_trigger")
 def retrieve_latest_records():
     try:
@@ -266,8 +278,6 @@ def process_influencer_brief():
 def add_influencer_data_in_db():
     try:
         influencer_data = {
-            "profile_id":f"instagram_{request.args.get('instagram_username')}",
-            "social_media_profile_type":"instagram",
             "instagram_url": request.args.get("instagram_url"),
             "instagram_username": request.args.get("instagram_username"),
             "full_name": request.args.get("full_name"),
@@ -296,11 +306,9 @@ def add_influencer_data_in_db():
             "snapchat_url": request.args.get("snapchat_id"),
             "linkedin_url": request.args.get("linkedin_id"),
             "phone": request.args.get("phone"),
-            "tiktok_username": request.args.get("tiktok_id"),
         }
         
         # CREATE TABLE influencers_instagram (
-        # id SERIAL PRIMARY KEY,
         # instagram_url TEXT,
         # instagram_username TEXT,
         # full_name TEXT,

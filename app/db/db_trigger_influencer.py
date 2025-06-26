@@ -22,7 +22,7 @@ def influencer_table_trigger(campaign_id,social_media_type):
                         WHERE created_time > (
                             SELECT last_processed_time_instagram
                             FROM {profile_checkpoint_table}
-                            WHERE campaign_id = '{campaign_id}') LIMIT 3;
+                            WHERE campaign_id = '{campaign_id}') and social_media_type = 'instagram' LIMIT 3;
                     """
         elif social_media_type.upper() == "TIKTOK":
             checkpoint_column_name= "last_processed_time_tiktok"
@@ -31,7 +31,7 @@ def influencer_table_trigger(campaign_id,social_media_type):
                         WHERE created_time > (
                             SELECT last_processed_time_tiktok
                             FROM {profile_checkpoint_table}
-                            WHERE campaign_id = '{campaign_id}') LIMIT 3;
+                            WHERE campaign_id = '{campaign_id}') and social_media_type = 'tiktok' LIMIT 3;
                     """
            
         if data_fetch_query:
@@ -92,3 +92,4 @@ def export_influencer_data(influencer_data):
 
     except Exception as e:
         print(f"Error occured while ingesting influencer data: {e}")
+
