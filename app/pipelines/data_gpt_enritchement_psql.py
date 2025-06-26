@@ -37,10 +37,10 @@ def tiktok_enritchment(tiktok_bio, tiktok_text, tiktok_username):
                 "linkedin_url": {"type": "string"},
                 "youtube_url": {"type": "string"},
                 "influencer_nationality": {"type": "string"},
-                
+                "targeted_domain": {"type": "string"},
                 
             },
-            "required": ["niche", "languages_used", "content_type", "audience_location", "content_style", "suitable_brands", "summary", "instagram_url", "twitter_url", "snapchat_url", "linkedin_url", "youtube_url", "influencer_nationality"]
+            "required": ["niche", "languages_used", "content_type", "audience_location", "content_style", "suitable_brands", "summary", "instagram_url", "twitter_url", "snapchat_url", "linkedin_url", "youtube_url", "influencer_nationality", "targeted_domain"]
         }
     }
 
@@ -191,6 +191,13 @@ def data_entrichment_using_gpt(username):
             "email_id": result.get("email_id", "N/A"),
             "phone": contact_info.get("phone", "N/A") if contact_info else result.get("phone", "N/A"),
             "full_name": result.get("full_name", "N/A"),
+            "influencer_type": result.get("influencer_type", "N/A"),
+            "tiktok_share_count":result.get("tiktok_share_count", "N/A"),
+            "tiktok_play_count": result.get("tiktok_play_count", "N/A"),
+            "tiktok_comment_count": result.get("tiktok_comment_count", "N/A"),
+            "tiktok_digg_count": result.get("tiktok_digg_count", "N/A"),
+            "tiktok_text": result.get("tiktok_text", "N/A"),
+            "tiktok_video_urls": result.get("tiktok_video_urls", "N/A"),
 
             "tiktok_niche": enriched.get("niche", "N/A") if enriched else "N/A",
             "tiktok_language_used": ", ".join(enriched.get("languages_used", [])) if enriched and enriched.get("languages_used") else "N/A",
@@ -199,10 +206,13 @@ def data_entrichment_using_gpt(username):
             "tiktok_audience_location": enriched.get("audience_location", "N/A") if enriched else "N/A",
             "tiktok_suitable_brands": ", ".join(enriched.get("suitable_brands", [])) if enriched and enriched.get("suitable_brands") else "N/A",
             "tiktok_summary": enriched.get("summary", "N/A") if enriched else "N/A",
-            
-            "email": contact_info.get("email", "N/A") if contact_info else "N/A",
+            "twitter_url": enriched.get("summary", "N/A") if enriched else "N/A",
+            "snapchat_url": enriched.get("summary", "N/A") if enriched else "N/A",
+            "youtube_url":enriched.get("summary", "N/A") if enriched else "N/A",
+            # "email": contact_info.get("email", "N/A") if contact_info else "N/A",
             "phone": contact_info.get("phone", "N/A") if contact_info else "N/A",
-            "target_audience": contact_info.get("target_audience", "N/A") if contact_info else "N/A",
+            "targeted_audience": contact_info.get("target_audience", "N/A") if contact_info else "N/A",
+            "targeted_domain" : contact_info.get("targeted_domain", "N/A") if contact_info else "N/A",
             
             "instagram_url": identity_info.get("instagram_url", "N/A") if identity_info else enriched.get("instagram_url", "N/A"),
             "influencer_nationality": identity_info.get("influencer_nationality", "N/A") if identity_info else enriched.get("influencer_nationality", "N/A"),
