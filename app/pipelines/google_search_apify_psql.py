@@ -10,12 +10,16 @@ APIFY_API_URL = f"https://api.apify.com/v2/acts/tuningsearch~cheap-google-search
 # === Extract username from URL for Instagram or TikTok ===
 def extract_username(url):
     if "instagram.com" in url:
+        # Skip reels
+        if "/reel/" in url or "/reels/" in url:
+            return None
         match = re.search(r"instagram\.com/([^/?#]+)", url)
     elif "tiktok.com" in url:
         match = re.search(r"tiktok\.com/@([^/?#]+)", url)
     else:
         return None
     return match.group(1) if match else None
+
 
 
 

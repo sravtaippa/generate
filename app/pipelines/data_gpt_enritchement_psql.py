@@ -37,10 +37,11 @@ def tiktok_enritchment(tiktok_bio, tiktok_text, tiktok_username):
                 "linkedin_url": {"type": "string"},
                 "youtube_url": {"type": "string"},
                 "influencer_nationality": {"type": "string"},
-                
+                "targeted_domain": {"type": "string"},
+                "full_name": {"type": "string"},
                 
             },
-            "required": ["niche", "languages_used", "content_type", "audience_location", "content_style", "suitable_brands", "summary", "instagram_url", "twitter_url", "snapchat_url", "linkedin_url", "youtube_url", "influencer_nationality"]
+            "required": ["niche", "languages_used", "content_type", "audience_location", "content_style", "suitable_brands", "summary", "instagram_url", "twitter_url", "snapchat_url", "linkedin_url", "youtube_url", "influencer_nationality", "targeted_domain", "full_name"]
         }
     }
 
@@ -168,31 +169,65 @@ def data_entrichment_using_gpt(username):
     if enriched is None and contact_info is None and identity_info is None:
         return {"status": "failed", "message": "GPT enrichment failed"}
     print(f"Enriched Data:{enriched}")
+    data = {
+            "id": result["id"],
+            "tiktok_username": username,
+            "tiktok_niche": enriched.get("niche", "N/A") if enriched else "N/A",
+            "tiktok_language_used": ", ".join(enriched.get("languages_used", [])) if enriched and enriched.get("languages_used") else "N/A",
+            "tiktok_content_type": enriched.get("content_type", "N/A") if enriched else "N/A",
+            "tiktok_content_style": enriched.get("content_style", "N/A") if enriched else "N/A",
+            "tiktok_audience_location": enriched.get("audience_location", "N/A") if enriched else "N/A",
+            "tiktok_suitable_brands": ", ".join(enriched.get("suitable_brands", [])) if enriched and enriched.get("suitable_brands") else "N/A",
+            "tiktok_influencer_summary": enriched.get("summary", "N/A") if enriched else "N/A",            
+            "twitter_url": enriched.get("twitter_url", "N/A") if enriched else "N/A",
+            "snapchat_url": enriched.get("snapchat_url", "N/A") if enriched else "N/A",
+            # "youtube_url":enriched.get("youtube_url", "N/A") if enriched else "N/A",
+            "targeted_domain" : enriched.get("targeted_domain", "N/A") if enriched else "N/A",
+            # "email": contact_info.get("email", "N/A") if contact_info else "N/A",
+            "email_id": contact_info.get("email", "N/A") if contact_info else "N/A",
+            "phone": contact_info.get("phone", "N/A") if contact_info else "N/A",
+            "targeted_audience": contact_info.get("targeted_audience", "N/A") if contact_info else "N/A",            
+            "instagram_url": identity_info.get("instagram_url", "N/A") if identity_info else enriched.get("instagram_url", "N/A"),
+            "influencer_nationality": identity_info.get("influencer_nationality", "N/A") if identity_info else enriched.get("influencer_nationality", "N/A"),
+            "profile_type": identity_info.get("profile_type", "N/A") if identity_info else "N/A",
+            "linkedin_url": enriched.get("linkedin_url", "N/A")if enriched else "N/A",
+            "full_name": enriched.get("full_name", "N/A") if enriched else "N/A",
+        }
+
+    db_manager.update_multiple_fields(table_name, data, "id")
+    print(f"⚠️ No existing record found with Instagram URL. Updating current record.")
+
     instagram_url = enriched["instagram_url"]
     print(f"Instagram Url:{instagram_url}")
     
     if instagram_url:
         cols_list = ["instagram_url"]
-    col_values = [instagram_url]
-    existing = db_manager.get_records_with_filter(table_name, cols_list, col_values, limit=1)
+        col_values = [instagram_url]
+        existing = db_manager.get_records_with_filter("influencers", cols_list, col_values, limit=1)
 
     if existing:
         existing_record = existing if isinstance(existing, dict) else existing[0]
         data = {
             "id": existing_record["id"],
-            "tiktok_username": username,
-            "tiktok_niche": enriched["niche"],
-            "tiktok_language_used": ", ".join(enriched["languages_used"])
+            "full_name": enriched.get("full_name", "N/A") if enriched else "N/A",
+            "email_id": contact_info.get("email", "N/A") if contact_info else "N/A",
+            "phone": contact_info.get("phone", "N/A") if contact_info else result.get("phone", "N/A"),
+            "tiktok_url": result.get("tiktok_url", "N/A"),
+            
         }
-        db_manager.update_multiple_fields(table_name, data, "id")
-        print(f"✅ Updated existing record with matching Instagram URL.")
+
+        db_manager.update_multiple_fields("influencers", data, "id")
+        print(f"✅ Updated Influencers table existing record with matching Instagram URL.")
     else:
         data = {
             "id": result["id"],
-            "tiktok_username": username,
-            "tiktok_niche": enriched["niche"],
-            "tiktok_language_used": ", ".join(enriched["languages_used"])
+            "full_name": enriched.get("full_name", "N/A") if enriched else "N/A",
+            "email_id": contact_info.get("email", "N/A") if contact_info else "N/A",
+            "phone": contact_info.get("phone", "N/A") if contact_info else result.get("phone", "N/A"),
+            "tiktok_url": result.get("tiktok_url", "N/A"),          
+            "instagram_url": identity_info.get("instagram_url", "N/A") if identity_info else enriched.get("instagram_url", "N/A"),
         }
+
         db_manager.update_multiple_fields(table_name, data, "id")
         print(f"⚠️ No existing record found with Instagram URL. Updating current record.")
 
