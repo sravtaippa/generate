@@ -102,6 +102,11 @@ def post_scraper(instagram_username,posts_count):
         instagram_data["instagram_video_play_counts"] = str(video_play_counts)
         instagram_data["instagram_video_urls"] = str(video_urls)
         instagram_data["instagram_likes_counts"] = str(likes_counts)
+        
+        # Compute averages for numeric lists:
+        instagram_data["avg_comments"] = int(sum(comments_counts) / len(comments_counts)) if comments_counts else 0
+        instagram_data["avg_likes"]  = int(sum(likes_counts) / len(likes_counts)) if likes_counts else 0
+        instagram_data["avg_video_play_counts"] = int(sum(video_play_counts) / len(video_play_counts)) if video_play_counts else 0
         return instagram_data
     
     except Exception as e:
