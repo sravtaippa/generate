@@ -20,8 +20,10 @@ HEADERS = {
 # === Extract username from URL for Instagram or TikTok ===
 def extract_username(url):
     if "instagram.com" in url:
+        # Skip reels
+        if "/reel/" in url or "/reels/" in url:
+            return None
         match = re.search(r"instagram\.com/([^/?#]+)", url)
-        
     elif "tiktok.com" in url:
         match = re.search(r"tiktok\.com/@([^/?#]+)", url)
     else:
