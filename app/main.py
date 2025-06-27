@@ -50,7 +50,7 @@ from dashboard.influencer_data_view import influencer_bp
 from pipelines.data_collection_influencers import data_collection
 
 from pipelines.smart_query_engine import convert_text_to_sql_v2
-from db.db_trigger_influencer import influencer_table_trigger
+from generate.app.db.db_influencer import influencer_table_trigger
 # from pipelines.tiktok import scrape_multiple_profiles
 
 from pipelines.data_collection_influencers_tiktok import scrape_tiktok_profile
@@ -65,7 +65,7 @@ from pipelines.profile_analyzer_engine import profile_intelligence_engine
 from pipelines.smart_query_machine import influencer_brief_processing
 from make.estimated_reach_engagement_rate import calculate_metrics
 from pipelines.google_search_apify import scrape_influencers
-from db.db_trigger_influencer import export_influencer_data
+from generate.app.db.db_influencer import export_influencer_data
 from db.db_ops import db_manager
 
 from pipelines.google_search_apify_psql import scrape_influencers_psql
