@@ -161,11 +161,15 @@ def scrape_through_google():
 def calculate_metrics_instagram():
     try:
         if request.method == 'GET':
-            username = int(request.args.get("uaername"))
-            reach_rate = 0.35
-        else:  # POST
-            username = int(request.args.get("uaername"))
-            reach_rate = 0.35
+            username = request.args.get("username")
+            reach_rate = float(request.args.get("reach_rate", 0.35))
+        else:
+            data = request.get_json(force=True)
+            username = data.get("username")
+            reach_rate = float(data.get("reach_rate", 0.35))
+
+        if not username:
+            return jsonify({"status": "failed", "error": "Missing 'username' parameter"}), 400
 
         result, status = calculate_metrics(username, reach_rate)
         return jsonify(result), status
