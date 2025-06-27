@@ -22,8 +22,10 @@ def calculate_metrics(username, reach_rate):
         if not isinstance(likes, list) or not isinstance(comments, list):
             return {"status": "failed", "error": "Likes and comments must be lists"}, 400
 
-        likes_count = [int(l) for l in likes]
-        comments_count = [int(c) for c in comments]
+        # likes_count = [int(l) for l in likes]
+        # comments_count = [int(c) for c in comments]
+        likes_count = [int(l) for l in likes if isinstance(l, (int, float, str)) and str(l).strip().isdigit()]
+        comments_count = [int(c) for c in comments if isinstance(c, (int, float, str)) and str(c).strip().isdigit()]
 
         avg_likes = sum(likes_count) / len(likes_count) if likes_count else 0
         avg_comments = sum(comments_count) / len(comments_count) if comments_count else 0
