@@ -65,7 +65,7 @@ from pipelines.profile_analyzer_engine import profile_intelligence_engine
 from pipelines.smart_query_machine import influencer_brief_processing
 from make.estimated_reach_engagement_rate import calculate_metrics
 from pipelines.google_search_apify import scrape_influencers
-from generate.app.db.db_influencer import export_influencer_data
+from db.db_influencer import export_influencer_data
 from db.db_ops import db_manager
 
 from pipelines.google_search_apify_psql import scrape_influencers_psql
