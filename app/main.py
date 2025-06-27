@@ -50,7 +50,7 @@ from dashboard.influencer_data_view import influencer_bp
 from pipelines.data_collection_influencers import data_collection
 
 from pipelines.smart_query_engine import convert_text_to_sql_v2
-from db.db_trigger_influencer import influencer_table_trigger
+from db.db_influencer import influencer_table_trigger
 # from pipelines.tiktok import scrape_multiple_profiles
 
 from pipelines.data_collection_influencers_tiktok import scrape_tiktok_profile
@@ -65,7 +65,8 @@ from pipelines.profile_analyzer_engine import profile_intelligence_engine
 from pipelines.smart_query_machine import influencer_brief_processing
 from pipelines.estimated_reach_engagement_rate import calculate_metrics
 from pipelines.google_search_apify import scrape_influencers
-from db.db_trigger_influencer import export_influencer_data
+from db.db_influencer import export_influencer_data
+from db.db_ops import db_manager
 
 from pipelines.google_search_apify_psql import scrape_influencers_psql
 from pipelines.data_gpt_enritchement_psql import data_entrichment_using_gpt
@@ -235,6 +236,17 @@ def scrape_tiktok_profile_endpoint():
 
 ########## INFLUENCER MARKETING ROUTES ##########
 
+@app.route("/duplicate_check_influencer")
+def duplicate_check_influencer_data():
+    try:
+        primary_key_column = request.args.get("primary_key_column")
+        primary_key_value = request.args.get("primary_key_value")
+        table_name = request.args.get("table_name")
+        status = db_manager.unique_key_check(primary_key_column,primary_key_value,table_name)
+        return {"status":"success","content":status}
+    except Exception as e:
+        return {"status":"failed","content":f"Error occurred during unique key check: {e}"}
+
 @app.route("/influencer_table_trigger")
 def retrieve_latest_records():
     try:
@@ -266,8 +278,6 @@ def process_influencer_brief():
 def add_influencer_data_in_db():
     try:
         influencer_data = {
-            "profile_id":f"instagram_{request.args.get('instagram_username')}",
-            "social_media_profile_type":"instagram",
             "instagram_url": request.args.get("instagram_url"),
             "instagram_username": request.args.get("instagram_username"),
             "full_name": request.args.get("full_name"),
@@ -285,6 +295,9 @@ def add_influencer_data_in_db():
             "instagram_likes_counts": request.args.get("instagram_likes_counts"),
             "instagram_video_play_counts": request.args.get("instagram_video_play_counts"),
             "instagram_video_urls": request.args.get("video_urls"),
+            "avg_comments": request.args.get("avg_comments"),
+            "avg_likes": request.args.get("avg_likes"),
+            "avg_video_play_counts": request.args.get("avg_video_play_counts"),
             "influencer_type": request.args.get("influencer_type"),
             "influencer_location": request.args.get("influencer_location"),
             "influencer_nationality": request.args.get("influencer_nationality"),
@@ -292,12 +305,14 @@ def add_influencer_data_in_db():
             "targeted_domain": request.args.get("targeted_domain"),
             "profile_type": request.args.get("profile_type"),
             "email_id": request.args.get("email"),
-            "twitter_url": request.args.get("twitter_id"),
-            "snapchat_url": request.args.get("snapchat_id"),
-            "linkedin_url": request.args.get("linkedin_id"),
+            "tiktok_id": request.args.get("tiktok_id"),
+            "twitter_id": request.args.get("twitter_id"),
+            "snapchat_id": request.args.get("snapchat_id"),
+            "linkedin_id": request.args.get("linkedin_id"),
             "phone": request.args.get("phone"),
-            "tiktok_username": request.args.get("tiktok_id"),
         }
+        influencer_data['engagement_rate']= float((influencer_data.get("avg_likes",0) + influencer_data.get("avg_comments",0))/influencer_data.get("instagram_followers_count",1))
+        influencer_data['estimated_reach']= float(0.20 * influencer_data.get("instagram_followers_count",0))
         export_influencer_data(influencer_data)
     except Exception as e:
         print(f"Error occurred while fetching influencer data from db: {e}")
