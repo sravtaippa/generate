@@ -36,11 +36,11 @@ def profile_scraper(instagram_username,influencer_type,influencer_location):
             instagram_data["full_name"] = item.get("fullName")
             instagram_data["instagram_bio"] = item.get("biography")
             instagram_data["external_urls"] = str(item.get("externalUrls"))
-            instagram_data["instagram_followers_count"] = str(item.get("followersCount"))
-            instagram_data["instagram_follows_count"] = str(item.get("followsCount"))
+            instagram_data["instagram_followers_count"] = int(item.get("followersCount"))
+            instagram_data["instagram_follows_count"] = int(item.get("followsCount"))
             instagram_data["business_category_name"] = str(item.get("businessCategoryName"))
             instagram_data["instagram_profile_pic"] = str(item.get("profilePicUrl"))
-            instagram_data["instagram_posts_count"] = str(item.get("postsCount"))
+            instagram_data["instagram_posts_count"] = int(item.get("postsCount"))
         instagram_data["influencer_type"] = str(influencer_type)
         instagram_data["influencer_location"] = str(influencer_location)
         # --------------------------- Post Scraper ---------------------------
@@ -86,7 +86,9 @@ def post_scraper(instagram_username,posts_count):
         instagram_data = {}
         for item in items_posts:
             print(item)
-            captions.append(item.get("caption", ""))
+            caption = item.get("caption", "")
+            trimmed_caption = caption[:80]
+            captions.append(trimmed_caption)
             hashtags.append(item.get("hashtags", ""))
             post_urls.append(item.get("url", ""))
             comments_counts.append(item.get("commentsCount", 0))
@@ -102,6 +104,11 @@ def post_scraper(instagram_username,posts_count):
         instagram_data["instagram_video_play_counts"] = str(video_play_counts)
         instagram_data["instagram_video_urls"] = str(video_urls)
         instagram_data["instagram_likes_counts"] = str(likes_counts)
+        
+        # Compute averages for numeric lists:
+        instagram_data["avg_comments"] = int(sum(comments_counts) / len(comments_counts)) if comments_counts else 0
+        instagram_data["avg_likes"]  = int(sum(likes_counts) / len(likes_counts)) if likes_counts else 0
+        instagram_data["avg_video_play_counts"] = int(sum(video_play_counts) / len(video_play_counts)) if video_play_counts else 0
         return instagram_data
     
     except Exception as e:

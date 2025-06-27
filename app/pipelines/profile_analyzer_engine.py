@@ -7,7 +7,6 @@ from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TAB
 openai.api_key =  OPENAI_API_KEY 
 
 
-
 def classify_vertical(instagram_bio, influencer_location, trimmed_instagram_caption, trimmed_instagram_hashtags):
     try:
 
@@ -15,7 +14,7 @@ def classify_vertical(instagram_bio, influencer_location, trimmed_instagram_capt
         system_prompt = """
         You are a an advanced AI assistant programmed to analyze social media profiles of users. Based on the provided information, classify the user into the following categories and return a valid JSON string as output.
 
-        - The "targeted_domain" must be one of: ["food", "fashion", "fitness", "gaming", "education", "automotive", "finance", "art"].
+        - The "targeted_domain" can have multiple values from these options (need not be limited to one value): ["food", "fashion", "fitness", "gaming", "education", "automotive", "finance", "art"]. Eg: food,lifestyle.
         - The "targeted_audience" must be ONLY one of: ["gen-z", "gen-y", "gen-x"] & cannot contain multiple values, based on user's content and who the targeted audience can be. Use this information to determine the closest targeted audience:
            1. gen-z: born between 1997–2012 (mostly teens and young adults)
            2. gen-y: born between 1981–1996 (millennials, young professionals)
