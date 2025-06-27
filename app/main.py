@@ -311,40 +311,8 @@ def add_influencer_data_in_db():
             "linkedin_id": request.args.get("linkedin_id"),
             "phone": request.args.get("phone"),
         }
-        
-        # CREATE TABLE influencers_instagram (
-        # instagram_url TEXT,
-        # instagram_username TEXT,
-        # full_name TEXT,
-        # instagram_bio TEXT,
-        # external_urls TEXT,
-        # instagram_followers_count TEXT,
-        # instagram_follows_count TEXT,
-        # business_category_name TEXT,
-        # instagram_profile_pic TEXT,
-        # instagram_posts_count TEXT,
-        # instagram_captions TEXT,
-        # instagram_hashtags TEXT,
-        # instagram_post_urls TEXT,
-        # instagram_comments_counts TEXT,
-        # instagram_likes_counts TEXT,
-        # instagram_video_play_counts TEXT,
-        # instagram_video_urls TEXT,
-        # influencer_type TEXT,
-        # influencer_location TEXT,
-        # influencer_nationality TEXT,
-        # targeted_audience TEXT,
-        # targeted_domain TEXT,
-        # profile_type TEXT,
-        # email_id TEXT,
-        # twitter_url TEXT,
-        # snapchat_url TEXT,
-        # linkedin_url TEXT,
-        # phone TEXT,
-        # created_time TIMESTAMPTZ DEFAULT NOW(),
-        # updated_time TIMESTAMPTZ DEFAULT NOW()
-        # );
-
+        influencer_data['engagement_rate']= float((influencer_data.get("avg_likes",0) + influencer_data.get("avg_comments",0))/influencer_data.get("instagram_followers_count",1))
+        influencer_data['estimated_reach']= float(0.20 * influencer_data.get("instagram_followers_count",0))
         export_influencer_data(influencer_data)
     except Exception as e:
         print(f"Error occurred while fetching influencer data from db: {e}")
