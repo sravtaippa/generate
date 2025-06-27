@@ -50,7 +50,7 @@ from dashboard.influencer_data_view import influencer_bp
 from pipelines.data_collection_influencers import data_collection
 
 from pipelines.smart_query_engine import convert_text_to_sql_v2
-from generate.app.db.db_influencer import influencer_table_trigger
+from db.db_influencer import influencer_table_trigger
 # from pipelines.tiktok import scrape_multiple_profiles
 
 from pipelines.data_collection_influencers_tiktok import scrape_tiktok_profile
