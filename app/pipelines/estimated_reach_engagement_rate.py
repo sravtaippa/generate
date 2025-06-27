@@ -15,9 +15,25 @@ def calculate_metrics(username, reach_rate):
         record = result if isinstance(result, dict) else result[0]
         print(f"✅ Record: {record}", flush=True)
 
-        followers = record.get("followers", 0)
-        comments = record.get("comments", [])
-        likes = record.get("likes", [])
+        followers = record.get("tiktok_followers_count", 0)
+        import ast
+
+        comments = record.get("tiktok_comment_count", [])
+        likes = record.get("tiktok_digg_count", [])
+
+        # Convert from string to list if needed
+        if isinstance(likes, str):
+            try:
+                likes = ast.literal_eval(likes)
+            except Exception as e:
+                return {"status": "failed", "error": f"Invalid likes format: {e}"}, 400
+
+        if isinstance(comments, str):
+            try:
+                comments = ast.literal_eval(comments)
+            except Exception as e:
+                return {"status": "failed", "error": f"Invalid comments format: {e}"}, 400
+
         followers_count = int(followers)
 
         if not isinstance(likes, list) or not isinstance(comments, list):
@@ -34,13 +50,12 @@ def calculate_metrics(username, reach_rate):
 
         engagement_rate = ((avg_likes + avg_comments) / followers_count) * 100
         estimated_reach = followers_count * reach_rate
-
-        # Optional: Update data (e.g., insert enrichment into same table — only if valid)
         update_data = {
+            "id":  record["id"],
             "engagement_rate": round(engagement_rate, 2),
             "estimated_reach": int(estimated_reach)
         }
-        db_manager.update_multiple_fields(table_name, update_data, "id", record["id"])
+        db_manager.update_multiple_fields(table_name, update_data, "id")
 
         return {
             "status": "success",
