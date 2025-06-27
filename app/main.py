@@ -63,7 +63,7 @@ from pipelines.data_enrtichment_tiktok import scrape_and_store
 from pipelines.retrieve_influencer_data import retrieve_data_from_db
 from pipelines.profile_analyzer_engine import profile_intelligence_engine
 from pipelines.smart_query_machine import influencer_brief_processing
-from make.estimated_reach_engagement_rate import calculate_metrics
+from pipelines.estimated_reach_engagement_rate import calculate_metrics
 from pipelines.google_search_apify import scrape_influencers
 from db.db_trigger_influencer import export_influencer_data
 
@@ -163,16 +163,16 @@ def calculate_metrics_instagram():
             followers_count = int(request.args.get("followers_count", 0))
             likes = request.args.getlist("likes", type=int)
             comments = request.args.getlist("comments", type=int)
-            reach_rate = float(request.args.get("reach_rate", 0.20))
+            reach_rate = float(request.args.get("reach_rate", 0.35))
         else:  # POST
             data = request.get_json()
             followers_count = int(data.get("followers_count", 0))
             likes = data.get("likes", [])
             comments = data.get("comments", [])
-            reach_rate = float(data.get("reach_rate", 0.20))
+            reach_rate = float(data.get("reach_rate", 0.35))
 
-        result = calculate_metrics(followers_count, likes, comments, reach_rate)
-        return jsonify(result)
+        result, status = calculate_metrics(followers_count, likes, comments, reach_rate)
+        return jsonify(result), status
 
     except Exception as e:
         return jsonify({"status": "failed", "error": str(e)}), 500
