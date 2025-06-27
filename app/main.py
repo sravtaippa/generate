@@ -161,18 +161,13 @@ def scrape_through_google():
 def calculate_metrics_instagram():
     try:
         if request.method == 'GET':
-            followers_count = int(request.args.get("followers_count", 0))
-            likes = request.args.getlist("likes", type=int)
-            comments = request.args.getlist("comments", type=int)
-            reach_rate = float(request.args.get("reach_rate", 0.35))
+            username = int(request.args.get("uaername"))
+            reach_rate = 0.35
         else:  # POST
-            data = request.get_json()
-            followers_count = int(data.get("followers_count", 0))
-            likes = data.get("likes", [])
-            comments = data.get("comments", [])
-            reach_rate = float(data.get("reach_rate", 0.35))
+            username = int(request.args.get("uaername"))
+            reach_rate = 0.35
 
-        result, status = calculate_metrics(followers_count, likes, comments, reach_rate)
+        result, status = calculate_metrics(username, reach_rate)
         return jsonify(result), status
 
     except Exception as e:
