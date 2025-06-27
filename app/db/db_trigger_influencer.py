@@ -61,17 +61,19 @@ def influencer_table_trigger(campaign_id,social_media_type):
 def export_influencer_data(influencer_data):
     try:
         tiktok_url = influencer_data.get("tiktok_url")
+        instagram_url = influencer_data.get("instagram_url")
         influencers_table_instagram = "influencers_instagram"
         base_table = "influencers"
         db_manager.insert_data(influencer_data,influencers_table_instagram)
         print("Influencer record added to db")
         print(f"Checking for profiles with corresponding tiktok url...")
-        if tiktok_url != "NA" or tiktok_url != "":
-            data_fetch_query = f"""select id from {base_table} where 
-                        tiktok_url = {tiktok_url} LIMIT 1;
+        
+        data_fetch_query = f"""select id from {base_table} where 
+                        tiktok_url = {tiktok_url} or instagram_url = {instagram_url} LIMIT 1;
                     """
-            data = db_manager.execute_sql_query(data_fetch_query)
-            if data:
+        data = db_manager.execute_sql_query(data_fetch_query)
+        if data:
+                print(f"data already exists: {data}, updating it")
                 current_time = datetime.now(timezone.utc)
                 id = data.get("id")
                 update_fields = {
