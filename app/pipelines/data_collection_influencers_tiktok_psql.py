@@ -89,10 +89,9 @@ def scrape_tiktok_profile_psql(username):
             "influencer_nationality": "",
             "influencer_location": "",
             "targeted_audience": "",
-            "targeted_domain": ""
-
-            
+            "targeted_domain": ""            
         }
+        
 
         print("Prepared PSQL data:", data, flush=True)
         cols_list = ["tiktok_username"]
