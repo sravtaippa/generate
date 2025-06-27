@@ -60,7 +60,8 @@ def influencer_table_trigger(campaign_id,social_media_type):
     
 def export_influencer_data(influencer_data):
     try:
-        tiktok_url = influencer_data.get("tiktok_url")
+        tiktok_username = influencer_data.get("tiktok_id").lstrip("@")
+        tiktok_url = f"https://www.tiktok.com/@{tiktok_username}"
         instagram_url = influencer_data.get("instagram_url")
         influencers_table_instagram = "influencers_instagram"
         base_table = "influencers"
