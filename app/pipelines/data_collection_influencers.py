@@ -86,7 +86,9 @@ def post_scraper(instagram_username,posts_count):
         instagram_data = {}
         for item in items_posts:
             print(item)
-            captions.append(item.get("caption", ""))
+            caption = item.get("caption", "")
+            trimmed_caption = caption[:80]
+            captions.append(trimmed_caption)
             hashtags.append(item.get("hashtags", ""))
             post_urls.append(item.get("url", ""))
             comments_counts.append(item.get("commentsCount", 0))
