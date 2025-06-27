@@ -305,9 +305,10 @@ def add_influencer_data_in_db():
             "targeted_domain": request.args.get("targeted_domain"),
             "profile_type": request.args.get("profile_type"),
             "email_id": request.args.get("email"),
-            "twitter_url": request.args.get("twitter_id"),
-            "snapchat_url": request.args.get("snapchat_id"),
-            "linkedin_url": request.args.get("linkedin_id"),
+            "tiktok_id": request.args.get("tiktok_id"),
+            "twitter_id": request.args.get("twitter_id"),
+            "snapchat_id": request.args.get("snapchat_id"),
+            "linkedin_id": request.args.get("linkedin_id"),
             "phone": request.args.get("phone"),
         }
         

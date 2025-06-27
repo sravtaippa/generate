@@ -7,7 +7,6 @@ from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TAB
 openai.api_key =  OPENAI_API_KEY 
 
 
-
 def classify_vertical(instagram_bio, influencer_location, trimmed_instagram_caption, trimmed_instagram_hashtags):
     try:
 
