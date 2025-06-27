@@ -8,7 +8,7 @@ def calculate_metrics(username, reach_rate):
         cols_list = ["tiktok_username"]
         col_values = [username]
         result = db_manager.get_records_with_filter(table_name, cols_list, col_values, limit=1)
-        if result:
+        if not result:
             return {"status": "failed", "message": f"No record found for {username}"}
         
         record = result if isinstance(result, dict) else result[0]
