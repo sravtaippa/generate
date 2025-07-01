@@ -18,7 +18,6 @@ def influencer_form_tracker():
         if not data:
             return jsonify({"error": "No data received"}), 400
 
-        # Extract key parts
         contact = data.get("data", {}).get("contact", {})
         fields = contact.get("fields", {})
         funnel_info = data.get("data", {}).get("funnel_step", {})
@@ -27,29 +26,27 @@ def influencer_form_tracker():
         email = contact.get("email")
         first_name = fields.get("first_name", "")
         surname = fields.get("surname", "")
-        company_name = fields.get("comapny_name", "")
+        company_name = fields.get("company_name", "")  # spelling fixed
         phone = fields.get("phone_number")
-
-        # full_name = f"{first_name} {surname}".strip()
-        # client_id = funnel_name.lower().replace(" ", "_") or "taippa_marketing"
 
         if not email or not first_name or not phone:
             return jsonify({"error": "Missing email, name, or phone"}), 400
 
-        # Check if record exists (match by email)
+        # Check if record exists
         records = table.all(formula=f"{{email}} = '{email}'")
-        if records:
+        if not records:
             print(f"➕ Creating new record for {email}")
             table.create({
-                
                 "first_name": first_name,
                 "email": email,
                 "instagram_handle_name": surname,
                 "tiktok_handle_name": company_name,
                 "phone_number": phone
             })
+        else:
+            print(f"✅ Record already exists for {email}, skipping.")
 
-        return jsonify({"status": "success", "message": "Booking data saved to Airtable"}), 200
+        return jsonify({"status": "success", "message": "Data saved to Airtable"}), 200
 
     except Exception as e:
         print(f"❌ Error processing request: {e}")
