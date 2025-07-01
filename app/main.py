@@ -70,6 +70,7 @@ from db.db_ops import db_manager
 
 from pipelines.google_search_apify_psql import scrape_influencers_psql
 from pipelines.data_gpt_enritchement_psql import data_entrichment_using_gpt
+from make.influencer_marketing_landing_page_form import influencer_form_tracker
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -92,6 +93,13 @@ app.register_blueprint(influencer_bp)
 #     except Exception as e:
 #         print(f"Error occurred while scraping influencer posts data : {e}")
 #         return jsonify({"status": "failed", "content": "Error occurred while scraping posts data"})
+@app.route("/register_influencer_form_tracker", methods=["POST"])
+def run_influencer_form_tracker():
+    try:
+        return influencer_form_tracker()
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+    
 @app.route('/data_entrichment_using_gpt_psql', methods=['GET'])
 def data_entrichment_using_gpt_psql():
     try:
