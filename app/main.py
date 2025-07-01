@@ -71,6 +71,7 @@ from db.db_ops import db_manager
 from pipelines.google_search_apify_psql import scrape_influencers_psql
 from pipelines.data_gpt_enritchement_psql import data_entrichment_using_gpt
 from make.influencer_marketing_landing_page_form import influencer_form_tracker
+from pipelines.influencer_sanitization import sanitize_and_upload
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -93,6 +94,63 @@ app.register_blueprint(influencer_bp)
 #     except Exception as e:
 #         print(f"Error occurred while scraping influencer posts data : {e}")
 #         return jsonify({"status": "failed", "content": "Error occurred while scraping posts data"})
+@app.route("/upload-sanitized", methods=["POST", "GET"])
+def upload_sanitized():
+    data_list = []
+
+    if request.method == "POST" and request.is_json:
+        json_data = request.get_json()
+        if isinstance(json_data, list):
+            data_list = json_data
+        elif isinstance(json_data, dict):
+            data_list = [json_data]
+        else:
+            return jsonify({"error": "Invalid JSON format"}), 400
+
+    elif request.method == "GET":
+        influencer_data = {
+            "instagram_url": request.args.get("instagram_url"),
+            "instagram_username": request.args.get("instagram_username"),
+            "full_name": request.args.get("full_name"),
+            "instagram_bio": request.args.get("instagram_bio"),
+            "external_urls": request.args.get("external_urls"),
+            "instagram_followers_count": request.args.get("instagram_followers_count"),
+            "instagram_follows_count": request.args.get("instagram_follows_count"),
+            "business_category_name": request.args.get("business_category_name"),
+            "instagram_profile_pic": request.args.get("instagram_profile_pic"),
+            "instagram_posts_count": request.args.get("instagram_posts_count"),
+            "instagram_captions": request.args.get("trimmed_instagram_caption"),
+            "instagram_hashtags": request.args.get("trimmed_instagram_hashtags"),
+            "instagram_post_urls": request.args.get("instagram_post_urls"),
+            "instagram_comments_counts": request.args.get("instagram_comments_counts"),
+            "instagram_likes_counts": request.args.get("instagram_likes_counts"),
+            "instagram_video_play_counts": request.args.get("instagram_video_play_counts"),
+            "instagram_video_urls": request.args.get("video_urls"),
+            "avg_comments": request.args.get("avg_comments"),
+            "avg_likes": request.args.get("avg_likes"),
+            "avg_video_play_counts": request.args.get("avg_video_play_counts"),
+            "influencer_type": request.args.get("influencer_type"),
+            "influencer_location": request.args.get("influencer_location"),
+            "influencer_nationality": request.args.get("influencer_nationality"),
+            "targeted_audience": request.args.get("targeted_audience"),
+            "targeted_domain": request.args.get("targeted_domain"),
+            "profile_type": request.args.get("profile_type"),
+            "email_id": request.args.get("email"),
+            "tiktok_url": request.args.get("tiktok_id"),
+            "twitter_url": request.args.get("twitter_id"),
+            "snapchat_url": request.args.get("snapchat_id"),
+            "linkedin_url": request.args.get("linkedin_id"),
+            "phone": request.args.get("phone"),
+            "social_media_profile_type": request.args.get("social_media_profile_type", "instagram")  # fallback
+        }
+        data_list = [influencer_data]
+
+    else:
+        return jsonify({"error": "Unsupported request format. Use GET with query params or POST JSON."}), 400
+
+    result = sanitize_and_upload(data_list)
+    return jsonify(result), 200
+
 @app.route("/register_influencer_form_tracker", methods=["POST"])
 def run_influencer_form_tracker():
     try:
