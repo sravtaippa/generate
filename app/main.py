@@ -112,7 +112,7 @@ def fetch_airtable_data_via_formula():
         return jsonify({"status": "failed", "content": "Error occurred while fetching Airtable data from formula"})
 
 
-@app.route('/submit_influencer_form', methods=['POST'])
+@app.route('/submit_influencer_form_data', methods=['POST'])
 def submit_influencer_form():
     try:
         brand_id = request.form.get("brand_id")
