@@ -73,7 +73,7 @@ from pipelines.data_gpt_enritchement_psql import data_entrichment_using_gpt
 from influencers.ai_query_engine import airtable_formula_generator,fetch_records_from_airtable_with_formula
 from influencers.process_brand_brief import influencer_brief_processing
 from make.influencer_marketing_landing_page_form import influencer_form_tracker
-from pipelines.influencer_sanitization import sanitize_and_upload
+from pipelines.influencer_sanitization import  sanitize_data_instagram
 from pipelines.influencer_sanitization_tiktok import sanitize_and_upload_tiktok_data
 from pipelines.data_gpt_enritchement import data_entrichment_using_gpt_airtable
 print(f"\n =============== Generate : Pipeline started  ===============")
@@ -299,7 +299,7 @@ def upload_sanitized():
     else:
         return jsonify({"error": "Unsupported request format. Use GET with query params or POST JSON."}), 400
 
-    result = sanitize_and_upload(data_list)
+    result = sanitize_data_instagram(data_list)
     return jsonify(result), 200
 
 @app.route("/register_influencer_form_tracker", methods=["POST"])
