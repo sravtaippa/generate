@@ -62,7 +62,7 @@ from pipelines.data_collection_influencers_tiktok import scrape_tiktok_profile
 from pipelines.data_enrtichment_tiktok import scrape_and_store
 from pipelines.retrieve_influencer_data import retrieve_data_from_db
 from pipelines.profile_analyzer_engine import profile_intelligence_engine
-from pipelines.smart_query_machine import influencer_brief_processing
+# from pipelines.smart_query_machine import influencer_brief_processing
 from pipelines.estimated_reach_engagement_rate import calculate_metrics
 from pipelines.google_search_apify import scrape_influencers
 from db.db_influencer import export_influencer_data
@@ -71,6 +71,7 @@ from db.db_ops import db_manager
 from pipelines.google_search_apify_psql import scrape_influencers_psql
 from pipelines.data_gpt_enritchement_psql import data_entrichment_using_gpt
 from influencers.ai_query_engine import airtable_formula_generator,fetch_records_from_airtable_with_formula
+from influencers.process_brand_brief import influencer_brief_processing
 from make.influencer_marketing_landing_page_form import influencer_form_tracker
 from pipelines.influencer_sanitization import sanitize_and_upload
 from pipelines.influencer_sanitization_tiktok import sanitize_and_upload_tiktok_data
@@ -293,7 +294,6 @@ def upload_sanitized():
             "social_media_profile_type": request.args.get("social_media_profile_type", "instagram")  # fallback
         }
         data_list = [influencer_data]
-
     else:
         return jsonify({"error": "Unsupported request format. Use GET with query params or POST JSON."}), 400
 
@@ -474,14 +474,51 @@ def retrieve_latest_records():
 @app.route("/process_influencer_brief", methods=["GET"])
 def process_influencer_brief():
     try:
+        # Airtable
         drive_urls = request.args.get("drive_urls")
         client_id = request.args.get("client_id")
-        # drive_urls = """["https://drive.google.com/uc?id=1IoCxHQP8dKBgrGLjeUcDq75Y9Ip97dVf&export=download"]"""
-        # client_id = "aarka"
+        drive_urls = """["https://drive.google.com/uc?id=1IoCxHQP8dKBgrGLjeUcDq75Y9Ip97dVf&export=download"]"""
+        client_id = "aarka"
+        airtable_fields = """
+        Database schema with column descriptions:
+            Table: src_influencer_data (
+            id                          long text -- Unique identifier for the influencer
+            instagram_url               long text -- URL of the influencer's Instagram profile (if null it would have values as '', 'NA','N/A')
+            instagram_followers_count   Long text -- Number of followers on Instagram
+            instagram_username          Long text -- Instagram username/handle
+            instagram_bio               Long text -- Bio text from the Instagram profile
+            influencer_type             Long text -- Type/category of influencer (fixed category values among this: [food_vlogger,fashion_vlogger,real_estate_influencers,business_vloggers,finance_vloggers,real_estate_influencers,beauty_vlogger,tech_vloggers])
+            influencer_location         Long text -- Location of the influencer
+            instagram_post_urls         Long text -- List of URLs to the influencer's Instagram posts
+            business_category_name      Long text -- Main business category of the influencer (Tag provided by Instagram for Business profile Eg: "Personal blog","Digital creator","Reel creator" etc)
+            full_name                   Long text -- Full name of the influencer
+            instagram_follows_count     Long text -- Number of accounts the influencer follows
+            created_time                Long text -- Timestamp when the influencer was added to the database
+            instagram_hashtags          Long text -- Hashtags used by the influencer for different posts (stored as list of strings)
+            instagram_captions          Long text -- Captions from the influencer's posts (stored as list of strings)
+            instagram_video_play_counts Long text -- Number of plays for video posts (stored as list of strings)
+            instagram_likes_counts      Long text -- Number of likes on posts (stored as list of strings)
+            instagram_comments_counts   Long text -- Number of comments on posts (stored as list of strings)
+            instagram_video_urls        Long text -- URLs of video posts
+            instagram_posts_count       Long text -- Total number of posts by the influencer
+            external_urls               Long text -- List of external links provided by the influencer
+            instagram_profile_pic       Long text -- URL of the influencer's profile picture
+            influencer_nationality      Long text -- Nationality of the influencer (Include country names)
+            targeted_audience           Long text -- Target audience group for the influencer (fixed category values among this: ["gen-z","gen-y", "gen-x"])
+            targeted_domain             Long text -- Domain or industry targeted by the influencer (fixed categoru values among this: ["food", "fashion", "fitness", "gaming", "education", "automotive", "finance", "art"])
+            profile_type                Long text -- Type of profile (fixed category values among this: ["person","group"])
+            email_id                    Long text -- Email address of the influencer (if not available value is "NA")
+            twitter_url                 Long text -- URL of the influencer's Twitter profile
+            snapchat_url                Long text -- URL of the influencer's Snapchat profile
+            phone                       Long text -- Phone number of the influencer ( if not available value is "NA")
+            linkedin_url                Long text -- URL of the influencer's LinkedIn profile
+            tiktok_url                  Long text -- URL of the influencer's TikTok profile
+            )
+        """
         print(drive_urls)
         if drive_urls in ["", None] or client_id in ["", None]:
-            return {"status":"failed","content":"Missing input parameters"}
-        return {"status":"success","content":influencer_brief_processing(drive_urls,client_id)}
+            return {"status":"failed","content":"Missing input parameters while processing influencer brief"}
+        return {"status":"success","content":influencer_brief_processing(drive_urls, client_id,airtable_fields)}
     except Exception as e:
         print(f"Error occurred while processing influencer brief: {e}")
         return {"status":"failed","content":f"Error occurred while processing influencer brief: {e}"}
