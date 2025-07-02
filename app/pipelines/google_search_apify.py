@@ -56,7 +56,7 @@ def add_to_airtable(media, username, url, influencer_type, influencer_location):
         "unique_profile_key": unique_key,
         "influencer_type": influencer_type,
         "influencer_location": influencer_location,
-        "created_time": datetime.datetime.utcnow().isoformat()
+       
     }
 
     data = {"fields": fields}
