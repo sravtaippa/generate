@@ -76,6 +76,7 @@ from make.influencer_marketing_landing_page_form import influencer_form_tracker
 from pipelines.influencer_sanitization import  sanitize_data_instagram
 from pipelines.influencer_sanitization_tiktok import sanitize_and_upload_tiktok_data
 from pipelines.data_gpt_enritchement import data_entrichment_using_gpt_airtable
+from dashboard.influencer_registration_form import submit_to_airtable
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -110,21 +111,22 @@ def fetch_airtable_data_via_formula():
         print(f"Error occurred while fetching Airtable data from formula: {e}")
         return jsonify({"status": "failed", "content": "Error occurred while fetching Airtable data from formula"})
 
-# @app.route('/tiktok_posts_to_airtable', methods=['GET'])
-# def influencer_post_scraper_tiktok():
-#     try:
-#         tiktok_username = request.args.get("username")
-#         # posts_count = request.args.get("posts_count", type=int, default=5)
-#         posts_count = 5
-#         if not tiktok_username:
-#             return jsonify({"status": "failed", "content": "Missing 'tiktok_username' parameter"})
-#         result = scrape_and_store(tiktok_username, posts_count)
-#         if result["status"] == "failed":
-#             return jsonify({"status": "failed", "content": result.get("error", "Unknown error")})
-#         return jsonify({"status": "passed", "content": result})
-#     except Exception as e:
-#         print(f"Error occurred while scraping influencer posts data : {e}")
-#         return jsonify({"status": "failed", "content": "Error occurred while scraping posts data"})
+
+@app.route('/submit_influencer_form', methods=['POST'])
+def submit_influencer_form():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"status": "failed", "content": "Missing JSON body"}), 400
+
+        result = submit_to_airtable(data)
+        if result["status"] == "failed":
+            return jsonify({"status": "failed", "content": result.get("error", "Unknown error")}), 400
+
+        return jsonify({"status": "passed", "content": result}), 201
+    except Exception as e:
+        print(f"Error occurred while submitting form data to Airtable: {e}")
+        return jsonify({"status": "failed", "content": "Internal server error"}), 500
 
 
 @app.route('/get_data_entrichment_using_gpt_module', methods=['GET', 'POST'])
