@@ -18,12 +18,12 @@ HEADERS = {
 }
 
 # === Extract username from URL for Instagram or TikTok ===
-def extract_username(url):
-    if "instagram.com" in url:
+def extract_username(url, media):
+    if media is "instagram":
         if "/reel/" in url or "/reels/" in url:
             return None
         match = re.search(r"instagram\.com/([^/?#]+)", url)
-    elif "tiktok.com" in url:
+    elif media is "tiktok":
         match = re.search(r"tiktok\.com/@([^/?#]+)", url)
     else:
         return None
@@ -72,7 +72,7 @@ def process_and_upload(results, media, influencer_type, influencer_location):
     seen = set()
     for item in results:
         url = item.get("url", "")
-        username = extract_username(url)
+        username = extract_username(url, media)
 
         if username and username not in seen:
             seen.add(username)
