@@ -36,7 +36,7 @@ def unique_key_check_airtable(column_name,unique_value,table_name):
             # print(f"\nCompleted unique key check")
             return any(record['fields'].get(column_name) == unique_value for record in records) 
         except Exception as e:
-            print(f"Error occured in {__name__} while performing unique value check in airtable. {e}")
+            print(f"Error occured in {__name__} while performing unique value check in airtable. {e}") 
 
 # function to export data to Airtable
 def export_to_airtable(data,raw_table):
