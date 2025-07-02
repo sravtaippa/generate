@@ -126,8 +126,8 @@ def fetch_airtable_data_via_formula():
 #         print(f"Error occurred while scraping influencer posts data : {e}")
 #         return jsonify({"status": "failed", "content": "Error occurred while scraping posts data"})
 
-@app.route('/data_entrichment_using_gpt_airtable', methods=['GET', 'POST'])
-def data_entrichment_using_gpt_airtable():
+@app.route('/_getdata_entrichment_using_gpt_module', methods=['GET', 'POST'])
+def data_entrichment_using_gpt_module():
     data_list = []
 
     if request.method == "POST" and request.is_json:
