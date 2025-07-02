@@ -191,30 +191,5 @@ def data_entrichment_using_gpt_airtable(data_dict):
     }
 
 
-# === Flask API Endpoint ===
-@app.route("/data_entrichment_using_gpt", methods=["GET", "POST"])
-def data_entrichment_using_gpt_route():
-    data_list = []
-
-    if request.method == "POST" and request.is_json:
-        json_data = request.get_json()
-        if isinstance(json_data, list):
-            data_list = json_data
-        elif isinstance(json_data, dict):
-            data_list = [json_data]
-        else:
-            return jsonify({"error": "Invalid JSON format"}), 400
-
-    elif request.method == "GET":
-        influencer_data = {key: request.args.get(key) for key in request.args}
-        data_list = [influencer_data]
-
-    else:
-        return jsonify({"error": "Unsupported request format. Use GET or POST."}), 400
-
-    result = data_entrichment_using_gpt_airtable(data_list[0])
-    return jsonify(result), 200
-
-
 if __name__ == "__main__":
     app.run(debug=True)
