@@ -126,6 +126,7 @@ def fetch_airtable_data_via_formula():
 #         print(f"Error occurred while scraping influencer posts data : {e}")
 #         return jsonify({"status": "failed", "content": "Error occurred while scraping posts data"})
 
+
 @app.route('/get_data_entrichment_using_gpt_module', methods=['GET', 'POST'])
 def data_entrichment_using_gpt_module():
     data_list = []
@@ -176,14 +177,15 @@ def data_entrichment_using_gpt_module():
             "tiktok_username": request.args.get("tiktok_username"),
             "tiktok_video_urls": request.args.get("tiktok_video_urls"),
             "tiktok_videos_count": request.args.get("tiktok_videos_count")
+            
         }
         data_list = [influencer_data]
 
     else:
         return jsonify({"error": "Unsupported request format. Use GET with query params or POST JSON."}), 400
 
-    result = data_entrichment_using_gpt_airtable(data_list)
-    return jsonify(result), 200
+    results = [data_entrichment_using_gpt_airtable(data) for data in data_list]
+    return jsonify(results), 200
 
 @app.route("/upload-sanitized-tiktok-data", methods=["POST", "GET"])
 def upload_sanitized_tiktok_data():
