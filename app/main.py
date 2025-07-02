@@ -72,6 +72,7 @@ from pipelines.google_search_apify_psql import scrape_influencers_psql
 from pipelines.data_gpt_enritchement_psql import data_entrichment_using_gpt
 from make.influencer_marketing_landing_page_form import influencer_form_tracker
 from pipelines.influencer_sanitization import sanitize_and_upload
+from pipelines.influencer_sanitization_tiktok import sanitize_and_upload_tiktok_data
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -94,6 +95,65 @@ app.register_blueprint(influencer_bp)
 #     except Exception as e:
 #         print(f"Error occurred while scraping influencer posts data : {e}")
 #         return jsonify({"status": "failed", "content": "Error occurred while scraping posts data"})
+@app.route("/upload-sanitized-tiktok-data", methods=["POST", "GET"])
+def upload_sanitized_tiktok_data():
+    data_list = []
+
+    if request.method == "POST" and request.is_json:
+        json_data = request.get_json()
+        if isinstance(json_data, list):
+            data_list = json_data
+        elif isinstance(json_data, dict):
+            data_list = [json_data]
+        else:
+            return jsonify({"error": "Invalid JSON format"}), 400
+
+    elif request.method == "GET":
+        influencer_data = {
+            "created_time": request.args.get("created_time"),
+            "email_id": request.args.get("email_id"),
+            "external_urls": request.args.get("external_urls"),
+            "full_name": request.args.get("full_name"),
+            "id": request.args.get("id"),
+            "influencer_location": request.args.get("influencer_location"),
+            "influencer_nationality": request.args.get("influencer_nationality"),
+            "influencer_type": request.args.get("influencer_type"),
+            "instagram_url": request.args.get("instagram_url"),
+            "phone": request.args.get("phone"),
+            "profile_type": request.args.get("profile_type"),
+            "social_media_profile_type": request.args.get("social_media_profile_type", "tiktok"),
+            "targeted_audience": request.args.get("targeted_audience"),
+            "tiktok_audience_location": request.args.get("tiktok_audience_location"),
+            "tiktok_bio": request.args.get("tiktok_bio"),
+            "tiktok_comment_count": request.args.get("tiktok_comment_count"),
+            "tiktok_content_style": request.args.get("tiktok_content_style"),
+            "tiktok_content_type": request.args.get("tiktok_content_type"),
+            "tiktok_digg_count": request.args.get("tiktok_digg_count"),
+            "tiktok_followers_count": request.args.get("tiktok_followers_count"),
+            "tiktok_follows_count": request.args.get("tiktok_follows_count"),
+            "tiktok_influencer_summary": request.args.get("tiktok_influencer_summary"),
+            "tiktok_language_used": request.args.get("tiktok_language_used"),
+            "tiktok_likes_count": request.args.get("tiktok_likes_count"),
+            "tiktok_niche": request.args.get("tiktok_niche"),
+            "tiktok_play_count": request.args.get("tiktok_play_count"),
+            "tiktok_profile_pic": request.args.get("tiktok_profile_pic"),
+            "tiktok_share_count": request.args.get("tiktok_share_count"),
+            "tiktok_suitable_brands": request.args.get("tiktok_suitable_brands"),
+            "tiktok_targeted_audience": request.args.get("tiktok_targeted_audience"),
+            "tiktok_text": request.args.get("tiktok_text"),
+            "tiktok_url": request.args.get("tiktok_url"),
+            "tiktok_username": request.args.get("tiktok_username"),
+            "tiktok_video_urls": request.args.get("tiktok_video_urls"),
+            "tiktok_videos_count": request.args.get("tiktok_videos_count")
+        }
+        data_list = [influencer_data]
+
+    else:
+        return jsonify({"error": "Unsupported request format. Use GET with query params or POST JSON."}), 400
+
+    result = sanitize_and_upload_tiktok_data(data_list)
+    return jsonify(result), 200
+
 @app.route("/upload-sanitized", methods=["POST", "GET"])
 def upload_sanitized():
     data_list = []
