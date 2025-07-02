@@ -40,7 +40,7 @@ def is_valid_tt_url(url):
     return isinstance(url, str) and url.strip().startswith("https://www.tiktok.com/")
 
 # === Clean & Return Without Saving ===
-def sanitize_and_upload(data_list):
+def sanitize_data_instagram(data_list):
     cleaned_results = []
     skipped_count = 0
 
@@ -76,7 +76,3 @@ def sanitize_and_upload(data_list):
         "skipped_count": skipped_count,
         "cleaned_data": cleaned_results
     }
-
-# === Run App ===
-if __name__ == "__main__":
-    app.run(debug=True)

@@ -40,7 +40,7 @@ def is_valid_tt_url(url):
 def sanitize_and_upload_tiktok_data(data_list):
     cleaned_results = []
     skipped_count = 0
-
+    print(f"Data for cleaning:{data_list}")
     for index, fields in enumerate(data_list):
         social_type = (fields.get("social_media_profile_type") or "").strip().lower()
         tt_url = (fields.get("tiktok_url") or "").strip()
@@ -62,6 +62,7 @@ def sanitize_and_upload_tiktok_data(data_list):
             cleaned[field] = val
 
         cleaned_results.append(cleaned)
+        print(f"cleaned Data: {cleaned_results}")
 
     return {
         "total_input": len(data_list),
