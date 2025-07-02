@@ -76,7 +76,7 @@ from make.influencer_marketing_landing_page_form import influencer_form_tracker
 from pipelines.influencer_sanitization import  sanitize_data_instagram
 from pipelines.influencer_sanitization_tiktok import sanitize_and_upload_tiktok_data
 from pipelines.data_gpt_enritchement import data_entrichment_using_gpt_airtable
-from dashboard.influencer_registration_form import submit_to_airtable
+from dashboard.influencer_registration_form import handle_upload_and_submit_to_airtable
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -119,13 +119,11 @@ def submit_influencer_form():
         files = request.files.getlist("documents")
 
         if not brand_id:
-            return jsonify({"status": "failed", "content": "Missing JSON body"}), 400
+            return jsonify({"status": "failed", "content": "Missing brand_id"}), 400
 
-        result = submit_to_airtable(brand_id, files)
-        if result["status"] == "failed":
-            return jsonify({"status": "failed", "content": result.get("error", "Unknown error")}), 400
+        result = handle_upload_and_submit_to_airtable(brand_id, files)
+        return result
 
-        return jsonify({"status": "passed", "content": result}), 201
     except Exception as e:
         print(f"Error occurred while submitting form data to Airtable: {e}")
         return jsonify({"status": "failed", "content": "Internal server error"}), 500
