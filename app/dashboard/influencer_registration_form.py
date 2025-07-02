@@ -75,8 +75,8 @@ def submit_to_airtable(brand_id, file_urls):
     return res.status_code, res.json()
 
 
-@app.route('/submit_influencer_form', methods=['POST'])
-def submit_influencer_form(brand_id, files):
+
+def submit_to_airtable(brand_id, files):
     try:
         
         if not brand_id or not files:
