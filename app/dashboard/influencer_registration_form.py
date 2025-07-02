@@ -76,15 +76,14 @@ def submit_to_airtable(brand_id, file_urls):
 
 
 
-def submit_to_airtable(brand_id, files):
+def handle_upload_and_submit_to_airtable(brand_id, files):
     try:
-        
         if not brand_id or not files:
             return jsonify({"status": "failed", "message": "Missing brand_id or files"}), 400
 
         drive_service = get_authenticated_drive_service()
 
-        # Upload all files to Drive and collect their URLs
+        # Upload to Google Drive
         file_urls = [upload_file_to_drive(f, drive_service) for f in files]
 
         # Send to Airtable
