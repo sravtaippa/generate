@@ -115,11 +115,13 @@ def fetch_airtable_data_via_formula():
 @app.route('/submit_influencer_form', methods=['POST'])
 def submit_influencer_form():
     try:
-        data = request.get_json()
-        if not data:
+        brand_id = request.form.get("brand_id")
+        files = request.files.getlist("documents")
+
+        if not brand_id:
             return jsonify({"status": "failed", "content": "Missing JSON body"}), 400
 
-        result = submit_to_airtable(data)
+        result = submit_to_airtable(brand_id, files)
         if result["status"] == "failed":
             return jsonify({"status": "failed", "content": result.get("error", "Unknown error")}), 400
 
