@@ -118,6 +118,7 @@ def submit_influencer_form():
         print("🔁 Headers:", dict(request.headers))
         print("📦 Form:", request.form)
         print("📎 Files:", request.files)
+        print("📎 Body:",  dict(request.body))
         brand_id = request.form.get("brand_id")
         files = request.files.getlist("documents")
 
