@@ -62,7 +62,7 @@ def sanitize_and_upload_tiktok_data(data_list):
             cleaned[field] = val
 
         cleaned_results.append(cleaned)
-        print(f"cleaned Data: {cleaned_results}")
+    print(f"cleaned Data: {cleaned_results}")
 
     return {
         "total_input": len(data_list),
