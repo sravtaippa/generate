@@ -1,6 +1,5 @@
 import requests
 import re
-import uuid
 import datetime
 from flask import jsonify, request
 from config import OPENAI_API_KEY,AIRTABLE_API_KEY,AIRTABLE_BASE_ID,AIRTABLE_TABLE_NAME,APOLLO_API_KEY,APOLLO_HEADERS,APIFY_API_TOKEN
@@ -50,7 +49,7 @@ def add_to_airtable(media, username, url, influencer_type, influencer_location):
     unique_key = f"{media.lower()}_{username}"
 
     fields = {
-        "id": str(uuid.uuid4()),
+        
         "username": username,
         "social_media_type": media.lower(),
         "profile_url": url,
