@@ -115,6 +115,9 @@ def fetch_airtable_data_via_formula():
 @app.route('/submit_influencer_form_data', methods=['POST'])
 def submit_influencer_form():
     try:
+        print("🔁 Headers:", dict(request.headers))
+        print("📦 Form:", request.form)
+        print("📎 Files:", request.files)
         brand_id = request.form.get("brand_id")
         files = request.files.getlist("documents")
 
