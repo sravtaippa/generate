@@ -70,12 +70,40 @@ from db.db_ops import db_manager
 
 from pipelines.google_search_apify_psql import scrape_influencers_psql
 from pipelines.data_gpt_enritchement_psql import data_entrichment_using_gpt
+from influencers.ai_query_engine import airtable_formula_generator,fetch_records_from_airtable_with_formula
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
 app = Flask(__name__)
 app.register_blueprint(influencer_bp)
+
+
+######### AIRTABLE ROUTES - INFLUENCER MARKETING ##########
+@app.route('/generate_airtable_formula', methods=['GET'])
+def generate_airtable_formula():
+    try:
+        user_query = request.args.get("user_query")
+        influencer_table = request.args.get("influencer_table")
+        if not user_query or not influencer_table:
+            return jsonify({"status": "failed", "content": "Missing 'table_name' or 'formula' parameter"})
+        formula = airtable_formula_generator(influencer_table,user_query)
+        return jsonify({"status": "passed", "content": formula})
+    except Exception as e:
+        print(f"Error occurred while generating Airtable formula: {e}")
+        return jsonify({"status": "failed", "content": "Error occurred while generating Airtable formula"})
+    
+@app.route('/fetch_airtable_data_via_formula', methods=['GET'])
+def fetch_airtable_data_via_formula():
+    try:
+        formula = request.args.get("formula")
+        if not formula:
+            return jsonify({"status": "failed", "content": "Missing 'formula' parameter"})
+        filtered_airtable_data = fetch_records_from_airtable_with_formula(formula)
+        return jsonify({"status": "passed", "content": filtered_airtable_data})
+    except Exception as e:
+        print(f"Error occurred while fetching Airtable data from formula: {e}")
+        return jsonify({"status": "failed", "content": "Error occurred while fetching Airtable data from formula"})
 
 # @app.route('/tiktok_posts_to_airtable', methods=['GET'])
 # def influencer_post_scraper_tiktok():
