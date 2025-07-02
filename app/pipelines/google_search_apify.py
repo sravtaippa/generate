@@ -1,5 +1,7 @@
-import requests 
+import requests
 import re
+import uuid
+import datetime
 from flask import jsonify, request
 
 # === Apify config ===
@@ -8,7 +10,7 @@ APIFY_API_URL = f"https://api.apify.com/v2/acts/tuningsearch~cheap-google-search
 
 # === Airtable config ===
 AIRTABLE_BASE_ID = 'app5s8zl7DsUaDmtx'
-AIRTABLE_TABLE_NAME = 'influencers'
+AIRTABLE_TABLE_NAME = 'influencer_profile_urls'
 AIRTABLE_API_KEY = 'patELEdV0LAx6Aba3.393bf0e41eb59b4b80de15b94a3d122eab50035c7c34189b53ec561de590dff3'
 
 AIRTABLE_URL = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE_NAME}"
@@ -20,7 +22,6 @@ HEADERS = {
 # === Extract username from URL for Instagram or TikTok ===
 def extract_username(url):
     if "instagram.com" in url:
-        # Skip reels
         if "/reel/" in url or "/reels/" in url:
             return None
         match = re.search(r"instagram\.com/([^/?#]+)", url)
@@ -30,45 +31,35 @@ def extract_username(url):
         return None
     return match.group(1) if match else None
 
-def is_duplicate(media, username):
-    if media.lower() == "instagram":
-        field_name = "instagram_username"
-    elif media.lower() == "tiktok":
-        field_name = "tiktok_username"
-    else:
-        print(f"⚠️ Unknown media type for duplicate check: {media}")
-        return False, username  # still return username for consistency
-
-    filter_formula = f"{{{field_name}}} = '{username}'"
+# === Check for duplicate using unique_profile_key ===
+def is_duplicate(media, unique_profile_key):
+    filter_formula = f"{{unique_profile_key}} = '{unique_profile_key}'"
     params = {"filterByFormula": filter_formula}
-
     response = requests.get(AIRTABLE_URL, headers=HEADERS, params=params)
     if response.status_code == 200:
         records = response.json().get("records", [])
-        return len(records) > 0, username
+        return len(records) > 0
     else:
-        print(f"⚠️ Error checking duplicate for {username}: {response.text}")
-        return False, username
+        print(f"⚠️ Error checking duplicate for {unique_profile_key}: {response.text}")
+        return False
 
-
-# === Add new record to Airtable with appropriate field names ===
+# === Add new record to Airtable ===
 def add_to_airtable(media, username, url, influencer_type, influencer_location):
-    fields = {
-        "influencer_type": influencer_type,
-        "influencer_location": influencer_location
-    }
-
-    if media.lower() == "instagram":
-        fields["instagram_username"] = username
-        fields["instagram_url"] = url
-        fields["social_media_type"] = "instagram"
-    elif media.lower() == "tiktok":
-        fields["tiktok_username"] = username
-        fields["tiktok_url"] = url
-        fields["social_media_type"] = "tiktok"
-    else:
-        print(f"⚠️ Unknown media type: {media}")
+    if not username:
         return
+
+    unique_key = f"{media.lower()}_{username}"
+
+    fields = {
+        "id": str(uuid.uuid4()),
+        "username": username,
+        "social_media_type": media.lower(),
+        "profile_url": url,
+        "unique_profile_key": unique_key,
+        "influencer_type": influencer_type,
+        "influencer_location": influencer_location,
+        "created_time": datetime.datetime.utcnow().isoformat()
+    }
 
     data = {"fields": fields}
 
@@ -87,14 +78,14 @@ def process_and_upload(results, media, influencer_type, influencer_location):
 
         if username and username not in seen:
             seen.add(username)
-            is_dup, extracted_username = is_duplicate(media, username)
+            unique_key = f"{media.lower()}_{username}"
+            is_dup = is_duplicate(media, unique_key)
             if not is_dup:
-                add_to_airtable(media, extracted_username, url, influencer_type, influencer_location)
+                add_to_airtable(media, username, url, influencer_type, influencer_location)
             else:
-                print(f"🔁 Skipped duplicate: {extracted_username}")
+                print(f"🔁 Skipped duplicate: {unique_key}")
         else:
             print(f"⚠️ Invalid or already seen username: {username}")
-
 
 # === Flask route function to trigger scraping ===
 def scrape_influencers(data, media, influencer_type, influencer_location, page):
