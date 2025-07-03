@@ -276,7 +276,7 @@ def upload_sanitized():
             "instagram_profile_pic": request.args.get("instagram_profile_pic"),
             "instagram_posts_count": request.args.get("instagram_posts_count"),
             "instagram_captions": request.args.get("trimmed_instagram_caption"),
-            "instagram_hashtags": request.args.get("trimmed_instagram_hashtags"),
+            "instagram_hashtags": request.args.get("trimmed_instagram_caption"),
             "instagram_post_urls": request.args.get("instagram_post_urls"),
             "instagram_comments_counts": request.args.get("instagram_comments_counts"),
             "instagram_likes_counts": request.args.get("instagram_likes_counts"),
