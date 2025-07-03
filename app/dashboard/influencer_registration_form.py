@@ -53,7 +53,8 @@ def handle_upload_and_submit_to_airtable(brand_id, files):
     drive_service = get_authenticated_drive_service()
     file_urls = [upload_file_to_drive(f, drive_service) for f in files]
 
-    file_urls_str = "[" + ".".join(file_urls) + "]"
+    file_urls_str = "[" + ",".join(f'"{url}"' for url in file_urls) + "]"
+
 
     payload = {
         "fields": {
