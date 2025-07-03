@@ -144,13 +144,25 @@ Input:
         return None
 
 
-# === Main Logic ===
 def data_entrichment_using_gpt_airtable(data_dict):
     print(f"✅ Received Dict: {data_dict}")
 
+    # Parse TikTok bio/text
     tiktok_bio = data_dict.get("tiktok_bio", "")
     tiktok_text = data_dict.get("tiktok_text", "")
     tiktok_username = data_dict.get("tiktok_username", "")
+
+    # Extract numeric engagement fields
+    likes = safe_int(data_dict.get("tiktok_digg_count"))
+    comments = safe_int(data_dict.get("tiktok_comment_count"))
+    shares = safe_int(data_dict.get("tiktok_share_count"))
+    followers = safe_int(data_dict.get("tiktok_followers_count"))
+    play_count = safe_int(data_dict.get("tiktok_play_count"))
+    videos_count = safe_int(data_dict.get("tiktok_videos_count"))
+
+    total_engagements = likes + comments + shares
+    engagement_rate = round((total_engagements / followers) * 100, 2) if followers > 0 else 0
+    estimated_reach = play_count
 
     enriched = tiktok_enritchment(tiktok_bio, tiktok_text, tiktok_username)
     contact_info = tiktok_extract_contact_and_audience(tiktok_bio, tiktok_text, tiktok_username)
@@ -179,6 +191,9 @@ def data_entrichment_using_gpt_airtable(data_dict):
         "snapchat_url": enriched.get("snapchat_url", "N/A") if enriched else "N/A",
         "targeted_domain": enriched.get("targeted_domain", "N/A") if enriched else "N/A",
         "full_name": enriched.get("full_name", "N/A") if enriched else "N/A",
+        "engagement_rate": f"{engagement_rate}%",
+        "estimated_engagement_count": str(total_engagements),
+        "estimated_reach": str(estimated_reach)
     }
 
     return {
@@ -189,6 +204,8 @@ def data_entrichment_using_gpt_airtable(data_dict):
         "identity_info": identity_info,
         "combined_output": data
     }
+
+
 
 
 if __name__ == "__main__":
