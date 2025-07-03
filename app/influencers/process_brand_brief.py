@@ -136,19 +136,132 @@ def process_documents(files,client_id):
         return False
 
 
+# def generate_brand_query(brand_brief_doc_info):
+
+#     prompt = f"""
+#         You are an assistant that generates brand query context based on the influencer brief documents provided by a brand.
+
+#         Here is the brand brief doc_info retreived from the vector database:
+#         "{brand_brief_doc_info}"
+
+#         Understand the brand's requirements and generate a query context that includes the following details:
+#         1. Target Audience
+#         2. Influencer Followers Count
+#         3. Influencer Nationality
+#         4. Influencer Region
+#         5. Targeted Domain
+#         6. Email Address
+#         7. Age of the Influencer
+#         Return only the Exact accurate influencer criteria required by the brand to query relevant influencers, with no explanation or markdown.
+
+#     """
+
+#     response = openai_client.chat.completions.create(
+#         model="gpt-4-turbo",
+#         messages=[{"role": "user", "content": prompt}],
+#         temperature=0.0
+#     )
+
+#     formula = response.choices[0].message.content.strip()
+#     # Remove code block formatting if present
+#     if formula.startswith("```"):
+#         formula = formula.split("```")[1].strip()
+#     return formula
+
+
+def generate_brand_query(brand_brief_doc_info):
+    """
+    Generates a structured influencer criteria query from the given brand brief context.
+    
+    :param brand_brief_doc_info: Relevant text chunks extracted from the brand brief via vector DB.
+    :return: Structured influencer criteria string for downstream use (e.g., Airtable query).
+    """
+    
+    prompt = f"""
+    You are an assistant that extracts influencer selection criteria from brand brief documents.
+
+    Here is the brand brief information retrieved from the vector database:
+    \"\"\"{brand_brief_doc_info}\"\"\"
+
+    Analyze this content and return only the influencer criteria required by the brand. Include:
+
+    1. Target Audience (gen-z,gen-x,gen-y)
+    2. Influencer type with followers count:
+    - Nano Influencers: 1,000 to 10,000 followers
+    - Micro Influencers: 10,001 to 50,000 followers
+    - Mid-tier Influencers: 50,001 to 250,000 followers
+    - Macro Influencers: 250,001 to 1,000,000 followers
+
+    3. Influencer Nationality **Do not pluralize** values for this field, eg: use "Indian", "Russian" — never "Indians", "Russians", etc.
+    4. Influencer Location (Eg: India, USA, Europe, etc.)
+    5. Targeted Domain (Eg: finance, investment, food, real_estate, fashion, etc.)
+
+    Return only the influencer criteria in plain text. Do not include any explanation or markdown formatting.
+    """
+
+    response = openai_client.chat.completions.create(
+        model="gpt-4-turbo",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.0
+    )
+
+    criteria = response.choices[0].message.content.strip()
+    
+    # Clean up response if wrapped in code block
+    if criteria.startswith("```"):
+        criteria = criteria.split("```")[1].strip()
+
+    return criteria
+
+
 # --- Generate filter formula from user query ---
 def generate_airtable_formula(query_context,airtable_fields):
 
+    field_mappings = """
+    Field mappings for Airtable:
+    1. Target Audience: `target_audience`
+    2. Influencer Followers Count: instagram_followers_count
+    3. Influencer Nationality: `influencer_nationality`
+    4. Influencer Region: `influencer_region`
+    5. Targeted Domain: `targeted_domain`
+    """
     prompt = f"""
         You are an assistant that generates Airtable filterByFormula expressions based on the influencer criteria required by a brand to query relevant influencers.
 
         Airtable Table Schema:
         {airtable_fields}
+        - Always use SEARCH() instead of FIND() for string comparisons to ensure case-insensitive matching.
 
         Influencer Criteria required for the brand to query relevant influencers:
         "{query_context}"
 
+        Instructions:
+        - Only use these airtable fields for reference: [instagram_followers_count, targeted_domain, influencer_nationality, targeted_audience]
+        - For the number comparison use the VALUE() function to convert string to number.
+        - Use the exact field names and allowed values from the schema above.
+        - For any text comparisons (like nationality, targeted domain, etc.), use SEARCH() for **case-insensitive matching**.
+        - Do **not pluralize** values like nationalities. For example, use `"Indian"` not `"Indians"`, `"Russian"` not `"Russians"`, etc.
+        - Only generate the Airtable formula — no explanation or markdown.
+        
         Return only the Airtable formula, with no explanation or markdown.
+    """
+    prompt = f"""
+    You are an assistant that generates Airtable filterByFormula expressions based on the influencer criteria required by a brand to query relevant influencers.
+
+    Airtable Table Schema:
+    {airtable_fields}
+
+    Instructions:
+    - Only generate a valid Airtable formula — no explanation, no markdown, no code block.
+    - Only use these airtable fields for reference: [instagram_followers_count, targeted_domain, influencer_nationality]
+    - Use the exact field names and allowed values from the schema above.
+    - Use SEARCH() for all string comparisons to ensure **case-insensitive** matching.
+    - **Do not pluralize** values for **influencer_nationality** field . For example, use "Indian", "Russian", "French" during search — never "Indians", "Russians", etc.
+    - For number comparisons, always use VALUE() to convert from text to number before comparing.
+    - Make sure the final formula is Airtable-compatible and syntactically correct.
+    
+    Influencer Criteria required by the brand:
+    \"{query_context}\"
     """
 
     response = openai_client.chat.completions.create(
@@ -192,12 +305,16 @@ def airtable_formula_generator(index, client_id, airtable_fields):
 
         retrieved_texts = [match['metadata']['text'] for match in query_resp['matches']]
         print(f"Retrieved {len(retrieved_texts)} relevant chunks for the query.")
-        
+        print("Sample retrieved text:", retrieved_texts)  # Print first 100 characters of the first chunk
         query_context = " ".join(retrieved_texts)
+        brand_query = generate_brand_query(query_context)
+        print(f"\n📝 Generated Brand Query:\n{brand_query}\n")
+
         # Step 3: Generate formula
-        formula = generate_airtable_formula(query_context,airtable_fields)
+        formula = generate_airtable_formula(brand_query,airtable_fields)
+        
         print(f"\n🧠 Generated Formula:\n{formula}\n")
-        return formula
+        return brand_query,formula
     except Exception as e:
         print(f"Error generating formula: {e}")
         return []
