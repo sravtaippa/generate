@@ -112,27 +112,24 @@ def fetch_airtable_data_via_formula():
         return jsonify({"status": "failed", "content": "Error occurred while fetching Airtable data from formula"})
 
 
+
+@app.route('/upload', methods=['GET'])
+def upload_page():
+    return render_template("upload_form.html")
+
 @app.route('/submit_influencer_form_data', methods=['POST'])
 def submit_influencer_form():
     try:
-        print("🔁 Headers:", dict(request.headers))
-        print("📦 Form:", request.form)
-        print("📎 Files:", request.files)
-        print("📎 Raw Body:", request.get_data(as_text=True))  # safe way
-
         brand_id = request.form.get("brand_id")
         files = request.files.getlist("documents")
 
-        if not brand_id:
-            return jsonify({"status": "failed", "content": "Missing brand_id"}), 400
+        if not brand_id or not files:
+            return jsonify({"status": "failed", "content": "Missing brand_id or documents"}), 400
 
-        result = handle_upload_and_submit_to_airtable(brand_id, files)
-        return result
-
+        return handle_upload_and_submit_to_airtable(brand_id, files)
     except Exception as e:
-        print(f"Error occurred while submitting form data to Airtable: {e}")
-        return jsonify({"status": "failed", "content": "Internal server error"}), 500
-
+        print(f"Error occurred: {e}")
+        return jsonify({"status": "failed", "message": str(e)}), 500
 
 @app.route('/get_data_entrichment_using_gpt_module', methods=['GET', 'POST'])
 def data_entrichment_using_gpt_module():
