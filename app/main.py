@@ -483,8 +483,8 @@ def process_influencer_brief():
         # Airtable
         drive_urls = request.args.get("drive_urls")
         client_id = request.args.get("client_id")
-        drive_urls = """["https://drive.google.com/uc?id=1IoCxHQP8dKBgrGLjeUcDq75Y9Ip97dVf&export=download"]"""
-        client_id = "aarka"
+        # drive_urls = """["https://drive.google.com/uc?id=1IoCxHQP8dKBgrGLjeUcDq75Y9Ip97dVf&export=download"]"""
+        # client_id = "sls"
         airtable_fields = """
         Database schema with column descriptions:
             Table: src_influencer_data (
