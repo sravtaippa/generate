@@ -22,23 +22,22 @@ HEADERS = {
 from urllib.parse import unquote
 
 def extract_username(url, media):
-    url = unquote(url)  # decode %40 into @
-    
-    if media == "instagram":
-        if "/reel/" in url or "/reels/" in url:
-            return None
-        match = re.search(r"instagram\.com/([^/?#]+)", url)
-    elif media == "tiktok":
-        match = re.search(r"tiktok\.com/@([^/?#]+)", url)
-        if match:
-            return match.group(1)
-        else:
-            # fallback: handle video links like /@username/video/1234
-            match = re.search(r"tiktok\.com/@([^/]+)/video", url)
-            if match:
-                return match.group(1)
-    return None
+    url = unquote(url)
 
+    if media == "instagram":
+        # Skip non-profile Instagram paths
+        if any(x in url for x in ["/reel/", "/reels/", "/p/", "/tv/", "/stories/", "/explore/"]):
+            return None
+        match = re.search(r"instagram\.com/([a-zA-Z0-9_.]+)", url)
+
+    elif media == "tiktok":
+        if any(x in url for x in ["/discover/", "/hashtag/"]):
+            return None
+        match = re.search(r"tiktok\.com/@([^/?#]+)", url)
+        if not match:
+            match = re.search(r"tiktok\.com/@([^/]+)/video", url)
+
+    return match.group(1) if match else None
 
 
 # === Check for duplicate using unique_profile_key ===
