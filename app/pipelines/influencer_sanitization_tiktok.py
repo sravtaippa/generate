@@ -17,7 +17,7 @@ FIELDS = [
 
 # === Cleaning Helpers ===
 def clean_value(value):
-    if isinstance(value, str) and value.strip().lower() in {"na", "n/a", "none", ""}:
+    if isinstance(value, str) and value.strip().lower() in {"na", "n/a", "none", "unknown", ""}:
         return ""
     return value
 
