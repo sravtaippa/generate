@@ -292,7 +292,7 @@ def upload_sanitized():
             "targeted_domain": request.args.get("targeted_domain"),
             "profile_type": request.args.get("profile_type"),
             "email_id": request.args.get("email"),
-            "tiktok_url": request.args.get("tiktok_id"),
+            "tiktok_url": request.args.get("tiktok_url"),
             "twitter_url": request.args.get("twitter_id"),
             "snapchat_url": request.args.get("snapchat_id"),
             "linkedin_url": request.args.get("linkedin_id"),
