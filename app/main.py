@@ -484,6 +484,7 @@ def process_influencer_brief():
         drive_urls = request.args.get("drive_urls")
         client_id = request.args.get("client_id")
         # drive_urls = """["https://drive.google.com/uc?id=1IoCxHQP8dKBgrGLjeUcDq75Y9Ip97dVf&export=download"]"""
+        # drive_urls = '["https://drive.google.com/uc?id=1LsB71VCGuoQG_r67l2oWzpFKh5zrvosf&export=download"]'
         # client_id = "sls"
         airtable_fields = """
         Database schema with column descriptions:
@@ -509,22 +510,95 @@ def process_influencer_brief():
             instagram_posts_count       Long text -- Total number of posts by the influencer
             external_urls               Long text -- List of external links provided by the influencer
             instagram_profile_pic       Long text -- URL of the influencer's profile picture
-            influencer_nationality      Long text -- Nationality of the influencer (Include country names)
+            influencer_nationality      Long text -- Nationality of the influencer (Include country names, can be case sensitive)
             targeted_audience           Long text -- Target audience group for the influencer (fixed category values among this: ["gen-z","gen-y", "gen-x"])
-            targeted_domain             Long text -- Domain or industry targeted by the influencer (fixed categoru values among this: ["food", "fashion", "fitness", "gaming", "education", "automotive", "finance", "art"])
+            targeted_domain             Long text -- Domain or industry targeted by the influencer (Can only have fixed category values among this: ["food", "fashion", "fitness", "gaming", "education", "automotive", "finance", "art"])
             profile_type                Long text -- Type of profile (fixed category values among this: ["person","group"])
-            email_id                    Long text -- Email address of the influencer (if not available value is "NA")
+            email_id                    Long text -- Email address of the influencer (if not available value is "NA" or "")
             twitter_url                 Long text -- URL of the influencer's Twitter profile
             snapchat_url                Long text -- URL of the influencer's Snapchat profile
-            phone                       Long text -- Phone number of the influencer ( if not available value is "NA")
+            phone                       Long text -- Phone number of the influencer ( if not available value is "NA" or "")
             linkedin_url                Long text -- URL of the influencer's LinkedIn profile
             tiktok_url                  Long text -- URL of the influencer's TikTok profile
             )
         """
+        airtable_fields = """
+        Airtable Schema for Table: `src_influencer_data`
+
+        Columns:
+        - instagram_url:               long text  
+        → URL of the influencer's Instagram profile (null values: '', 'NA', 'N/A')
+
+        - instagram_followers_count:   long text  
+        → Number of followers on Instagram
+
+        - instagram_follows_count:     long text  
+        → Number of accounts the influencer follows
+
+        - instagram_username:          long text  
+        → Instagram username/handle
+
+        - instagram_bio:               long text  
+        → Bio text from the Instagram profile
+
+        - influencer_type:             long text  
+        → Type/category of influencer  
+            (fixed values: ["food_vlogger", "fashion_vlogger", "real_estate_influencers", 
+                            "business_vloggers", "finance_vloggers", 
+                            "beauty_vlogger", "tech_vloggers"])
+
+        - influencer_location:         long text  
+        → Location of the influencer
+
+        - business_category_name:      long text  
+        → Business tag by Instagram (e.g., "Personal blog", "Digital creator")
+
+        - instagram_hashtags:          long text  
+        → List of hashtags used in posts (stored as list of strings)
+
+        - instagram_captions:          long text  
+        → List of post captions (stored as list of strings)
+
+        - avg_video_play_counts:       long text  
+        → Average number of video plays
+
+        - avg_likes:                   long text  
+        → Average number of likes on posts
+
+        - avg_comments:                long text  
+        → Average number of comments on posts
+
+        - instagram_posts_count:       long text  
+        → Total number of posts
+
+        - influencer_nationality:      long text  
+        → Nationality of the influencer (e.g., "indian", "russian", etc.)
+
+        - targeted_audience:           long text  
+        → Audience group (fixed values: ["gen-z", "gen-y", "gen-x"])
+
+        - targeted_domain:             long text  
+        → Domain focus (fixed values: ["food", "fashion", "fitness", 
+                                        "gaming", "education", "automotive", 
+                                        "finance", "art"])
+
+        - profile_type:                long text  
+        → Type of profile (fixed values: ["person", "group"])
+
+        - email_id:                    long text  
+        → Email address (if not available: "NA" or "")
+
+        - phone:                       long text  
+        → Phone number (if not available: "NA" or "")
+
+        - tiktok_url:                  long text  
+        → TikTok profile URL
+        """
         print(drive_urls)
         if drive_urls in ["", None] or client_id in ["", None]:
             return {"status":"failed","content":"Missing input parameters while processing influencer brief"}
-        return {"status":"success","content":influencer_brief_processing(drive_urls, client_id,airtable_fields)}
+        brand_query,formula = influencer_brief_processing(drive_urls, client_id,airtable_fields)
+        return {"status":"success","content":{"brand_query": brand_query, "formula": formula}}
     except Exception as e:
         print(f"Error occurred while processing influencer brief: {e}")
         return {"status":"failed","content":f"Error occurred while processing influencer brief: {e}"}
