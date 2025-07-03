@@ -142,7 +142,12 @@ Input:
     except Exception as e:
         print("❌ Identity analysis failed:", e)
         return None
-
+    
+def safe_int(value):
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return 0
 
 def data_entrichment_using_gpt_airtable(data_dict):
     print(f"✅ Received Dict: {data_dict}")
