@@ -117,19 +117,16 @@ def fetch_airtable_data_via_formula():
 def upload_page():
     return render_template("upload_form.html")
 
-@app.route('/submit_influencer_form_data', methods=['POST'])
-def submit_influencer_form():
-    try:
-        brand_id = request.form.get("brand_id")
-        files = request.files.getlist("documents")
+@app.route("/submit_influencer_form_data", methods=["POST"])
+def submit_form():
+    brand_id = request.form.get("brand_id")
+    files = request.files.getlist("documents")
+    images = request.files.getlist("images")
 
-        if not brand_id or not files:
-            return jsonify({"status": "failed", "content": "Missing brand_id or documents"}), 400
+    if not brand_id or (not files and not images):
+        return jsonify({"error": "Missing brand_id or files/images"}), 400
 
-        return handle_upload_and_submit_to_airtable(brand_id, files)
-    except Exception as e:
-        print(f"Error occurred: {e}")
-        return jsonify({"status": "failed", "message": str(e)}), 500
+    return handle_upload_and_submit_to_airtable(brand_id, files, images)
 
 @app.route('/get_data_entrichment_using_gpt_module', methods=['GET', 'POST'])
 def data_entrichment_using_gpt_module():
