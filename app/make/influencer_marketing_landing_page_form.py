@@ -26,7 +26,10 @@ def influencer_form_tracker():
         email = contact.get("email")
         first_name = fields.get("first_name", "")
         surname = fields.get("surname", "")
-        company_name = fields.get("company_name", "")  # spelling fixed
+        snap_url = fields.get("city", "")
+        fb_url = fields.get("neighborhood", "")
+        twitter_url= fields.get("street_address", ""),
+        tiktok_url = fields.get("state", ""), # spelling fixed
         phone = fields.get("phone_number")
 
         if not email or not first_name or not phone:
@@ -40,7 +43,10 @@ def influencer_form_tracker():
                 "first_name": first_name,
                 "email": email,
                 "instagram_handle_name": surname,
-                "tiktok_handle_name": company_name,
+                "snap_handle_name": snap_url,
+                "fb_handle_name": fb_url,
+                "twitter_handle_name": twitter_url,
+                "tiktok_handle_name": tiktok_url,
                 "phone_number": phone
             })
         else:
