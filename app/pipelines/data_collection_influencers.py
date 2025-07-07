@@ -49,7 +49,7 @@ def profile_scraper(instagram_username,influencer_type,influencer_location):
     except Exception as e:
         print(f"Error occured while executing the profile scraper: {e}")
 
-def post_scraper(instagram_username,posts_count):
+def post_scraper(instagram_username,posts_count,followers_count):
     try:
 
         input_object_posts = {
@@ -113,8 +113,10 @@ def post_scraper(instagram_username,posts_count):
         instagram_data["avg_likes"]  = int(sum(likes_counts) / len(likes_counts)) if likes_counts else 0
         instagram_data["avg_video_play_counts"] = int(sum(video_play_counts) / len(video_play_counts)) if video_play_counts else 0
         total_engagements = comments_count + likes_count
-        # engagement_rate = round((total_engagements / followers) * 100, 2) if followers > 0 else 0
+        engagement_rate = round((total_engagements / followers_count) * 100, 2) if followers_count > 0 else 0
         estimated_reach = instagram_data["avg_video_play_counts"]
+        instagram_data["engagement_rate"] = engagement_rate
+        instagram_data["estimated_reach"] = estimated_reach
         return instagram_data
     
     except Exception as e:

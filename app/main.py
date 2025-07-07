@@ -725,9 +725,10 @@ def influencer_post_scraper():
     try:
         instagram_username = request.args.get("instagram_username")
         posts_count = request.args.get("posts_count", type=int, default=10)
-        if instagram_username in ["",None]:
+        followers_count = request.args.get("followers_count", type=int, default=0)
+        if instagram_username in ["",None] or followers_count == 0:
             raise
-        return {"status":"passed","content":post_scraper(instagram_username,posts_count)}
+        return {"status":"passed","content":post_scraper(instagram_username,posts_count,followers_count)}
     except Exception as e:
         print(f"Error occured while scraping influencer posts data : {e}")
         return {"status":"failed","content":f"Error occured while scraping posts data"}
