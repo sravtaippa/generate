@@ -49,6 +49,7 @@ def upload_file_to_drive(file_obj, drive_service):
 
     return f"https://drive.google.com/uc?id={file_id}&export=download"
 
+<<<<<<< HEAD
 def handle_upload_and_submit_to_airtable(brand_id, files):
     drive_service = get_authenticated_drive_service()
     file_urls = [upload_file_to_drive(f, drive_service) for f in files]
@@ -63,16 +64,46 @@ def handle_upload_and_submit_to_airtable(brand_id, files):
             "file_url": file_urls_str  # for long text field
         }
     }
+=======
+def handle_upload_and_submit_to_airtable(brand_id, files, images):
+    drive_service = get_authenticated_drive_service()
+
+    # Upload documents
+    document_urls = [upload_file_to_drive(f, drive_service) for f in files]
+    # Upload images
+    image_urls = [upload_file_to_drive(img, drive_service) for img in images]
+
+    # Prepare Airtable payload
+    payload = {
+        "fields": {
+            "brand_id": brand_id,
+            "documents": [{"url": url} for url in document_urls],  # Attachment field
+            "images": [{"url": url} for url in image_urls],        # New attachment field for images
+            "file_url": "[" + ",".join(f'"{url}"' for url in document_urls) + "]",
+            "image_url": "[" + ",".join(f'"{url}"' for url in image_urls) + "]"  # Optional: store as text
+        }
+    }
+
+>>>>>>> dce3442688e94cb0d754c91b82c662b5083f614f
     headers = {
         "Authorization": f"Bearer {AIRTABLE_API_KEY}",
         "Content-Type": "application/json"
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> dce3442688e94cb0d754c91b82c662b5083f614f
     response = requests.post(AIRTABLE_URL, headers=headers, json=payload)
     if response.status_code not in (200, 201):
         return jsonify({"status": "failed", "airtable_error": response.text}), 400
 
     return jsonify({
         "status": "success",
+<<<<<<< HEAD
         "uploaded_files": file_urls,
+=======
+        "uploaded_documents": document_urls,
+        "uploaded_images": image_urls,
+>>>>>>> dce3442688e94cb0d754c91b82c662b5083f614f
         "airtable_response": response.json()
     }), 201
