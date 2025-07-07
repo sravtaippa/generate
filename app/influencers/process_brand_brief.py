@@ -294,7 +294,7 @@ def airtable_formula_generator(index, client_id, airtable_fields):
         """
 
         q_res = openai_client.embeddings.create(input=[user_query], model="text-embedding-ada-002")
-        q_vec = q_res.data[0].embedding
+        q_vec = q_res.data[0].embedding # [1002,3001,-312,1001,2002]
 
         query_resp = index.query(
             vector=q_vec,
