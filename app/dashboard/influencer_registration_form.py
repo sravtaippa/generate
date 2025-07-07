@@ -49,6 +49,20 @@ def upload_file_to_drive(file_obj, drive_service):
 
     return f"https://drive.google.com/uc?id={file_id}&export=download"
 
+def handle_upload_and_submit_to_airtable(brand_id, files):
+    drive_service = get_authenticated_drive_service()
+    file_urls = [upload_file_to_drive(f, drive_service) for f in files]
+
+    file_urls_str = "[" + ",".join(f'"{url}"' for url in file_urls) + "]"
+
+
+    payload = {
+        "fields": {
+            "brand_id": brand_id,
+            "documents": [{"url": url} for url in file_urls],  # for attachments field
+            "file_url": file_urls_str  # for long text field
+        }
+    }
 def handle_upload_and_submit_to_airtable(brand_id, files, images):
     drive_service = get_authenticated_drive_service()
 
@@ -79,6 +93,7 @@ def handle_upload_and_submit_to_airtable(brand_id, files, images):
 
     return jsonify({
         "status": "success",
+        "uploaded_files": file_urls,
         "uploaded_documents": document_urls,
         "uploaded_images": image_urls,
         "airtable_response": response.json()

@@ -6,6 +6,9 @@ app = Flask(__name__)
 FIELDS = [
     "avg_comments", "avg_likes", "avg_video_play_counts", "business_category_name",
     "created_time", "email_id", "external_urls", "full_name", "id", "influencer_location",
+    "influencer_nationality", "influencer_type", "instagram_bio", "instagram_captions",
+    "instagram_comments_counts", "instagram_followers_count", "instagram_follows_count",
+    "instagram_hashtags", "instagram_likes_counts", "instagram_post_urls",
     "influencer_nationality", "influencer_type", "instagram_bio", 
     "instagram_comments_counts", "instagram_followers_count", "instagram_follows_count",
     "instagram_likes_counts", "instagram_post_urls",

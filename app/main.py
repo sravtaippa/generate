@@ -117,6 +117,19 @@ def fetch_airtable_data_via_formula():
 def upload_page():
     return render_template("upload_form.html")
 
+@app.route('/submit_influencer_form_data', methods=['POST'])
+def submit_influencer_form():
+    try:
+        brand_id = request.form.get("brand_id")
+        files = request.files.getlist("documents")
+
+        if not brand_id or not files:
+            return jsonify({"status": "failed", "content": "Missing brand_id or documents"}), 400
+
+        return handle_upload_and_submit_to_airtable(brand_id, files)
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return jsonify({"status": "failed", "message": str(e)}), 500
 @app.route("/submit_influencer_form_data", methods=["POST"])
 def submit_form():
     brand_id = request.form.get("brand_id")
@@ -289,6 +302,7 @@ def upload_sanitized():
             "targeted_domain": request.args.get("targeted_domain"),
             "profile_type": request.args.get("profile_type"),
             "email_id": request.args.get("email"),
+            # "tiktok_url": request.args.get("tiktok_id"),
             "tiktok_url": request.args.get("tiktok_url"),
             "twitter_url": request.args.get("twitter_id"),
             "snapchat_url": request.args.get("snapchat_id"),
@@ -711,9 +725,10 @@ def influencer_post_scraper():
     try:
         instagram_username = request.args.get("instagram_username")
         posts_count = request.args.get("posts_count", type=int, default=10)
-        if instagram_username in ["",None]:
+        followers_count = request.args.get("followers_count", type=int, default=0)
+        if instagram_username in ["",None] or followers_count == 0:
             raise
-        return {"status":"passed","content":post_scraper(instagram_username,posts_count)}
+        return {"status":"passed","content":post_scraper(instagram_username,posts_count,followers_count)}
     except Exception as e:
         print(f"Error occured while scraping influencer posts data : {e}")
         return {"status":"failed","content":f"Error occured while scraping posts data"}

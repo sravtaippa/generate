@@ -26,6 +26,7 @@ def influencer_form_tracker():
         email = contact.get("email")
         first_name = fields.get("first_name", "")
         surname = fields.get("surname", "")
+        company_name = fields.get("company_name", "")  # spelling fixed
         snap_url = fields.get("city", "")
         fb_url = fields.get("neighborhood", "")
         twitter_url= fields.get("street_address", "")
@@ -35,6 +36,7 @@ def influencer_form_tracker():
         if not email or not first_name or not phone:
             return jsonify({"error": "Missing email, name, or phone"}), 400
 
+        # Check if record exists
         
         records = table.all(formula=f"{{email}} = '{email}'")
         if not records:
@@ -43,6 +45,7 @@ def influencer_form_tracker():
                 "first_name": first_name,
                 "email": email,
                 "instagram_handle_name": surname,
+                "tiktok_handle_name": company_name,
                 "snap_handle_name": snap_url,
                 "fb_handle_name": fb_url,
                 "twitter_handle_name": twitter_url,

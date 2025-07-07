@@ -99,6 +99,14 @@
       font-weight: bold;
     }
 
+    .progress-bar {
+      height: 6px;
+      background-color: #4CAF50;
+      border-radius: 4px;
+      margin-top: 4px;
+      width: 100%;
+    }
+
     button {
       background-color: #7e3ff2;
       color: white;
@@ -125,12 +133,14 @@
       <label for="brand_id">Brand Id*</label>
       <input type="text" name="brand_id" id="brand_id" placeholder="Enter Brand ID" required>
       <div id="brandError" class="error" style="display: none;">Please fill out this field.</div>
+      
 
       <label for="documents">Upload Documents*</label>
       <div class="file-drop" id="fileDropLabel">
         Drag & Drop Files Here<br><small>or</small><br><strong>Click to Browse</strong>
       </div>
       <input type="file" name="documents" id="documents" multiple>
+
       <div id="fileList" class="file-list"></div>
 
       <button type="submit">Submit</button>
