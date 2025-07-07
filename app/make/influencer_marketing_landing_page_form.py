@@ -28,8 +28,8 @@ def influencer_form_tracker():
         surname = fields.get("surname", "")
         snap_url = fields.get("city", "")
         fb_url = fields.get("neighborhood", "")
-        twitter_url= fields.get("street_address", ""),
-        tiktok_url = fields.get("state", ""), # spelling fixed
+        twitter_url= fields.get("street_address", "")
+        tiktok_url = fields.get("state", "")
         phone = fields.get("phone_number")
 
         if not email or not first_name or not phone:
