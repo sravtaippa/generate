@@ -707,7 +707,7 @@ def initiate_smart_query_engine():
         print(f"Error occured while initiating smart query engine: {e}")
         return {"status":"failed","content":f"Error occured while initiating smart query engine"}
 
-@app.route("/influencer_profile_scrape",methods=["GET"])
+@app.route("/influencer_profile_scrape_1",methods=["GET"])
 def influencer_profile_scraper():
     try:
         instagram_username = request.args.get("instagram_username")
