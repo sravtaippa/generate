@@ -35,7 +35,7 @@ def influencer_form_tracker():
         if not email or not first_name or not phone:
             return jsonify({"error": "Missing email, name, or phone"}), 400
 
-        # Check if record exists
+        
         records = table.all(formula=f"{{email}} = '{email}'")
         if not records:
             print(f"➕ Creating new record for {email}")
