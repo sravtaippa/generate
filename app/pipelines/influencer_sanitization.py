@@ -15,7 +15,7 @@ FIELDS = [
     "instagram_posts_count", "instagram_profile_pic", "instagram_url", "instagram_username",
     "instagram_video_play_counts", "instagram_video_urls", "linkedin_url", "phone",
     "profile_type", "snapchat_url", "social_media_profile_type", "targeted_audience",
-    "targeted_domain", "tiktok_url", "twitter_url"
+    "targeted_domain", "tiktok_url", "twitter_url", "engagement_rate", "estimated_reach"
 ]
 
 # === Cleaning Helpers ===
@@ -68,6 +68,10 @@ def sanitize_data_instagram(data_list):
             elif field == "phone":
                 val = clean_phone(val)
             elif field == "id":
+                val = str(val)
+            elif field == "engagement_rate":
+                val = str(val)
+            elif field == "estimated_reach":
                 val = str(val)
             cleaned[field] = val
 

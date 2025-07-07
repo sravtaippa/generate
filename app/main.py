@@ -308,7 +308,9 @@ def upload_sanitized():
             "snapchat_url": request.args.get("snapchat_id"),
             "linkedin_url": request.args.get("linkedin_id"),
             "phone": request.args.get("phone"),
-            "social_media_profile_type": request.args.get("social_media_profile_type", "instagram")  # fallback
+            "social_media_profile_type": request.args.get("social_media_profile_type", "instagram"),  # fallback
+            "engagement_rate": request.args.get("engagement_rate"),
+            "estimated_reach": request.args.get("estimated_reach")
         }
         data_list = [influencer_data]
     else:
