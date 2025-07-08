@@ -100,7 +100,7 @@ def store_meeting_data():
         
         # Assuming meeting_data is a JSON string, you can parse it if needed
         # For now, we will just return it as is
-        return jsonify({"status": "passed", "content": populate_meeting_notes(meeting_data,client_id)})
+        return jsonify({"status": "passed", "content": str(populate_meeting_notes(meeting_data,client_id))})
     except Exception as e:
         print(f"Error occurred while storing meeting data: {e}")
         return jsonify({"status": "failed", "content": "Error occurred while storing meeting data"}), 500
