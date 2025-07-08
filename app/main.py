@@ -78,6 +78,7 @@ from pipelines.influencer_sanitization_tiktok import sanitize_and_upload_tiktok_
 from pipelines.data_gpt_enritchement import data_entrichment_using_gpt_airtable
 from dashboard.influencer_registration_form import handle_upload_and_submit_to_airtable
 from influencers.notion_content_extractor import get_notion_page_text
+from influencers.process_meeting_notes import populate_meeting_notes
 
 print(f"\n =============== Generate : Pipeline started  ===============")
 
@@ -88,13 +89,27 @@ app.register_blueprint(influencer_bp)
 
 
 ######### ROUTES - INFLUENCER MARKETING ##########
+
+@app.route("/store_meeting_data", methods=["GET"])
+def store_meeting_data():
+    try:
+        meeting_data = request.args.get("meeting_data")
+        client_id = request.args.get("client_id")
+        if not meeting_data or not client_id:
+            return jsonify({"status": "failed", "content": "Missing 'meeting_data' or 'client_id' parameter"}), 400
+        
+        # Assuming meeting_data is a JSON string, you can parse it if needed
+        # For now, we will just return it as is
+        return jsonify({"status": "passed", "content": populate_meeting_notes(meeting_data,client_id)})
+    except Exception as e:
+        print(f"Error occurred while storing meeting data: {e}")
+        return jsonify({"status": "failed", "content": "Error occurred while storing meeting data"}), 500
+
 @app.route('/get_notion_page_text', methods=['GET'])
 def get_notion_page_content():
     try:
         auth_token = request.args.get('auth_token')
         page_id = request.args.get('page_id')
-        # auth_token = "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"
-        # page_id = "22a5b0ddf1a88039a105f289d5e73024"
         if not auth_token or not page_id:
             return jsonify({"status": "failed", "content": "Missing 'auth_token' or 'page_id' parameter"}), 400
         return ({"status": "passed", "content": get_notion_page_text(auth_token, page_id)})
