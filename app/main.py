@@ -77,6 +77,8 @@ from pipelines.influencer_sanitization import  sanitize_data_instagram
 from pipelines.influencer_sanitization_tiktok import sanitize_and_upload_tiktok_data
 from pipelines.data_gpt_enritchement import data_entrichment_using_gpt_airtable
 from dashboard.influencer_registration_form import handle_upload_and_submit_to_airtable
+from influencers.notion_content_extractor import get_notion_page_text
+
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -85,7 +87,21 @@ app = Flask(__name__)
 app.register_blueprint(influencer_bp)
 
 
-######### AIRTABLE ROUTES - INFLUENCER MARKETING ##########
+######### ROUTES - INFLUENCER MARKETING ##########
+@app.route('/get_notion_page_text', methods=['GET'])
+def get_notion_page_content():
+    try:
+        auth_token = request.args.get('auth_token')
+        page_id = request.args.get('page_id')
+        # auth_token = "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"
+        # page_id = "22a5b0ddf1a88039a105f289d5e73024"
+        if not auth_token or not page_id:
+            return jsonify({"status": "failed", "content": "Missing 'auth_token' or 'page_id' parameter"}), 400
+        return ({"status": "passed", "content": get_notion_page_text(auth_token, page_id)})
+    except Exception as e:
+        print(f"Error occurred while fetching Notion page text: {e}")
+        return jsonify({"status": "failed", "content": "Error occurred while fetching Notion page text"}), 500
+
 @app.route('/generate_airtable_formula', methods=['GET'])
 def generate_airtable_formula():
     try:
