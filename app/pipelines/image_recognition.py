@@ -195,8 +195,8 @@ def get_image_urls_from_apify(post_url):
 
 def extract_images():
     try:
-        filter_formula = "AND(NOT({email_id} = ''), OR({influencer_location} = 'KSA', {influencer_location} = 'Saudi Arabia'))"
-        records = instagram_airtable.get_all(filterByFormula=filter_formula)
+        filter_formula = "AND(NOT({email_id} = ''), OR({influencer_location} = 'KSA', {influencer_location} = 'Saudi Arabia'),({image_tags}=''))"
+        records = instagram_airtable.get_all(filterByFormula=filter_formula, maxRecords=5)
 
         print(f"📦 Fetched {len(records)} records")
 
