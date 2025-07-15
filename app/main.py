@@ -77,12 +77,45 @@ from pipelines.influencer_sanitization import  sanitize_data_instagram
 from pipelines.influencer_sanitization_tiktok import sanitize_and_upload_tiktok_data
 from pipelines.data_gpt_enritchement import data_entrichment_using_gpt_airtable
 from dashboard.influencer_registration_form import handle_upload_and_submit_to_airtable
+from pipelines.google_slide_image_upload import insert_image_from_airtable
+from pipelines.image_recognition import extract_images
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
 app = Flask(__name__)
 app.register_blueprint(influencer_bp)
+
+@app.route('/image-recognition-instagram', methods=['GET'])
+def image_recognition_endpoint():
+    result = extract_images()
+    if result.get("status") == "error":
+        return jsonify(result), 500
+    return jsonify(result), 200
+
+    
+@app.route('/image-uploading_into_google_slide', methods=['GET', 'POST'])
+def image_upload_endpoint():
+    try:
+        if request.method == 'POST':
+            data = request.get_json()
+            record_id = data.get('record_id') if data else None
+        else:  # GET
+            record_id = request.args.get('record_id')
+
+        if not record_id:
+            return jsonify({"status": "failed", "message": "Missing record_id"}), 400
+
+        result = insert_image_from_airtable(record_id)
+
+        if result.get("status") == "error":
+            return jsonify(result), 404
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return jsonify({"status": "failed", "message": str(e)}), 500
 
 
 ######### AIRTABLE ROUTES - INFLUENCER MARKETING ##########
@@ -1632,4 +1665,4 @@ def run_booking_meeting_form_tracker():
 if __name__ == '__main__':
 #   app.run(debug=True,use_reloader=False)
 #   app.run(port=8001) 
-  app.run(host="127.0.0.1",debug=True, port=5000)
+  app.run(host="127.0.0.1",debug=True, port=5050)
