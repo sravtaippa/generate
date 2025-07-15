@@ -77,6 +77,7 @@ from pipelines.influencer_sanitization import  sanitize_data_instagram
 from pipelines.influencer_sanitization_tiktok import sanitize_and_upload_tiktok_data
 from pipelines.data_gpt_enritchement import data_entrichment_using_gpt_airtable
 from dashboard.influencer_registration_form import handle_upload_and_submit_to_airtable
+from pipelines.image_recognition import extract_images
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
