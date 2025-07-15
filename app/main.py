@@ -77,8 +77,6 @@ from pipelines.influencer_sanitization import  sanitize_data_instagram
 from pipelines.influencer_sanitization_tiktok import sanitize_and_upload_tiktok_data
 from pipelines.data_gpt_enritchement import data_entrichment_using_gpt_airtable
 from dashboard.influencer_registration_form import handle_upload_and_submit_to_airtable
-from pipelines.google_slide_image_upload import insert_image_from_airtable
-from pipelines.image_recognition import extract_images
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -118,7 +116,35 @@ def image_upload_endpoint():
         return jsonify({"status": "failed", "message": str(e)}), 500
 
 
-######### AIRTABLE ROUTES - INFLUENCER MARKETING ##########
+######### ROUTES - INFLUENCER MARKETING ##########
+
+@app.route("/store_meeting_data", methods=["GET"])
+def store_meeting_data():
+    try:
+        meeting_data = request.args.get("meeting_data")
+        client_id = request.args.get("client_id")
+        if not meeting_data or not client_id:
+            return jsonify({"status": "failed", "content": "Missing 'meeting_data' or 'client_id' parameter"}), 400
+        
+        # Assuming meeting_data is a JSON string, you can parse it if needed
+        # For now, we will just return it as is
+        return jsonify({"status": "passed", "content": str(populate_meeting_notes(meeting_data,client_id))})
+    except Exception as e:
+        print(f"Error occurred while storing meeting data: {e}")
+        return jsonify({"status": "failed", "content": "Error occurred while storing meeting data"}), 500
+
+@app.route('/get_notion_page_text', methods=['GET'])
+def get_notion_page_content():
+    try:
+        auth_token = request.args.get('auth_token')
+        page_id = request.args.get('page_id')
+        if not auth_token or not page_id:
+            return jsonify({"status": "failed", "content": "Missing 'auth_token' or 'page_id' parameter"}), 400
+        return ({"status": "passed", "content": get_notion_page_text(auth_token, page_id)})
+    except Exception as e:
+        print(f"Error occurred while fetching Notion page text: {e}")
+        return jsonify({"status": "failed", "content": "Error occurred while fetching Notion page text"}), 500
+
 @app.route('/generate_airtable_formula', methods=['GET'])
 def generate_airtable_formula():
     try:
