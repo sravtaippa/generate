@@ -189,13 +189,16 @@ Rules:
     
 def image_analysis_endpoint(data):
     try:
-       
         post_urls = data.get("post_urls", [])
 
         if not isinstance(post_urls, list) or not post_urls:
             return jsonify({"error": "Invalid or missing 'post_urls'"}), 400
 
         results = []
+        all_post_urls = []
+        all_image_urls = []
+        all_drive_urls = []
+        all_tags = []
 
         for post_url in post_urls:
             result = {"post_url": post_url}
@@ -225,7 +228,19 @@ def image_analysis_endpoint(data):
             })
             results.append(result)
 
-        return jsonify({"results": results}), 200
+            # ✅ Aggregate values
+            all_post_urls.append(post_url)
+            all_image_urls.append(image_url)
+            all_drive_urls.append(drive_url)
+            all_tags.extend(tags)
+
+        return jsonify({
+            "results": results,
+            "all_post_urls": all_post_urls,
+            "all_image_urls": all_image_urls,
+            "all_drive_urls": all_drive_urls,
+            "all_tags": list(set(all_tags))  # Optional: deduplicate tags
+        }), 200
 
     except Exception as e:
         traceback.print_exc()
