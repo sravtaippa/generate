@@ -1,13 +1,11 @@
-from flask import Flask, jsonify
+from flask import Flask, request, jsonify
 import requests
 import traceback
-import ast
 import os
 import time
 import pickle
 import tempfile
-
-from airtable import Airtable
+import json
 from config import AIRTABLE_API_KEY, AIRTABLE_BASE_ID, APIFY_API_TOKEN, OPENAI_API_KEY
 
 from google.auth.transport.requests import Request
@@ -20,19 +18,13 @@ openai.api_key = OPENAI_API_KEY
 
 app = Flask(__name__)
 
-# Airtable setup
-TABLE_NAME = "influencers_instagram"
-instagram_airtable = Airtable(AIRTABLE_BASE_ID, TABLE_NAME, AIRTABLE_API_KEY)
-
-# Google Drive setup
+# === Google Drive Auth ===
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 CREDENTIALS_PATH = os.path.join(PROJECT_ROOT, 'credentials.json')
 TOKEN_PATH = os.path.join(PROJECT_ROOT, 'token.pickle')
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
-
-# === Authenticate Google Drive ===
 def get_authenticated_drive_service():
     creds = None
     if os.path.exists(TOKEN_PATH):
@@ -48,6 +40,7 @@ def get_authenticated_drive_service():
             pickle.dump(creds, token)
     return build("drive", "v3", credentials=creds)
 
+from io import BytesIO
 
 def upload_to_drive(image_url):
     tmp_path = None
@@ -57,13 +50,15 @@ def upload_to_drive(image_url):
             print(f"⚠️ Failed to download image: {image_url}")
             return None
 
+        # Save image to memory buffer
+        buffer = BytesIO(response.content)
+
+        # Write memory buffer to temp file
         with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg", mode='wb') as tmp_file:
-            for chunk in response.iter_content(1024):
-                tmp_file.write(chunk)
+            tmp_file.write(buffer.getvalue())
             tmp_path = tmp_file.name
 
-        del tmp_file
-
+        # Upload using MediaFileUpload
         drive_service = get_authenticated_drive_service()
         file_metadata = {"name": os.path.basename(tmp_path)}
         media = MediaFileUpload(tmp_path, mimetype="image/jpeg", resumable=False)
@@ -77,7 +72,8 @@ def upload_to_drive(image_url):
             fileId=file_id, body={"role": "reader", "type": "anyone"}
         ).execute()
 
-        del media  # Release file handle before deleting temp file
+        # Close file and delete after upload
+        media._fd.close()  # 👈 Force close file descriptor before deletion
         os.remove(tmp_path)
 
         return f"https://drive.google.com/uc?id={file_id}&export=download"
@@ -85,61 +81,12 @@ def upload_to_drive(image_url):
     except Exception as e:
         print(f"❌ Error uploading to Drive: {e}")
         traceback.print_exc()
-
         if tmp_path and os.path.exists(tmp_path):
             try:
                 os.remove(tmp_path)
             except Exception as cleanup_err:
                 print(f"⚠️ Cleanup error: {cleanup_err}")
-
         return None
-
-
-import traceback
-
-def analyze_image_with_gpt(image_url):
-    try:
-        response = openai.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": """
-Analyze the image and generate image tags for the given image. Return ONLY a JSON object like:
-
-{"tags": ["coffee", "beach", "phone"]}
-
-Rules:
-- Include actions, objects, clothing, and locations useful for influencer marketing.
-- No explanation. Just the JSON.
-                            """
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": image_url
-                            }
-                        }
-                    ]
-                }
-            ],
-            max_tokens=200,
-            temperature=0.5,
-        )
-
-        content = response.choices[0].message.content.strip()
-        return eval(content)
-
-    except Exception as e:
-        print(f"❌ Vision GPT error: {e}")
-        traceback.print_exc()
-        return {"tags": []}
-
-
-
 def get_image_urls_from_apify(post_url):
     try:
         payload = {"url": post_url}
@@ -204,66 +151,85 @@ def get_image_urls_from_apify(post_url):
         traceback.print_exc()
         return []
 
-
-def extract_images():
+def analyze_image_with_gpt(image_url):
     try:
-        filter_formula = "AND(NOT({email_id} = ''), OR({influencer_location} = 'KSA', {influencer_location} = 'Saudi Arabia'), ({image_tags}=''))"
-        records = instagram_airtable.get_all(filterByFormula=filter_formula, maxRecords=5)
-
-        print(f"📦 Fetched {len(records)} records")
-
-        for idx, record in enumerate(records):
-            record_id = record.get('id')
-            fields = record.get('fields', {})
-            post_urls = fields.get('instagram_post_urls', [])
-
-            if isinstance(post_urls, str):
-                try:
-                    post_urls = ast.literal_eval(post_urls)
-                except:
-                    post_urls = []
-
-            print(f"\n📄 Processing Record {idx+1} — ID: {record_id}")
-            print(f"🔗 Post URLs: {post_urls}")
-
-            all_drive_urls = []
-            all_tags = []
-
-            for post_url in post_urls:
-                image_urls = get_image_urls_from_apify(post_url)
-
-                if image_urls:
-                    image_url = image_urls[0]
-                    print(f"🖼️ Scraped image: {image_url}")
-                    drive_url = upload_to_drive(image_url)
-
-                    if drive_url:
-                        tags_json = analyze_image_with_gpt(drive_url)
-                        tags = tags_json.get("tags", [])
-                        all_drive_urls.append(drive_url)
-                        all_tags.extend(tags)
-                        print(f"✅ Uploaded to Drive: {drive_url}")
-                        print(f"🏷️ Tags: {tags}")
-                    else:
-                        print("⚠️ Drive upload failed.")
-                else:
-                    print("⚠️ No image found.")
-
-            if all_drive_urls or all_tags:
-                try:
-                    instagram_airtable.update(record_id, {
-                        'instagram_post_image_urls': "\n".join(all_drive_urls),  # joined as long text
-                        'image_tags': ", ".join(sorted(set(all_tags)))  # unique + sorted tags
-                    })
-                    print(f"📝 Airtable updated for record {record_id}")
-                except Exception as airtable_err:
-                    print(f"❌ Error updating Airtable: {airtable_err}")
-
-        return {"status": "success", "message": "All records processed."}
+        response = openai.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": """
+Analyze the image and generate image tags for the given image. Return ONLY a JSON object like:
+{"tags": ["coffee", "beach", "phone"]}
+Rules:
+- Include actions, objects, clothing, and locations useful for influencer marketing.
+- No explanation. Just the JSON.
+                            """
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": image_url
+                            }
+                        }
+                    ]
+                }
+            ],
+            max_tokens=200,
+            temperature=0.5,
+        )
+        content = response.choices[0].message.content.strip()
+        return json.loads(content)
     except Exception as e:
-        print("❌ Error in processing:")
         traceback.print_exc()
-        return {"status": "error", "message": str(e)}
+        return {"tags": []}  
+    
+def image_analysis_endpoint(data):
+    try:
+       
+        post_urls = data.get("post_urls", [])
 
-if __name__ == '__main__':
+        if not isinstance(post_urls, list) or not post_urls:
+            return jsonify({"error": "Invalid or missing 'post_urls'"}), 400
+
+        results = []
+
+        for post_url in post_urls:
+            result = {"post_url": post_url}
+            image_urls = get_image_urls_from_apify(post_url)
+            if not image_urls:
+                result["status"] = "failed"
+                result["reason"] = "No image found"
+                results.append(result)
+                continue
+
+            image_url = image_urls[0]
+            drive_url = upload_to_drive(image_url)
+            if not drive_url:
+                result["status"] = "failed"
+                result["reason"] = "Drive upload failed"
+                results.append(result)
+                continue
+
+            tags_data = analyze_image_with_gpt(drive_url)
+            tags = tags_data.get("tags", [])
+
+            result.update({
+                "image_url": image_url,
+                "drive_url": drive_url,
+                "tags": tags,
+                "status": "success"
+            })
+            results.append(result)
+
+        return jsonify({"results": results}), 200
+
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
     app.run(debug=True)

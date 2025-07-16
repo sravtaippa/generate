@@ -78,12 +78,24 @@ from pipelines.influencer_sanitization_tiktok import sanitize_and_upload_tiktok_
 from pipelines.data_gpt_enritchement import data_entrichment_using_gpt_airtable
 from dashboard.influencer_registration_form import handle_upload_and_submit_to_airtable
 from pipelines.image_recognition import extract_images
+from pipelines.image_recognition_without_airtable import image_analysis_endpoint
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
 app = Flask(__name__)
 app.register_blueprint(influencer_bp)
+
+@app.route('/image-recognition-instagram-dict', methods=['POST'])
+def image_recognition_endpoint_dict():
+    try:
+        data = request.get_json()
+        return image_analysis_endpoint(data)  
+    except Exception as e:
+        print(f"❌ Endpoint error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 
 @app.route('/image-recognition-instagram', methods=['GET'])
 def image_recognition_endpoint():
