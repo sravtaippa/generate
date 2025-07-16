@@ -86,39 +86,78 @@ print('Starting the app')
 app = Flask(__name__)
 app.register_blueprint(influencer_bp)
 
+# @app.route('/image-recognition-instagram-dict', methods=['GET', 'POST'])
+# def image_recognition_endpoint_dict():
+#     try:
+#         # ------------------- GET -------------------
+#         if request.method == 'GET':
+#             post_urls_str = request.args.get('post_urls', '').strip()
+
+#             if not post_urls_str:
+#                 return jsonify({"error": "Missing 'post_urls' query parameter"}), 400
+
+#             # Split by whitespace (space, tab, newline) — safe for space-separated list
+#             post_urls = [url.strip() for url in post_urls_str.split() if url.strip()]
+
+#             if not post_urls:
+#                 return jsonify({"error": "No valid URLs in 'post_urls'"}), 400
+
+#             data = {"post_urls": post_urls}
+#             return image_analysis_endpoint(data)
+
+#         # ------------------- POST -------------------
+#         if request.content_type != 'application/json':
+#             return jsonify({"error": "Content-Type must be application/json"}), 415
+
+#         data = request.get_json(force=True, silent=True)
+#         if not data or "post_urls" not in data:
+#             return jsonify({"error": "Invalid or missing 'post_urls' in JSON body"}), 400
+
+#         return image_analysis_endpoint(data)
+
+#     except Exception as e:
+#         print(f"❌ Endpoint error: {e}")
+#         return jsonify({"error": str(e)}), 500
+import ast  
+
 @app.route('/image-recognition-instagram-dict', methods=['GET', 'POST'])
 def image_recognition_endpoint_dict():
-    try:
-        if request.method == 'GET':
-            # Get post_urls as a single string from query param
-            post_urls_str = request.args.get('post_urls', '')
+    data = []
 
-            if not post_urls_str:
-                return jsonify({"error": "Missing 'post_urls' query parameter"}), 400
+    if request.method == 'POST' and request.is_json:
+        json_data = request.get_json()
+        if isinstance(json_data, dict) and 'post_urls' in json_data:
+            urls = json_data['post_urls']
+            if isinstance(urls, list):
+                data = urls
+            elif isinstance(urls, str):
+                data = [urls.strip()]
+            else:
+                return jsonify({"error": "'post_urls' must be a list or string"}), 400
+        else:
+            return jsonify({"error": "Missing or invalid 'post_urls' in JSON"}), 400
 
-            # Split by comma into list, trimming whitespace
-            post_urls = [url.strip() for url in post_urls_str.split(',') if url.strip()]
+    elif request.method == 'GET':
+        raw_input = request.args.get("post_urls", "").strip()
+        if not raw_input:
+            return jsonify({"error": "Missing 'post_urls' query parameter"}), 400
 
-            if not post_urls:
-                return jsonify({"error": "Empty 'post_urls' list"}), 400
+        try:
+            # Safely convert stringified list to actual list
+            parsed_list = ast.literal_eval(raw_input)
+            if not isinstance(parsed_list, list):
+                raise ValueError
+            data = [url.strip() for url in parsed_list if isinstance(url, str)]
+        except Exception:
+            return jsonify({"error": "Invalid format for 'post_urls'. Must be a list-like string."}), 400
 
-            data = {"post_urls": post_urls}
-            return image_analysis_endpoint(data)
+    else:
+        return jsonify({"error": "Unsupported request format. Use GET with query params or POST with JSON."}), 400
 
-        # POST method expects JSON body
-        if request.content_type != 'application/json':
-            return jsonify({"error": "Content-Type must be application/json"}), 415
+    if not data:
+        return jsonify({"error": "No valid Instagram post URLs provided"}), 400
 
-        data = request.get_json(force=True, silent=True)
-        if not data:
-            return jsonify({"error": "Invalid or missing JSON in request body"}), 400
-
-        return image_analysis_endpoint(data)
-
-    except Exception as e:
-        print(f"❌ Endpoint error: {e}")
-        return jsonify({"error": str(e)}), 500
-
+    return image_analysis_endpoint({"post_urls": data})
 
 @app.route('/image-recognition-instagram', methods=['GET'])
 def image_recognition_endpoint():
