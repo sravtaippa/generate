@@ -86,16 +86,21 @@ print('Starting the app')
 app = Flask(__name__)
 app.register_blueprint(influencer_bp)
 
-@app.route('/image-recognition-instagram-dict', methods=['POST'])
+@app.route('/image-recognition-instagram-dict', methods=['GET', 'POST'])
 def image_recognition_endpoint_dict():
     try:
+        if request.method == 'GET':
+            return jsonify({"message": "✅ Endpoint is alive and ready. Use POST to analyze images."})
+
+        if request.content_type != 'application/json':
+            return jsonify({"error": "Unsupported Media Type: Content-Type must be application/json"}), 415
+
         data = request.get_json()
         return image_analysis_endpoint(data)  
+
     except Exception as e:
         print(f"❌ Endpoint error: {e}")
         return jsonify({"error": str(e)}), 500
-
-
 
 @app.route('/image-recognition-instagram', methods=['GET'])
 def image_recognition_endpoint():
