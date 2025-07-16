@@ -90,8 +90,22 @@ app.register_blueprint(influencer_bp)
 def image_recognition_endpoint_dict():
     try:
         if request.method == 'GET':
-            return jsonify({"message": "✅ Endpoint is alive and working. Use POST to analyze Instagram posts."}), 200
+            # Get post_urls as a single string from query param
+            post_urls_str = request.args.get('post_urls', '')
 
+            if not post_urls_str:
+                return jsonify({"error": "Missing 'post_urls' query parameter"}), 400
+
+            # Split by comma into list, trimming whitespace
+            post_urls = [url.strip() for url in post_urls_str.split(',') if url.strip()]
+
+            if not post_urls:
+                return jsonify({"error": "Empty 'post_urls' list"}), 400
+
+            data = {"post_urls": post_urls}
+            return image_analysis_endpoint(data)
+
+        # POST method expects JSON body
         if request.content_type != 'application/json':
             return jsonify({"error": "Content-Type must be application/json"}), 415
 
