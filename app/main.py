@@ -90,17 +90,21 @@ app.register_blueprint(influencer_bp)
 def image_recognition_endpoint_dict():
     try:
         if request.method == 'GET':
-            return jsonify({"message": "✅ Endpoint is alive and ready. Use POST to analyze images."})
+            return jsonify({"message": "✅ Endpoint is alive and working. Use POST to analyze Instagram posts."}), 200
 
         if request.content_type != 'application/json':
-            return jsonify({"error": "Unsupported Media Type: Content-Type must be application/json"}), 415
+            return jsonify({"error": "Content-Type must be application/json"}), 415
 
-        data = request.get_json()
-        return image_analysis_endpoint(data)  
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({"error": "Invalid or missing JSON in request body"}), 400
+
+        return image_analysis_endpoint(data)
 
     except Exception as e:
         print(f"❌ Endpoint error: {e}")
         return jsonify({"error": str(e)}), 500
+
 
 @app.route('/image-recognition-instagram', methods=['GET'])
 def image_recognition_endpoint():
