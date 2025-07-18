@@ -11,7 +11,7 @@ app = Flask(__name__)
 APIFY_API_URL = f"https://api.apify.com/v2/acts/tuningsearch~cheap-google-search-results-scraper/run-sync-get-dataset-items?token={APIFY_API_TOKEN}"
 
 # === Airtable config ===
-AIRTABLE_TABLE_NAME = 'influencer_profile_urls'
+AIRTABLE_TABLE_NAME = 'influencer_profile_urls_v3'
 AIRTABLE_URL = f"https://api.airtable.com/v0/{AIRTABLE_BASE_ID}/{AIRTABLE_TABLE_NAME}"
 HEADERS = {
     'Authorization': f'Bearer {AIRTABLE_API_KEY}',

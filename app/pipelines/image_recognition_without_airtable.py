@@ -239,7 +239,7 @@ def image_analysis_endpoint(data):
             "all_post_urls": all_post_urls,
             "all_image_urls": all_image_urls,
             "all_drive_urls": all_drive_urls,
-            "all_tags": list(set(all_tags))  # Optional: deduplicate tags
+            "all_tags": list(set(all_tags)) 
         }), 200
 
     except Exception as e:
