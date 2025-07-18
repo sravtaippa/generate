@@ -77,15 +77,115 @@ from pipelines.influencer_sanitization import  sanitize_data_instagram
 from pipelines.influencer_sanitization_tiktok import sanitize_and_upload_tiktok_data
 from pipelines.data_gpt_enritchement import data_entrichment_using_gpt_airtable
 from dashboard.influencer_registration_form import handle_upload_and_submit_to_airtable
-from influencers.notion_content_extractor import get_notion_page_text
-from influencers.process_meeting_notes import populate_meeting_notes
-
+from pipelines.image_recognition import extract_images
+from pipelines.image_recognition_without_airtable import image_analysis_endpoint
+from pipelines.profile_pic import process_and_upload_image
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
 print('Starting the app')
 app = Flask(__name__)
 app.register_blueprint(influencer_bp)
+import ast  
+
+@app.route('/upload-profile-pic-from-url', methods=['GET', 'POST'])
+def upload_pic_from_url():
+    if request.method == 'POST':
+        data = request.get_json()
+        profile_pic_url = data.get("profile_pic_url")
+        record_id = data.get("record_id")
+
+    elif request.method == 'GET':
+        profile_pic_url = request.args.get("profile_pic_url")
+        record_id = request.args.get("record_id")
+
+    else:
+        return jsonify({"status": "failed", "message": "Unsupported method"}), 405
+
+    if not profile_pic_url or not record_id:
+        return jsonify({"status": "failed", "message": "Missing profile_pic_url or record_id"}), 400
+
+    result, status = process_and_upload_image(profile_pic_url, record_id)
+    return jsonify(result), status
+
+
+@app.route('/image-recognition-instagram-dict', methods=['GET', 'POST'])
+def image_recognition_endpoint_dict():
+    data = []
+
+    if request.method == 'POST' and request.is_json:
+        json_data = request.get_json()
+        if isinstance(json_data, dict) and 'post_urls' in json_data:
+            urls = json_data['post_urls']
+            if isinstance(urls, list):
+                data = urls
+            elif isinstance(urls, str):
+                data = [urls.strip()]
+            else:
+                return jsonify({"error": "'post_urls' must be a list or string"}), 400
+        else:
+            return jsonify({"error": "Missing or invalid 'post_urls' in JSON"}), 400
+
+    elif request.method == 'GET':
+        raw_input = request.args.get("post_urls", "").strip()
+        if not raw_input:
+            return jsonify({"error": "Missing 'post_urls' query parameter"}), 400
+
+        try:
+            
+            parsed_list = ast.literal_eval(raw_input)
+            if not isinstance(parsed_list, list):
+                raise ValueError
+            data = [url.strip() for url in parsed_list if isinstance(url, str)]
+            if data == []:
+                return jsonify({
+                    "results": "",
+                    "all_post_urls": "",
+                    "all_image_urls": "",
+                    "all_drive_urls": "",
+                    "all_tags": ""
+                }), 200
+        except Exception:
+            return jsonify({"error": "Invalid format for 'post_urls'. Must be a list-like string."}), 400
+
+    else:
+        return jsonify({"error": "Unsupported request format. Use GET with query params or POST with JSON."}), 400
+
+    if not data:
+        return jsonify({"error": "No valid Instagram post URLs provided"}), 400
+
+    return image_analysis_endpoint({"post_urls": data})
+
+@app.route('/image-recognition-instagram', methods=['GET'])
+def image_recognition_endpoint():
+    result = extract_images()
+    if result.get("status") == "error":
+        return jsonify(result), 500
+    return jsonify(result), 200
+
+    
+@app.route('/image-uploading_into_google_slide', methods=['GET', 'POST'])
+def image_upload_endpoint():
+    try:
+        if request.method == 'POST':
+            data = request.get_json()
+            record_id = data.get('record_id') if data else None
+        else:  # GET
+            record_id = request.args.get('record_id')
+
+        if not record_id:
+            return jsonify({"status": "failed", "message": "Missing record_id"}), 400
+
+        result = insert_image_from_airtable(record_id)
+
+        if result.get("status") == "error":
+            return jsonify(result), 404
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return jsonify({"status": "failed", "message": str(e)}), 500
 
 
 ######### ROUTES - INFLUENCER MARKETING ##########
@@ -1595,4 +1695,4 @@ def run_booking_meeting_form_tracker():
 if __name__ == '__main__':
 #   app.run(debug=True,use_reloader=False)
 #   app.run(port=8001) 
-  app.run(host="127.0.0.1",debug=True, port=5000)
+  app.run(host="127.0.0.1",debug=True, port=5050)
