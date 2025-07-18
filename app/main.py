@@ -132,11 +132,19 @@ def image_recognition_endpoint_dict():
             return jsonify({"error": "Missing 'post_urls' query parameter"}), 400
 
         try:
-            # Safely convert stringified list to actual list
+            
             parsed_list = ast.literal_eval(raw_input)
             if not isinstance(parsed_list, list):
                 raise ValueError
             data = [url.strip() for url in parsed_list if isinstance(url, str)]
+            if data == []:
+                return jsonify({
+                    "results": "",
+                    "all_post_urls": "",
+                    "all_image_urls": "",
+                    "all_drive_urls": "",
+                    "all_tags": ""
+                }), 200
         except Exception:
             return jsonify({"error": "Invalid format for 'post_urls'. Must be a list-like string."}), 400
 
