@@ -39,3 +39,4 @@ pdfplumber
 openpyxl
 pytesseract 
 pillow
+notion_client
