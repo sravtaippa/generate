@@ -306,7 +306,7 @@ def scrape_personal_data(instagram_bio,instagram_url):
     try:
         # Define the system prompt
         system_prompt = """
-        You are a smart assistant programmed to scrape social media bio and retrieve the following contact details if available: email, phone number, Snapchat ID, Twitter ID, Tiktok ID and LinkedIn ID. If any of these are not found, return the value 'NA'.
+        You are a smart assistant programmed to scrape social media bio and retrieve the following contact details if available: email, phone number, Snapchat ID, Twitter ID, Tiktok ID and LinkedIn ID. If any of these are not found, return the empty string value ''.
 
         Your task is to return a JSON string in the following format and nothing else, don't add any other text or markdown formatting:
         {
