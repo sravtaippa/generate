@@ -76,8 +76,8 @@ def classify_profile_type(instagram_bio,business_category_name):
         You are a smart assistant programmed to analyze social media profiles and determine whether the profile belongs to an individual or a group/team.
 
         Possible profile types:
-        - person
-        - group
+        - person (belonging to an individual)
+        - group (belonging to a team, organization, or business (eg: restaurants,brands, etc))
 
         Your task is to return only one of the above tags, and nothing else.
         """
