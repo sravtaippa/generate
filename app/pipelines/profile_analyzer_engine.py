@@ -365,10 +365,12 @@ def scrape_personal_data(instagram_bio,instagram_url,external_urls):
             From the first example above, you should extract `"phone": "966562446528"`, since it's available. 
             If any other social media profiles or email addresses are present in such infos extract those too.
 
-            4. If any value is not found, return `""` for that field.
-
+            4. If external URLs are not available, only use the `bio` field to extract the required information.
+            5. If any of the fields are not found from both bio and external urls, return a JSON string with empty string `""` for all the fields as shown in the output format.
+            6. Do not include any additional text, explanations, or markdown formatting in your response.
+            
             ### Output Format:
-            Return a **JSON string** (not an object or dictionary) exactly in the following format and **nothing else**:
+            Your task is to return a JSON string in the following format and nothing else, don't add any other text or markdown formatting:
 
             {
             "email": "",
@@ -382,7 +384,7 @@ def scrape_personal_data(instagram_bio,instagram_url,external_urls):
         # Define the user prompt
         user_prompt = f"""
         Provided info about the profile:
-        bio: {instagram_bio}, instagram_url: {instagram_url}
+        bio: {instagram_bio}, instagram_url: {instagram_url}, external_urls: {external_urls}
         """
 
         client = openai.OpenAI(api_key=OPENAI_API_KEY)
