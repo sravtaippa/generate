@@ -730,12 +730,13 @@ def add_influencer_data_in_db():
 def analyze_social_profile_data():
     try:
         instagram_bio = request.args.get("instagram_bio")
+        external_urls = request.args.get("external_urls")
         influencer_location = request.args.get("influencer_location")
         trimmed_instagram_caption = request.args.get("trimmed_instagram_caption")
         instagram_url = request.args.get("instagram_url")
         business_category_name = request.args.get("business_category_name")
         trimmed_instagram_hashtags = request.args.get("trimmed_instagram_hashtags")
-        return profile_intelligence_engine(instagram_bio, influencer_location, trimmed_instagram_caption, instagram_url, business_category_name, trimmed_instagram_hashtags)
+        return profile_intelligence_engine(instagram_bio, external_urls, influencer_location, trimmed_instagram_caption, instagram_url, business_category_name, trimmed_instagram_hashtags)
     except Exception as e:
         print(f"Error occurred while analyzing the social profile: {e}")
         return {"status": "failed", "content": f"Error occurred while analyzing the social profile: {e}"}
