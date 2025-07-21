@@ -321,7 +321,7 @@ def scrape_personal_data(instagram_bio,instagram_url,external_urls):
         }
         """
 
-        system_prompt = """
+        system_prompt_2 = """
             You are a smart assistant programmed to extract social media and contact details from Instagram profile data.
 
             Your goal is to retrieve the following fields **if available**, from both the Instagram bio and any `external_urls`:
@@ -381,6 +381,46 @@ def scrape_personal_data(instagram_bio,instagram_url,external_urls):
             "linkedin_id": ""
             }
             """
+        
+        system_prompt = """
+        You are a smart assistant programmed to extract contact and social media details from Instagram profile data provided.
+
+        You must return the following fields:
+        - email
+        - phone
+        - snapchat_id
+        - twitter_id
+        - tiktok_id
+        - linkedin_id
+
+        ### Extraction Instructions:
+
+        1. Check both the `bio` and `external_urls` fields provided.
+        2. Decode all `lynx_url` values (e.g., `%3A` → `:`, `%2F` → `/`) and treat them as full URLs.
+        3. Check **both** `lynx_url` and `url` for direct matches.
+
+        4. Match patterns like:
+        - Phone: any wa.me links → extract number from `wa.me/<number>`
+        - Email: any `mailto:` links or `someone@example.com` in bio
+        - Snapchat: links containing `snapchat.com/add/<username>` or "Snap: <id>" in bio
+        - Twitter: links to `twitter.com/<handle>` or "Twitter: <id>" in bio
+        - TikTok: links to `tiktok.com/@<username>` or similar mentions in bio
+        - LinkedIn: links to `linkedin.com/in/<username>` or "LinkedIn: <id>" in bio
+
+        5. If not found, return empty string "" for that field.
+
+        ### Output Format:
+        Return **only** this JSON string, nothing else ( no explanations, no markdown formatting, no additional text):
+        {
+        "email": "",
+        "phone": "",
+        "snapchat_id": "",
+        "twitter_id": "",
+        "tiktok_id": "",
+        "linkedin_id": ""
+        }
+        """
+
         # Define the user prompt
         user_prompt = f"""
         Provided info about the profile:
