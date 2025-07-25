@@ -5,6 +5,7 @@ import os
 from flask import Flask, render_template, request, jsonify
 from urllib.parse import unquote
 import time
+import ast
 import asyncio
 from pipelines.data_sanitization import fetch_and_update_data, update_email_opens, test_sanitize
 from pipelines.data_sanitization import update_email_opens
@@ -80,6 +81,7 @@ from dashboard.influencer_registration_form import handle_upload_and_submit_to_a
 from pipelines.image_recognition import extract_images
 from pipelines.image_recognition_without_airtable import image_analysis_endpoint
 from pipelines.profile_pic import process_and_upload_image
+from pipelines.campaign_metrics_tracker import update_campaign_metrics_v3
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -87,6 +89,31 @@ print('Starting the app')
 app = Flask(__name__)
 app.register_blueprint(influencer_bp)
 import ast  
+
+@app.route("/update_campaign_metrics", methods=["GET"])
+def update_campaign_metrics_endpoint():
+    try:
+        posts_count = 5
+        campaign_id = "motorcycles"
+        instagram_username = "dqsalmaan"
+        hashtags_required = '["ULtraviolette","Dubai"]'
+
+        campaign_id = request.args.get("campaign_id")
+        posts_count = request.args.get("posts_count", type=int)
+        instagram_username = request.args.get("instagram_username")
+        hashtags_required = request.args.getlist("hashtags_required")
+        
+        hashtags_required = ast.literal_eval(hashtags_required) if hashtags_required else []
+        if not campaign_id or not instagram_username or not hashtags_required:
+            return jsonify({"status": "failed", "message": "Missing input parameters"}), 400
+        status = update_campaign_metrics_v3(campaign_id,instagram_username,posts_count,hashtags_required)
+        if status:
+            return jsonify({"status": "passed", "content": "Campaign metrics updated successfully"}), 200
+        else:
+            return jsonify({"status": "failed", "content": "Failed to update campaign metrics"}), 500
+    except Exception as e:
+        print(f"Error occurred while updating Campaign metrics: {e}")
+        return jsonify({"status": "failed", "content": f"Failed to update campaign metrics {e}"}), 500
 
 @app.route('/upload-profile-pic-from-url', methods=['GET', 'POST'])
 def upload_pic_from_url():
