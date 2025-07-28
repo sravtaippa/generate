@@ -17,6 +17,21 @@ def unique_key_check_airtable(column_name,unique_value,table_name):
     except Exception as e:
         print(f"Error occured in {__name__} while performing unique value check in airtable. {e}")
 
+def unique_key_check_airtable_v3(column_name1, unique_value1, column_name2, unique_value2, table_name):
+    try:
+        api = Api(AIRTABLE_API_KEY)
+        airtable_obj = api.table(AIRTABLE_BASE_ID, table_name)
+        records = airtable_obj.all()
+
+        return any(
+            record['fields'].get(column_name1) == unique_value1 and
+            record['fields'].get(column_name2) == unique_value2
+            for record in records
+        )
+    except Exception as e:
+        print(f"Error occurred in {__name__} while performing unique value check in Airtable. {e}")
+        return False
+
 def retrieve_column_value(table_name,primary_key_col,primary_key_value,column_name):
     try:
         
@@ -58,7 +73,7 @@ def update_campaign_metrics_v3(campaign_id,instagram_username,posts_count,hashta
             date_str = str(date)  # "2025-07-24"
             formatted_date = date_str
 
-        # formatted_date = "2025-05-01"
+        formatted_date = "2025-05-01"
 
         print(f"Formatted date: {formatted_date}")
         input_object_posts = {
@@ -121,8 +136,8 @@ def update_campaign_metrics_v3(campaign_id,instagram_username,posts_count,hashta
                 "is_sponsored": str(item.get("isSponsored", "")),
                 "comments_disabled": str(item.get("isCommentsDisabled", ""))
             }
-
-            record_exists = unique_key_check_airtable('post_url',data["post_url"],"campaign_metrics_v3")
+            record_exists = unique_key_check_airtable_v3('campaign_id', campaign_id,'post_url',data["post_url"],"campaign_metrics_v3")
+            # record_exists = unique_key_check_airtable('post_url',data["post_url"],"campaign_metrics_v3")
             if not record_exists:
                 print(f"Record doesn't exist")
                 export_to_airtable(data,"campaign_metrics_v3")

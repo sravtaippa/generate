@@ -96,12 +96,12 @@ def update_campaign_metrics_endpoint():
         posts_count = 5
         campaign_id = "motorcycles"
         instagram_username = "dqsalmaan"
-        hashtags_required = '["ULtraviolette","Dubai"]'
+        hashtags_required = '["ULtraviolette"]'
 
-        campaign_id = request.args.get("campaign_id")
-        posts_count = request.args.get("posts_count", type=int)
-        instagram_username = request.args.get("instagram_username")
-        hashtags_required = request.args.getlist("hashtags_required")
+        # campaign_id = request.args.get("campaign_id")
+        # posts_count = request.args.get("posts_count", type=int)
+        # instagram_username = request.args.get("instagram_username")
+        # hashtags_required = request.args.getlist("hashtags_required")
         
         hashtags_required = ast.literal_eval(hashtags_required) if hashtags_required else []
         if not campaign_id or not instagram_username or not hashtags_required:
