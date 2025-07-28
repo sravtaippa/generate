@@ -31,10 +31,29 @@ def clean_email(email):
     return ""
 
 def clean_phone(phone):
-    if isinstance(phone, str):
-        digits = re.sub(r"\D", "", phone)
-        return f"+{digits}" if digits else ""
-    return ""
+    if not isinstance(phone, str):
+        return ""
+
+    # Remove all non-digit characters
+    digits = re.sub(r"\D", "", phone)
+
+    if not digits:
+        return ""
+
+    # Remove leading zeros or country code
+    if digits.startswith("966"):
+        digits = digits[3:]
+    elif digits.startswith("00966"):
+        digits = digits[5:]
+    elif digits.startswith("0"):
+        digits = digits[1:]
+
+    # Ensure it's 9 digits long (typical for Saudi mobile numbers)
+    if len(digits) == 9:
+        return f"+966{digits}"
+    else:
+        return ""
+
 
 def is_valid_ig_url(url):
     return isinstance(url, str) and re.match(r"^https?://(www\.)?instagram\.com/(?!reel)[^/?#]+/?", url)
