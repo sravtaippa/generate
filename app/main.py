@@ -111,6 +111,7 @@ def influencer_sanitization_module():
             "first_name": request.args.get("first_name"),
             "phone_number": request.args.get("phone_number"),
             "instagram_handle": request.args.get("instagram_handle"),
+            "tiktok_handle": request.args.get("tiktok_handle"),
             "location": request.args.get("location")                   
         }
         data_list = [influencer_data]

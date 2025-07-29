@@ -5,33 +5,39 @@ def clean_first_name(name):
         return ""
     return name.strip().title()
 
+import re
+
 def clean_phone_number(phone):
     if not isinstance(phone, str):
         return ""
 
-    # Remove all non-digit characters
     digits = re.sub(r"\D", "", phone)
 
-    # Normalize various starting formats
+    # Saudi numbers normalization
     if digits.startswith("00966"):
         digits = digits[5:]
+        if len(digits) == 9 and digits.startswith("5"):
+            return f"+966{digits}"
     elif digits.startswith("966"):
         digits = digits[3:]
+        if len(digits) == 9 and digits.startswith("5"):
+            return f"+966{digits}"
     elif digits.startswith("05"):
         digits = digits[1:]
+        if len(digits) == 9 and digits.startswith("5"):
+            return f"+966{digits}"
     elif digits.startswith("5") and len(digits) == 9:
-        pass  # already normalized
-    else:
-        return ""  # Invalid format
-
-    # Ensure it's a valid 9-digit Saudi mobile number (starts with 5)
-    if len(digits) == 9 and digits.startswith("5"):
         return f"+966{digits}"
-    else:
-        return ""
+
+    # For any other number (like UAE 0097150...), return original cleaned digits with plus
+    if digits:
+        return f"+{digits}"
+
+    return ""
 
 
-def clean_instagram_handle(instagram_handle_name):
+
+def clean_handle_name(instagram_handle_name):
     if not instagram_handle_name or not isinstance(instagram_handle_name, str):
         return None
 
@@ -58,6 +64,7 @@ def clean_data(data):
     return {
         "first_name": clean_first_name(data.get("first_name", "")),
         "phone_number": clean_phone_number(data.get("phone_number", "")),
-        "instagram_handle": clean_instagram_handle(data.get("instagram_handle", "")),
+        "instagram_handle": clean_handle_name(data.get("instagram_handle", "")),
+        "tiktok_handle": clean_handle_name(data.get("tiktok_handle", "")),
         "location": clean_location(data.get("location", ""))
     }
