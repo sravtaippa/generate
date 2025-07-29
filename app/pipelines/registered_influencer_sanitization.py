@@ -1,0 +1,63 @@
+import re
+
+def clean_first_name(name):
+    if not isinstance(name, str):
+        return ""
+    return name.strip().title()
+
+def clean_phone_number(phone):
+    if not isinstance(phone, str):
+        return ""
+
+    # Remove all non-digit characters
+    digits = re.sub(r"\D", "", phone)
+
+    # Normalize various starting formats
+    if digits.startswith("00966"):
+        digits = digits[5:]
+    elif digits.startswith("966"):
+        digits = digits[3:]
+    elif digits.startswith("05"):
+        digits = digits[1:]
+    elif digits.startswith("5") and len(digits) == 9:
+        pass  # already normalized
+    else:
+        return ""  # Invalid format
+
+    # Ensure it's a valid 9-digit Saudi mobile number (starts with 5)
+    if len(digits) == 9 and digits.startswith("5"):
+        return f"+966{digits}"
+    else:
+        return ""
+
+
+def clean_instagram_handle(instagram_handle_name):
+    if not instagram_handle_name or not isinstance(instagram_handle_name, str):
+        return None
+
+    handle = instagram_handle_name.strip().lower()
+    handle = re.sub(r"(https?:\/\/)?(www\.)?(instagram\.com|instagr\.am)\/", "", handle)
+    handle = re.split(r"[/?]", handle)[0].strip().rstrip("/")
+    handle = handle.lstrip("@")
+    
+    return f"@{handle}" if handle else None
+
+def clean_location(location):
+    if not isinstance(location, str):
+        return ""
+    location = location.strip().lower()
+    if "dammam" in location:
+        return "Dammam, KSA"
+    elif "riyadh" in location:
+        return "Riyadh, KSA"
+    elif "jeddah" in location:
+        return "Jeddah, KSA"
+    return location.title()
+
+def clean_data(data):
+    return {
+        "first_name": clean_first_name(data.get("first_name", "")),
+        "phone_number": clean_phone_number(data.get("phone_number", "")),
+        "instagram_handle": clean_instagram_handle(data.get("instagram_handle", "")),
+        "location": clean_location(data.get("location", ""))
+    }

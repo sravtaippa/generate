@@ -82,6 +82,7 @@ from pipelines.image_recognition import extract_images
 from pipelines.image_recognition_without_airtable import image_analysis_endpoint
 from pipelines.profile_pic import process_and_upload_image
 from pipelines.campaign_metrics_tracker import update_campaign_metrics_v3
+from pipelines.registered_influencer_sanitization import clean_data
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -89,6 +90,36 @@ print('Starting the app')
 app = Flask(__name__)
 app.register_blueprint(influencer_bp)
 import ast  
+
+
+
+@app.route('/registered_influencer_sanitization_module', methods=['GET', 'POST'])
+def influencer_sanitization_module():
+    data_list = []
+
+    if request.method == "POST" and request.is_json:
+        json_data = request.get_json()
+        if isinstance(json_data, list):
+            data_list = json_data
+        elif isinstance(json_data, dict):
+            data_list = [json_data]
+        else:
+            return jsonify({"error": "Invalid JSON format"}), 400
+
+    elif request.method == "GET":
+        influencer_data = {
+            "first_name": request.args.get("first_name"),
+            "phone_number": request.args.get("phone_number"),
+            "instagram_handle": request.args.get("instagram_handle"),
+            "location": request.args.get("location")                   
+        }
+        data_list = [influencer_data]
+
+    else:
+        return jsonify({"error": "Unsupported request format. Use GET with query params or POST JSON."}), 400
+
+    results = [clean_data(data) for data in data_list]
+    return jsonify(results), 200
 
 @app.route("/update_campaign_metrics", methods=["GET"])
 def update_campaign_metrics_endpoint():
