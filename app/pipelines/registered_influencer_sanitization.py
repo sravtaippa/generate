@@ -39,7 +39,7 @@ def clean_phone_number(phone):
 
 
 
-def clean_handle_name(instagram_handle_name):
+def clean_instagram_handle_name(instagram_handle_name):
     if not instagram_handle_name or not isinstance(instagram_handle_name, str):
         return None
 
@@ -48,6 +48,23 @@ def clean_handle_name(instagram_handle_name):
     handle = re.split(r"[/?]", handle)[0].strip().rstrip("/")
     handle = handle.lstrip("@")
     
+    return f"@{handle}" if handle else None
+
+def clean_tiktok_handle_name(tiktok_handle_name):
+    if not tiktok_handle_name or not isinstance(tiktok_handle_name, str):
+        return None
+
+    handle = tiktok_handle_name.strip().lower()
+    
+    # Remove base TikTok URL patterns
+    handle = re.sub(r"(https?:\/\/)?(www\.)?tiktok\.com\/(@)?", "", handle)
+
+    # Remove any query parameters or trailing slashes
+    handle = re.split(r"[/?]", handle)[0].strip().rstrip("/")
+
+    # Strip any leading @
+    handle = handle.lstrip("@")
+
     return f"@{handle}" if handle else None
 
 def clean_location(location):
@@ -66,7 +83,7 @@ def clean_data(data):
     return {
         "first_name": clean_first_name(data.get("first_name", "")),
         "phone_number": clean_phone_number(data.get("phone_number", "")),
-        "instagram_handle": clean_handle_name(data.get("instagram_handle", "")),
-        "tiktok_handle": clean_handle_name(data.get("tiktok_handle", "")),
+        "instagram_handle": clean_instagram_handle_name(data.get("instagram_handle", "")),
+        "tiktok_handle": clean_tiktok_handle_name(data.get("tiktok_handle", "")),
         "location": clean_location(data.get("location", ""))
     }
