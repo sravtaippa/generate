@@ -7,33 +7,35 @@ def clean_first_name(name):
 
 import re
 
+import re
+
 def clean_phone_number(phone):
     if not isinstance(phone, str):
         return ""
 
+    # Remove all non-digit characters
     digits = re.sub(r"\D", "", phone)
 
-    # Saudi numbers normalization
+    # Normalize Saudi numbers
     if digits.startswith("00966"):
         digits = digits[5:]
-        if len(digits) == 9 and digits.startswith("5"):
-            return f"+966{digits}"
     elif digits.startswith("966"):
         digits = digits[3:]
-        if len(digits) == 9 and digits.startswith("5"):
-            return f"+966{digits}"
     elif digits.startswith("05"):
         digits = digits[1:]
-        if len(digits) == 9 and digits.startswith("5"):
-            return f"+966{digits}"
     elif digits.startswith("5") and len(digits) == 9:
+        pass
+
+    # If it looks like a valid Saudi mobile number, format it
+    if len(digits) == 9 and digits.startswith("5"):
         return f"+966{digits}"
 
-    # For any other number (like UAE 0097150...), return original cleaned digits with plus
+    # Otherwise return cleaned number with + (if any digits)
     if digits:
         return f"+{digits}"
 
     return ""
+
 
 
 
