@@ -6,6 +6,7 @@ from flask import Flask, render_template, request, jsonify
 from urllib.parse import unquote
 import time
 import ast
+import json
 import asyncio
 from pipelines.data_sanitization import fetch_and_update_data, update_email_opens, test_sanitize
 from pipelines.data_sanitization import update_email_opens
@@ -128,27 +129,33 @@ def influencer_sanitization_module():
 @app.route("/update_campaign_metrics", methods=["GET"])
 def update_campaign_metrics_endpoint():
     try:
-        # posts_count = 5
-        # campaign_id = "motorcycles"
-        # instagram_username = "dqsalmaan"
-        # hashtags_required = '["ULtraviolette"]'
-
         campaign_id = request.args.get("campaign_id")
         posts_count = request.args.get("posts_count", type=int)
         instagram_username = request.args.get("instagram_username")
-        hashtags_required = request.args.getlist("hashtags_required")
         
-        hashtags_required = ast.literal_eval(hashtags_required) if hashtags_required else []
+        # Get and parse hashtags_required as list
+        raw_hashtags = request.args.get("hashtags_required")
+        hashtags_required = json.loads(raw_hashtags) if raw_hashtags else []
+
         if not campaign_id or not instagram_username or not hashtags_required:
             return jsonify({"status": "failed", "message": "Missing input parameters"}), 400
-        status = update_campaign_metrics_v3(campaign_id,instagram_username,posts_count,hashtags_required)
+
+        status = update_campaign_metrics_v3(
+            campaign_id,
+            instagram_username,
+            posts_count,
+            hashtags_required
+        )
+
         if status:
             return jsonify({"status": "passed", "content": "Campaign metrics updated successfully"}), 200
         else:
             return jsonify({"status": "failed", "content": "Failed to update campaign metrics"}), 500
+
     except Exception as e:
         print(f"Error occurred while updating Campaign metrics: {e}")
         return jsonify({"status": "failed", "content": f"Failed to update campaign metrics {e}"}), 500
+
 
 @app.route('/upload-profile-pic-from-url', methods=['GET', 'POST'])
 def upload_pic_from_url():
