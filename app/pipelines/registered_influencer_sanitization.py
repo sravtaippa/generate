@@ -67,6 +67,39 @@ def clean_tiktok_handle_name(tiktok_handle_name):
 
     return f"@{handle}" if handle else None
 
+def clean_snapchat_handle_name(handle):
+    if not handle or not isinstance(handle, str):
+        return None
+
+    handle = handle.strip().lower()
+    handle = re.sub(r"(https?:\/\/)?(www\.)?(snapchat\.com\/add\/)", "", handle)
+    handle = re.split(r"[/?]", handle)[0].strip().rstrip("/")
+    handle = handle.lstrip("@")
+
+    return f"@{handle}" if handle else None
+
+def clean_twitter_handle_name(handle):
+    if not handle or not isinstance(handle, str):
+        return None
+
+    handle = handle.strip().lower()
+    handle = re.sub(r"(https?:\/\/)?(www\.)?(twitter\.com\/)", "", handle)
+    handle = re.split(r"[/?]", handle)[0].strip().rstrip("/")
+    handle = handle.lstrip("@")
+
+    return f"@{handle}" if handle else None
+
+def clean_facebook_handle_name(handle):
+    if not handle or not isinstance(handle, str):
+        return None
+
+    handle = handle.strip().lower()
+    handle = re.sub(r"(https?:\/\/)?(www\.)?(facebook\.com\/)", "", handle)
+    handle = re.split(r"[/?]", handle)[0].strip().rstrip("/")
+    handle = handle.lstrip("@")
+
+    return f"@{handle}" if handle else None
+
 def clean_location(location):
     if not isinstance(location, str):
         return ""
@@ -85,5 +118,8 @@ def clean_data(data):
         "phone_number": clean_phone_number(data.get("phone_number", "")),
         "instagram_handle": clean_instagram_handle_name(data.get("instagram_handle", "")),
         "tiktok_handle": clean_tiktok_handle_name(data.get("tiktok_handle", "")),
+        "facebook_handle": clean_facebook_handle_name(data.get("facebook_handle", "")),
+        "twitter_handle": clean_twitter_handle_name(data.get("twitter_handle", "")),
+        "snapchat_handle": clean_snapchat_handle_name(data.get("snapchat_handle", "")),
         "location": clean_location(data.get("location", ""))
     }
