@@ -149,9 +149,9 @@ def update_campaign_metrics_v3(campaign_id,instagram_username,posts_count,hashta
         print(f"Error occured in {__name__} while updating campaign metrics. {e}")
         return False
 
-if __name__ == "__main__":
-    posts_count = 5
-    campaign_id = "motorcycles"
-    instagram_username = "dqsalmaan"
-    hashtags_required = ["ULtraviolette"]
+# if __name__ == "__main__":
+#     posts_count = 5
+#     campaign_id = "motorcycles"
+#     instagram_username = "dqsalmaan"
+#     hashtags_required = ["ULtraviolette"]
     # print(update_campaign_metrics(campaign_id,instagram_username,posts_count,hashtags_required))
