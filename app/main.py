@@ -84,6 +84,7 @@ from pipelines.image_recognition_without_airtable import image_analysis_endpoint
 from pipelines.profile_pic import process_and_upload_image
 from pipelines.campaign_metrics_tracker import update_campaign_metrics_v3
 from pipelines.registered_influencer_sanitization import clean_data
+from influencers.notion_content_extractor import get_notion_page_text
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
