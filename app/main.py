@@ -86,6 +86,7 @@ from pipelines.campaign_metrics_tracker import update_campaign_metrics_v3
 from pipelines.registered_influencer_sanitization import clean_data
 from influencers.notion_content_extractor import get_notion_page_text
 from influencers.process_meeting_notes import populate_meeting_notes
+from pipelines.process_external_url import extract_info
 print(f"\n =============== Generate : Pipeline started  ===============")
 
 print(f" Directory path for main file: {os.path.dirname(os.path.abspath(__file__))}")
@@ -95,6 +96,18 @@ app.register_blueprint(influencer_bp)
 import ast  
 
 
+@app.route('/extract_external_url', methods=['POST'])
+def extract_endpoint():
+    data = request.get_json()
+    if not data or 'external_url' not in data:
+        return jsonify({"error": "Missing 'external_url' parameter"}), 400
+
+    external_url = data['external_url']
+    if not isinstance(external_url, str):
+        return jsonify({"error": "'external_url' must be a string"}), 400
+
+    result = extract_info(external_url)
+    return jsonify(result), 200
 
 @app.route('/registered_influencer_sanitization_module', methods=['GET', 'POST'])
 def influencer_sanitization_module():
