@@ -125,7 +125,6 @@ def extract_endpoint():
     result = extract_info(long_text, instagram_followers_count, bio)
     return jsonify(result), 200
 
-
 @app.route('/registered_influencer_sanitization_module', methods=['GET', 'POST'])
 def influencer_sanitization_module():
     data_list = []
