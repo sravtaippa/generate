@@ -28,8 +28,7 @@ def parse_followers_count(text):
     if not text:
         return 0
     text = text.strip().lower()
-    text = re.sub(r"[^\d.km]", "", text)
-
+    text = re.sub(r"[^\d.km]", "", text)  # keep digits, dot, k, m
     try:
         if 'm' in text:
             return int(float(text.replace('m', '')) * 1_000_000)
@@ -56,33 +55,46 @@ def get_influencer_tier_from_count(count):
         return "Unknown"
 
 def get_country_full_name(code_or_name):
-    # Try alpha_2 lookup first
     try:
         country = pycountry.countries.get(alpha_2=code_or_name.upper())
         if country:
             return country.name
     except:
         pass
-    # Try fuzzy search by name
     try:
         country = pycountry.countries.search_fuzzy(code_or_name)[0]
         return country.name
     except:
         return None
 
-def extract_countries_with_codes(bio_text):
-    # Extract countries from GeoText (full names)
+def flag_emoji_to_country_code(flag_emoji):
+    OFFSET = 127397  # Unicode regional indicator symbol letter 'A' offset
+    try:
+        if len(flag_emoji) != 2:
+            return None
+        return ''.join([chr(ord(c) - OFFSET) for c in flag_emoji]).upper()
+    except:
+        return None
+
+def extract_countries_with_codes_and_flags(bio_text):
     places = GeoText(bio_text)
     countries = list(places.country_mentions.keys())
 
-    # Find all uppercase 2-letter words (possible country codes)
+    # Find uppercase 2-letter codes (like AE, IN)
     country_codes = re.findall(r'\b([A-Z]{2})\b', bio_text.upper())
-
-    # Map 2-letter codes to full country names, avoid duplicates
     for code in country_codes:
         full_name = get_country_full_name(code)
         if full_name and full_name not in countries:
             countries.append(full_name)
+
+    # Find all flag emojis (pairs of regional indicator symbols)
+    flag_emojis = re.findall(r'[\U0001F1E6-\U0001F1FF]{2}', bio_text)
+    for flag in flag_emojis:
+        country_code = flag_emoji_to_country_code(flag)
+        if country_code:
+            full_name = get_country_full_name(country_code)
+            if full_name and full_name not in countries:
+                countries.append(full_name)
 
     return countries
 
@@ -96,10 +108,9 @@ def extract_info(long_text, followers_text=None, bio=None):
     follower_count = parse_followers_count(followers_text)
     influencer_tier = get_influencer_tier_from_count(follower_count)
 
-    # Extract city and countries (with country code support)
     place_info = GeoText(bio or "")
-    cities = place_info.cities
-    countries = extract_countries_with_codes(bio or "")
+    cities = place_info.cities or []
+    countries = extract_countries_with_codes_and_flags(bio or "")
 
     return {
         "tiktok_url": re.search(TIKTOK_REGEX, cleaned_text).group(1) if re.search(TIKTOK_REGEX, cleaned_text) else None,
@@ -113,6 +124,7 @@ def extract_info(long_text, followers_text=None, bio=None):
         "cities": cities,
         "countries": countries
     }
+
 
 if __name__ == '__main__':
     app.run(debug=True)

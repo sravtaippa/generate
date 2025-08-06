@@ -102,18 +102,17 @@ from flask import Flask, request, jsonify
 @app.route('/extract_external_url', methods=['POST'])
 def extract_endpoint():
     data = request.get_json()
-
     if not data or 'external_url' not in data or 'instagram_followers_count' not in data:
         return jsonify({"error": "Missing required parameters"}), 400
 
     external_url = data['external_url']
-    instagram_followers_count = data.get('instagram_followers_count')
+    followers_text = data.get('instagram_followers_count')
     bio = data.get('bio', '')
 
     if not isinstance(external_url, str):
         return jsonify({"error": "'external_url' must be a string"}), 400
 
-    result = extract_info(external_url, instagram_followers_count, bio)
+    result = extract_info(external_url, followers_text, bio)
     return jsonify(result), 200
 
 
