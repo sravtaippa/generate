@@ -98,7 +98,6 @@ import ast
 
 from flask import Flask, request, jsonify
 
-
 @app.route('/extract_external_url', methods=['POST'])
 def extract_endpoint():
     data = request.get_json()
@@ -109,12 +108,13 @@ def extract_endpoint():
     followers_text = data.get('instagram_followers_count')
     bio = data.get('bio', '')
 
+    print("Received bio:", bio)  # Debugging to check bio content
+
     if not isinstance(external_url, str):
         return jsonify({"error": "'external_url' must be a string"}), 400
 
     result = extract_info(external_url, followers_text, bio)
     return jsonify(result), 200
-
 
 @app.route('/registered_influencer_sanitization_module', methods=['GET', 'POST'])
 def influencer_sanitization_module():

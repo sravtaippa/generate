@@ -1,4 +1,5 @@
 import re
+import unicodedata
 from flask import Flask, request, jsonify
 from urllib.parse import unquote
 from geotext import GeoText
@@ -28,7 +29,7 @@ def parse_followers_count(text):
     if not text:
         return 0
     text = text.strip().lower()
-    text = re.sub(r"[^\d.km]", "", text)  # keep digits, dot, k, m
+    text = re.sub(r"[^\d.km]", "", text)
     try:
         if 'm' in text:
             return int(float(text.replace('m', '')) * 1_000_000)
@@ -67,40 +68,25 @@ def get_country_full_name(code_or_name):
     except:
         return None
 
-def flag_emoji_to_country_code(flag_emoji):
-    OFFSET = 127397  # Unicode regional indicator symbol letter 'A' offset
-    try:
-        if len(flag_emoji) != 2:
-            return None
-        return ''.join([chr(ord(c) - OFFSET) for c in flag_emoji]).upper()
-    except:
-        return None
-
-def extract_countries_with_codes_and_flags(bio_text):
+def extract_countries_with_codes(bio_text):
     places = GeoText(bio_text)
     countries = list(places.country_mentions.keys())
-
-    # Find uppercase 2-letter codes (like AE, IN)
     country_codes = re.findall(r'\b([A-Z]{2})\b', bio_text.upper())
     for code in country_codes:
         full_name = get_country_full_name(code)
         if full_name and full_name not in countries:
             countries.append(full_name)
-
-    # Find all flag emojis (pairs of regional indicator symbols)
-    flag_emojis = re.findall(r'[\U0001F1E6-\U0001F1FF]{2}', bio_text)
-    for flag in flag_emojis:
-        country_code = flag_emoji_to_country_code(flag)
-        if country_code:
-            full_name = get_country_full_name(country_code)
-            if full_name and full_name not in countries:
-                countries.append(full_name)
-
     return countries
+
+def sanitize_bio(text):
+    if not text:
+        return ""
+    normalized = unicodedata.normalize('NFC', text)
+    return normalized.replace('\n', ' ').strip()
 
 def extract_info(long_text, followers_text=None, bio=None):
     if not long_text:
-        return {}
+        long_text = ""
 
     cleaned_text = unwrap_markdown(long_text)
     cleaned_text = decode_instagram_redirects(cleaned_text)
@@ -108,9 +94,10 @@ def extract_info(long_text, followers_text=None, bio=None):
     follower_count = parse_followers_count(followers_text)
     influencer_tier = get_influencer_tier_from_count(follower_count)
 
-    place_info = GeoText(bio or "")
-    cities = place_info.cities or []
-    countries = extract_countries_with_codes_and_flags(bio or "")
+    clean_bio = sanitize_bio(bio or "")
+    place_info = GeoText(clean_bio)
+    cities = place_info.cities
+    countries = extract_countries_with_codes(clean_bio)
 
     return {
         "tiktok_url": re.search(TIKTOK_REGEX, cleaned_text).group(1) if re.search(TIKTOK_REGEX, cleaned_text) else None,
@@ -124,6 +111,7 @@ def extract_info(long_text, followers_text=None, bio=None):
         "cities": cities,
         "countries": countries
     }
+
 
 
 if __name__ == '__main__':
