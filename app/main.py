@@ -104,12 +104,13 @@ def extract_endpoint():
 
     external_url = data['external_url']
     instagram_followers_count = data.get("instagram_followers_count", 0)
-    
+
     if not isinstance(external_url, str):
         return jsonify({"error": "'external_url' must be a string"}), 400
 
     result = extract_info(external_url, instagram_followers_count)
     return jsonify(result), 200
+
 
 @app.route('/registered_influencer_sanitization_module', methods=['GET', 'POST'])
 def influencer_sanitization_module():

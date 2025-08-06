@@ -1,5 +1,8 @@
+from flask import Flask, request, jsonify
 import re
 from urllib.parse import unquote
+
+app = Flask(__name__)
 
 # Regex patterns
 EMAIL_REGEX = r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"
@@ -19,37 +22,32 @@ def decode_instagram_redirects(text):
         return unquote(match.group(1))
     return pattern.sub(replacer, text)
 
-# Clean followers text like "12,000,0", "12.3K", "1.5M followers"
 def parse_followers_count(text):
     if not text:
         return 0
     text = text.strip().lower()
-    text = re.sub(r"[^\d.km]", "", text)  # Keep only digits, dots, k, m
-
+    text = re.sub(r"[^\d.km]", "", text)
     try:
         if 'm' in text:
             return int(float(text.replace('m', '')) * 1_000_000)
         elif 'k' in text:
             return int(float(text.replace('k', '')) * 1_000)
         else:
-            # Remove all non-digits and join the remaining parts
-            clean = re.sub(r"[^\d]", "", text)
-            return int(clean)
+            return int(re.sub(r"[^\d]", "", text))
     except:
         return 0
 
 def get_influencer_tier_from_text(text):
     count = parse_followers_count(text)
-
     if 1000 <= count < 10000:
         return "Nano"
-    elif 10_000 <= count < 50_000:
+    elif 10000 <= count < 50000:
         return "Micro"
-    elif 50_000 <= count < 500_000:
+    elif 50000 <= count < 500000:
         return "Mid-tier"
-    elif 500_000 <= count < 1_000_000:
+    elif 500000 <= count < 1000000:
         return "Macro"
-    elif count >= 1_000_000:
+    elif count >= 1000000:
         return "Mega"
     else:
         return "Unknown"
@@ -71,3 +69,4 @@ def extract_info(long_text, followers_text=None):
         "youtube_url": re.search(YOUTUBE_REGEX, cleaned_text).group(1) if re.search(YOUTUBE_REGEX, cleaned_text) else None,
         "influencer_tier": get_influencer_tier_from_text(followers_text)
     }
+
