@@ -97,28 +97,26 @@ import ast
 
 
 from flask import Flask, request, jsonify
-
 @app.route('/extract_external_url', methods=['POST'])
 def extract_endpoint():
     data = request.get_json()
 
-    external_url = data.get('external_url')
-    instagram_followers_count = data.get("instagram_followers_count", "")
-    bio = data.get("bio", "")
+    external_url = data.get('external_url', '')
+    instagram_followers_count = data.get('instagram_followers_count', '')
+    bio = data.get('bio', '')
 
-    # Handle stringified list input like "[]"
+    # Safely parse stringified list like "['https://example.com']"
     if isinstance(external_url, str):
         try:
-            import ast
             parsed = ast.literal_eval(external_url)
-            if isinstance(parsed, list) and parsed:
-                long_text = str(parsed)
+            if isinstance(parsed, list):
+                long_text = " ".join(parsed)
             else:
                 long_text = ""
-        except:
-            long_text = ""
+        except Exception:
+            long_text = external_url  # fallback to raw string
     elif isinstance(external_url, list):
-        long_text = str(external_url)
+        long_text = " ".join(external_url)
     else:
         long_text = ""
 

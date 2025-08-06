@@ -1,4 +1,5 @@
 import re
+import ast
 import unicodedata
 from flask import Flask, request, jsonify
 from urllib.parse import unquote
@@ -21,9 +22,7 @@ def unwrap_markdown(text):
 
 def decode_instagram_redirects(text):
     pattern = re.compile(r'https://l\.instagram\.com/\?u=([^&]+)&[^\s]*')
-    def replacer(match):
-        return unquote(match.group(1))
-    return pattern.sub(replacer, text)
+    return pattern.sub(lambda match: unquote(match.group(1)), text)
 
 def parse_followers_count(text):
     if not text:
@@ -36,8 +35,7 @@ def parse_followers_count(text):
         elif 'k' in text:
             return int(float(text.replace('k', '')) * 1_000)
         else:
-            clean = re.sub(r"[^\d]", "", text)
-            return int(clean)
+            return int(re.sub(r"[^\d]", "", text))
     except:
         return 0
 
@@ -85,33 +83,31 @@ def sanitize_bio(text):
     return normalized.replace('\n', ' ').strip()
 
 def extract_info(long_text, followers_text=None, bio=None):
-    if not long_text:
-        long_text = ""
-
-    cleaned_text = unwrap_markdown(long_text)
+    cleaned_text = unwrap_markdown(long_text or "")
     cleaned_text = decode_instagram_redirects(cleaned_text)
 
     follower_count = parse_followers_count(followers_text)
     influencer_tier = get_influencer_tier_from_count(follower_count)
 
     clean_bio = sanitize_bio(bio or "")
+    combined_text = f"{cleaned_text} {clean_bio}"
+
     place_info = GeoText(clean_bio)
     cities = place_info.cities
     countries = extract_countries_with_codes(clean_bio)
 
     return {
-        "tiktok_url": re.search(TIKTOK_REGEX, cleaned_text).group(1) if re.search(TIKTOK_REGEX, cleaned_text) else None,
-        "twitter_id": re.search(TWITTER_REGEX, cleaned_text).group(1) if re.search(TWITTER_REGEX, cleaned_text) else None,
-        "snapchat_id": re.search(SNAPCHAT_REGEX, cleaned_text).group(1) if re.search(SNAPCHAT_REGEX, cleaned_text) else None,
-        "phone": re.search(PHONE_REGEX, cleaned_text).group(1).strip() if re.search(PHONE_REGEX, cleaned_text) else None,
-        "email_id": re.search(EMAIL_REGEX, cleaned_text).group(0) if re.search(EMAIL_REGEX, cleaned_text) else None,
-        "linkedin_id": re.search(LINKEDIN_REGEX, cleaned_text).group(1) if re.search(LINKEDIN_REGEX, cleaned_text) else None,
-        "youtube_url": re.search(YOUTUBE_REGEX, cleaned_text).group(1) if re.search(YOUTUBE_REGEX, cleaned_text) else None,
+        "tiktok_url": re.search(TIKTOK_REGEX, combined_text).group(1) if re.search(TIKTOK_REGEX, combined_text) else None,
+        "twitter_id": re.search(TWITTER_REGEX, combined_text).group(1) if re.search(TWITTER_REGEX, combined_text) else None,
+        "snapchat_id": re.search(SNAPCHAT_REGEX, combined_text).group(1) if re.search(SNAPCHAT_REGEX, combined_text) else None,
+        "phone": re.search(PHONE_REGEX, combined_text).group(1).strip() if re.search(PHONE_REGEX, combined_text) else None,
+        "email_id": re.search(EMAIL_REGEX, combined_text).group(0) if re.search(EMAIL_REGEX, combined_text) else None,
+        "linkedin_id": re.search(LINKEDIN_REGEX, combined_text).group(1) if re.search(LINKEDIN_REGEX, combined_text) else None,
+        "youtube_url": re.search(YOUTUBE_REGEX, combined_text).group(1) if re.search(YOUTUBE_REGEX, combined_text) else None,
         "influencer_tier": influencer_tier,
         "cities": cities,
         "countries": countries
     }
-
 
 
 if __name__ == '__main__':
