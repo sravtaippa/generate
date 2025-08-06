@@ -98,18 +98,23 @@ import ast
 
 from flask import Flask, request, jsonify
 
+
 @app.route('/extract_external_url', methods=['POST'])
 def extract_endpoint():
     data = request.get_json()
+
     if not data or 'external_url' not in data or 'instagram_followers_count' not in data:
-        return jsonify({"error": "Missing 'external_url' or 'instagram_followers_count' parameter"}), 400
+        return jsonify({"error": "Missing required parameters"}), 400
 
     external_url = data['external_url']
-    instagram_followers_count = data['instagram_followers_count']
+    instagram_followers_count = data.get('instagram_followers_count')
+    bio = data.get('bio', '')
 
-    result = extract_info(external_url, instagram_followers_count)
+    if not isinstance(external_url, str):
+        return jsonify({"error": "'external_url' must be a string"}), 400
+
+    result = extract_info(external_url, instagram_followers_count, bio)
     return jsonify(result), 200
-
 
 
 @app.route('/registered_influencer_sanitization_module', methods=['GET', 'POST'])

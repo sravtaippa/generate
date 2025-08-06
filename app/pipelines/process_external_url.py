@@ -1,5 +1,10 @@
 import re
+from flask import Flask, request, jsonify
 from urllib.parse import unquote
+from geotext import GeoText
+import pycountry
+
+app = Flask(__name__)
 
 # Regex patterns
 EMAIL_REGEX = r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"
@@ -19,12 +24,11 @@ def decode_instagram_redirects(text):
         return unquote(match.group(1))
     return pattern.sub(replacer, text)
 
-# Clean followers text like "12,000,0", "12.3K", "1.5M followers"
 def parse_followers_count(text):
     if not text:
         return 0
     text = text.strip().lower()
-    text = re.sub(r"[^\d.km]", "", text)  # Keep only digits, dots, k, m
+    text = re.sub(r"[^\d.km]", "", text)
 
     try:
         if 'm' in text:
@@ -32,15 +36,12 @@ def parse_followers_count(text):
         elif 'k' in text:
             return int(float(text.replace('k', '')) * 1_000)
         else:
-            # Remove all non-digits and join the remaining parts
             clean = re.sub(r"[^\d]", "", text)
             return int(clean)
     except:
         return 0
 
-def get_influencer_tier_from_text(text):
-    count = parse_followers_count(text)
-
+def get_influencer_tier_from_count(count):
     if 1000 <= count < 10000:
         return "Nano"
     elif 10_000 <= count < 50_000:
@@ -54,12 +55,51 @@ def get_influencer_tier_from_text(text):
     else:
         return "Unknown"
 
-def extract_info(long_text, followers_text=None):
+def get_country_full_name(code_or_name):
+    # Try alpha_2 lookup first
+    try:
+        country = pycountry.countries.get(alpha_2=code_or_name.upper())
+        if country:
+            return country.name
+    except:
+        pass
+    # Try fuzzy search by name
+    try:
+        country = pycountry.countries.search_fuzzy(code_or_name)[0]
+        return country.name
+    except:
+        return None
+
+def extract_countries_with_codes(bio_text):
+    # Extract countries from GeoText (full names)
+    places = GeoText(bio_text)
+    countries = list(places.country_mentions.keys())
+
+    # Find all uppercase 2-letter words (possible country codes)
+    country_codes = re.findall(r'\b([A-Z]{2})\b', bio_text.upper())
+
+    # Map 2-letter codes to full country names, avoid duplicates
+    for code in country_codes:
+        full_name = get_country_full_name(code)
+        if full_name and full_name not in countries:
+            countries.append(full_name)
+
+    return countries
+
+def extract_info(long_text, followers_text=None, bio=None):
     if not long_text:
         return {}
 
     cleaned_text = unwrap_markdown(long_text)
     cleaned_text = decode_instagram_redirects(cleaned_text)
+
+    follower_count = parse_followers_count(followers_text)
+    influencer_tier = get_influencer_tier_from_count(follower_count)
+
+    # Extract city and countries (with country code support)
+    place_info = GeoText(bio or "")
+    cities = place_info.cities
+    countries = extract_countries_with_codes(bio or "")
 
     return {
         "tiktok_url": re.search(TIKTOK_REGEX, cleaned_text).group(1) if re.search(TIKTOK_REGEX, cleaned_text) else None,
@@ -69,5 +109,10 @@ def extract_info(long_text, followers_text=None):
         "email_id": re.search(EMAIL_REGEX, cleaned_text).group(0) if re.search(EMAIL_REGEX, cleaned_text) else None,
         "linkedin_id": re.search(LINKEDIN_REGEX, cleaned_text).group(1) if re.search(LINKEDIN_REGEX, cleaned_text) else None,
         "youtube_url": re.search(YOUTUBE_REGEX, cleaned_text).group(1) if re.search(YOUTUBE_REGEX, cleaned_text) else None,
-        "influencer_tier": get_influencer_tier_from_text(followers_text)
+        "influencer_tier": influencer_tier,
+        "cities": cities,
+        "countries": countries
     }
+
+if __name__ == '__main__':
+    app.run(debug=True)
