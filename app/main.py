@@ -101,20 +101,30 @@ from flask import Flask, request, jsonify
 @app.route('/extract_external_url', methods=['POST'])
 def extract_endpoint():
     data = request.get_json()
-    if not data or 'external_url' not in data or 'instagram_followers_count' not in data:
-        return jsonify({"error": "Missing required parameters"}), 400
 
-    external_url = data['external_url']
-    followers_text = data.get('instagram_followers_count')
-    bio = data.get('bio', '')
+    external_url = data.get('external_url')
+    instagram_followers_count = data.get("instagram_followers_count", "")
+    bio = data.get("bio", "")
 
-    print("Received bio:", bio)  # Debugging to check bio content
+    # Handle stringified list input like "[]"
+    if isinstance(external_url, str):
+        try:
+            import ast
+            parsed = ast.literal_eval(external_url)
+            if isinstance(parsed, list) and parsed:
+                long_text = str(parsed)
+            else:
+                long_text = ""
+        except:
+            long_text = ""
+    elif isinstance(external_url, list):
+        long_text = str(external_url)
+    else:
+        long_text = ""
 
-    if not isinstance(external_url, str):
-        return jsonify({"error": "'external_url' must be a string"}), 400
-
-    result = extract_info(external_url, followers_text, bio)
+    result = extract_info(long_text, instagram_followers_count, bio)
     return jsonify(result), 200
+
 
 @app.route('/registered_influencer_sanitization_module', methods=['GET', 'POST'])
 def influencer_sanitization_module():
