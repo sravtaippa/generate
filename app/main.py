@@ -96,6 +96,7 @@ app.register_blueprint(influencer_bp)
 import ast  
 
 
+# Route
 @app.route('/extract_external_url', methods=['POST'])
 def extract_endpoint():
     data = request.get_json()

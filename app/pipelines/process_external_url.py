@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import re
+import json
 from urllib.parse import unquote
 
 app = Flask(__name__)
@@ -12,7 +13,9 @@ TWITTER_REGEX = r"twitter\.com/([a-zA-Z0-9_]+)"
 SNAPCHAT_REGEX = r"snapchat\.com/add/([a-zA-Z0-9_.-]+)"
 LINKEDIN_REGEX = r"(https?://(?:www\.)?linkedin\.com/in/[a-zA-Z0-9_-]+)"
 YOUTUBE_REGEX = r"(https?://(?:www\.)?(?:youtube\.com|youtu\.be)/\S+)"
+FACEBOOK_REGEX = r"(?:https?://)?(?:www\.)?facebook\.com/([a-zA-Z0-9_.-]+)"  # <-- Added Facebook
 
+# Helper functions
 def unwrap_markdown(text):
     return re.sub(r'\[.*?\]\((https?://[^\s)]+)\)', r'\1', text)
 
@@ -52,17 +55,19 @@ def get_influencer_tier_from_text(text):
     else:
         return "Unknown"
 
-def extract_info(long_text, followers_text=None):
-    if not long_text:
+# Core extraction
+def extract_info(raw_text, followers_text=None):
+    if not raw_text:
         return {}
 
-    cleaned_text = unwrap_markdown(long_text)
+    cleaned_text = unwrap_markdown(raw_text)
     cleaned_text = decode_instagram_redirects(cleaned_text)
 
     return {
         "tiktok_url": re.search(TIKTOK_REGEX, cleaned_text).group(1) if re.search(TIKTOK_REGEX, cleaned_text) else None,
         "twitter_id": re.search(TWITTER_REGEX, cleaned_text).group(1) if re.search(TWITTER_REGEX, cleaned_text) else None,
         "snapchat_id": re.search(SNAPCHAT_REGEX, cleaned_text).group(1) if re.search(SNAPCHAT_REGEX, cleaned_text) else None,
+        "facebook_id": re.search(FACEBOOK_REGEX, cleaned_text).group(1) if re.search(FACEBOOK_REGEX, cleaned_text) else None,  # <-- New
         "phone": re.search(PHONE_REGEX, cleaned_text).group(1).strip() if re.search(PHONE_REGEX, cleaned_text) else None,
         "email_id": re.search(EMAIL_REGEX, cleaned_text).group(0) if re.search(EMAIL_REGEX, cleaned_text) else None,
         "linkedin_id": re.search(LINKEDIN_REGEX, cleaned_text).group(1) if re.search(LINKEDIN_REGEX, cleaned_text) else None,
@@ -70,3 +75,6 @@ def extract_info(long_text, followers_text=None):
         "influencer_tier": get_influencer_tier_from_text(followers_text)
     }
 
+# Run
+if __name__ == '__main__':
+    app.run(debug=True)
